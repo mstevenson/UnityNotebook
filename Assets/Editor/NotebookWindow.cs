@@ -106,6 +106,28 @@ public class NotebookWindow : EditorWindow
     
     private static void DrawCell(Notebook.Cell cell)
     {
+        // GUILayout.Space(20);
+        
+        // Draw a 20 px high region with two centered buttons that are only displayed when the cursor is within the rect
+        var rect = GUILayoutUtility.GetRect(0, 20, GUILayout.ExpandWidth(true));
+        var buttonRect = new Rect(rect.x + rect.width / 2 - 85, rect.y, 80, 20);
+        // only display if the cursor is within the rect
+        
+        // TODO the event is being eaten by other UI elements so mouse position doesn't update consistently
+        var mousePos = Event.current.mousePosition;
+        // if (rect.Contains(mousePos))
+        // {
+            if (GUI.Button(buttonRect, "+ Code"))
+            {
+                Debug.Log("Add code");
+            }
+            buttonRect.x += 85;
+            if (GUI.Button(buttonRect, "+ Text"))
+            {
+                Debug.Log("Add text");
+            }
+        // }
+
         GUILayout.BeginVertical(EditorStyles.textArea);
         // concatenate text lines from cell.source array
         var text = string.Join(null, cell.source);
@@ -120,7 +142,6 @@ public class NotebookWindow : EditorWindow
             text = DrawCodeEditor(text, ref _caretPos);
         }
         GUILayout.EndVertical();
-        GUILayout.Space(20);
     }
     
     
