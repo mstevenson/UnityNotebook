@@ -13,11 +13,11 @@ namespace MG.MDV
     {
         protected override void Write( RendererMarkdown renderer, HtmlBlock block )
         {
-            if( !Preferences.StripHTML )
-            {
-                renderer.WriteLeafRawLines( block );
-                renderer.FinishBlock();
-            }
+            // if( !Preferences.StripHTML )
+            // {
+            //     renderer.WriteLeafRawLines( block );
+            //     renderer.FinishBlock();
+            // }
         }
     }
 }

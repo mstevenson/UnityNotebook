@@ -30,7 +30,7 @@ public class NotebookWindow : EditorWindow
 
     private GUISkin GetMarkdownSkin()
     {
-        return Preferences.DarkSkin ? MarkdownSkinDark : MarkdownSkinLight;
+        return EditorGUIUtility.isProSkin ? MarkdownSkinDark : MarkdownSkinLight;
     }
     
     private void OnGUI()
@@ -55,7 +55,7 @@ public class NotebookWindow : EditorWindow
             {
                 if (cell.cellType == Notebook.CellType.Markdown)
                 {
-                    var viewer = new MarkdownViewer(Preferences.DarkSkin ? MarkdownSkinDark : MarkdownSkinLight, path, string.Join(null, cell.source));
+                    var viewer = new MarkdownViewer(EditorGUIUtility.isProSkin ? MarkdownSkinDark : MarkdownSkinLight, path, string.Join(null, cell.source));
                     _viewers.Add(viewer);
                 }
             }

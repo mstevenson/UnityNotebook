@@ -38,10 +38,6 @@ namespace MG.MDV
                 {
                     Application.OpenURL( Link );
                 }
-                else
-                {
-                    context.SelectPage( Link );
-                }
             }
         }
 

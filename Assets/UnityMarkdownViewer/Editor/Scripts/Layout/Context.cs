@@ -4,11 +4,10 @@ namespace MG.MDV
 {
     public class Context
     {
-        public Context( GUISkin skin, HandlerImages images, HandlerNavigate navigate )
+        public Context( GUISkin skin, HandlerImages images )
         {
             mStyleConverter = new StyleConverter( skin );
             mImages         = images;
-            mNagivate       = navigate;
 
             Apply( Style.Default );
         }
@@ -16,9 +15,7 @@ namespace MG.MDV
         StyleConverter      mStyleConverter;
         GUIStyle            mStyleGUI;
         HandlerImages       mImages;
-        HandlerNavigate     mNagivate;
 
-        public void     SelectPage( string path )       { mNagivate.SelectPage( path ); }
         public Texture  FetchImage( string url )        { return mImages.FetchImage( url ); }
 
         public float    LineHeight                      { get { return mStyleGUI.lineHeight; } }
