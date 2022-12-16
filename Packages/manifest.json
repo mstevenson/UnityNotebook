@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "com.mischief.markdownviewer": "https://github.com/gwaredd/UnityMarkdownViewer.git",
     "com.unity.ide.rider": "3.0.17",
     "com.unity.nuget.newtonsoft-json": "3.0.2",
     "com.unity.modules.ai": "1.0.0",

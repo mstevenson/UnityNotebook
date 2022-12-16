@@ -1,12 +1,5 @@
 {
   "dependencies": {
-    "com.mischief.markdownviewer": {
-      "version": "https://github.com/gwaredd/UnityMarkdownViewer.git",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "ba4203635b555e30b76dd24438271843d5e78e83"
-    },
     "com.unity.ext.nunit": {
       "version": "1.0.6",
       "depth": 1,
