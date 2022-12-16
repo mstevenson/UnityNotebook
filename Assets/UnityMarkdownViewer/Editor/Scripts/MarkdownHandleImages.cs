@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
+using static UnityEngine.Networking.UnityWebRequest.Result;
 
 namespace MG.MDV
 {
@@ -12,11 +12,11 @@ namespace MG.MDV
     {
         public string  CurrentPath;
 
-        Texture                     mPlaceholder      = null;
-        List<ImageRequest>          mActiveRequests   = new List<ImageRequest>();
-        Dictionary<string,Texture>  mTextureCache     = new Dictionary<string, Texture>();
+        Texture                     mPlaceholder;
+        List<ImageRequest>          mActiveRequests   = new();
+        Dictionary<string,Texture>  mTextureCache     = new();
 
-        class ImageRequest
+        private class ImageRequest
         {
             public string           URL; // original url
             public UnityWebRequest  Request;
@@ -30,13 +30,9 @@ namespace MG.MDV
 
             public Texture GetTexture()
             {
-                var handler = Request.downloadHandler as DownloadHandlerTexture;
-                return handler != null ? handler.texture : null;
+                return Request.downloadHandler is DownloadHandlerTexture handler ? handler.texture : null;
             }
         }
-
-
-        //------------------------------------------------------------------------------
 
         private string RemapURL( string url )
         {
@@ -49,14 +45,42 @@ namespace MG.MDV
 
             if( url.StartsWith( "/" ) )
             {
-                return string.Format( "file:///{0}{1}", projectDir, url );
+                return $"file:///{projectDir}{url}";
             }
 
             var assetDir = Path.GetDirectoryName( CurrentPath );
-            return "file:///" + Utils.PathNormalise( string.Format( "{0}/{1}/{2}", projectDir, assetDir, url ) );
+            return $"file:///{PathNormalise($"{projectDir}/{assetDir}/{url}")}";
         }
+        
+        private static readonly char[] Separators = { '/', '\\' };
 
-        //------------------------------------------------------------------------------
+        /// <summary>
+        /// path combine with basic normalization (reduces '.' and '..' relative paths)
+        /// </summary>
+        public static string PathNormalise( string _a, string separator = "/" )
+        {
+            var a = (_a ?? "").Split( Separators, StringSplitOptions.RemoveEmptyEntries );
+
+            var path = new List<string>();
+
+            foreach( var el in a )
+            {
+                if( el == "." )
+                {
+                    continue;
+                }
+                if( el != ".." )
+                {
+                    path.Add( el );
+                }
+                else if( path.Count > 0 )
+                {
+                    path.RemoveAt( path.Count - 1 );
+                }
+            }
+
+            return string.Join( separator, path.ToArray() );
+        }
 
         public Texture FetchImage( string url )
         {
@@ -81,10 +105,10 @@ namespace MG.MDV
             return mPlaceholder;
         }
 
-        //------------------------------------------------------------------------------
-
-        public bool UpdateRequests()
+        public bool Update()
         {
+            // Update requests
+            
             var req = mActiveRequests.Find( r => r.Request.isDone );
 
             if( req == null )
@@ -92,14 +116,14 @@ namespace MG.MDV
                 return false;
             }
 
-            if( req.Request.result == UnityWebRequest.Result.ProtocolError )
+            if( req.Request.result == ProtocolError )
             {
-                Debug.LogError( string.Format( "HTTP Error: {0} - {1} {2}", req.URL, req.Request.responseCode, req.Request.error ) );
+                Debug.LogError($"HTTP Error: {req.URL} - {req.Request.responseCode} {req.Request.error}");
                 mTextureCache[ req.URL ] = null;
             }
-            else if( req.Request.result == UnityWebRequest.Result.ConnectionError )
+            else if( req.Request.result == ConnectionError )
             {
-                Debug.LogError( string.Format( "Network Error: {0} - {1}", req.URL, req.Request.error ) );
+                Debug.LogError($"Network Error: {req.URL} - {req.Request.error}");
                 mTextureCache[ req.URL ] = null;
             }
             else
@@ -109,14 +133,6 @@ namespace MG.MDV
 
             mActiveRequests.Remove( req );
             return true;
-        }
-
-
-        //------------------------------------------------------------------------------
-
-        public bool Update()
-        {
-            return UpdateRequests();
         }
     }
 }
