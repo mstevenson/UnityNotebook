@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 6ab3c4b22e38e49939f80296c6d7ac93
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - m_ViewDataDictionary: {instanceID: 0}
+  - MarkdownSkinLight: {fileID: 11400000, guid: 81f272e4a921a5448a30c0e40b4ea003, type: 2}
+  - MarkdownSkinDark: {fileID: 11400000, guid: 8611e9e5923b6084997203d4997b4976, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
