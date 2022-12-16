@@ -22,7 +22,7 @@ public class NotebookWindow : EditorWindow
     
     private Notebook _notebook;
 
-    private Vector2 _scroll;
+    private static Vector2 _scroll;
 
     private void OnGUI()
     {
@@ -35,11 +35,22 @@ public class NotebookWindow : EditorWindow
             };
         }
         
+        DrawToolbar();
+        DrawNotebook(_notebook);
+        
+    }
+
+    private void DrawNotebookSelector()
+    {
         EditorGUI.BeginChangeCheck();
         _notebook = EditorGUILayout.ObjectField(_notebook, typeof(Notebook), true) as Notebook;
         if (EditorGUI.EndChangeCheck())
         {
             _caretPos = 0;
+            if (_notebook == null)
+            {
+                return;
+            }
             // get asset path
             var path = AssetDatabase.GetAssetPath(_notebook);
             foreach (var cell in _notebook.cells)
@@ -50,10 +61,33 @@ public class NotebookWindow : EditorWindow
                 }
             }
         }
+    }
+
+    private void DrawToolbar()
+    {
+        EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
         
-        _scroll = EditorGUILayout.BeginScrollView(_scroll, false, false);
-        DrawNotebook(_notebook);
-        EditorGUILayout.EndScrollView();
+        if (GUILayout.Button("Run All", EditorStyles.toolbarButton))
+        {
+            Debug.Log("Run");
+        }
+        if (GUILayout.Button("Stop", EditorStyles.toolbarButton))
+        {
+            Debug.Log("Stop");
+        }
+        EditorGUILayout.Space();
+        if (GUILayout.Button("Clear Output", EditorStyles.toolbarButton))
+        {
+            Debug.Log("Clear");
+        }
+        if (GUILayout.Button("Restart", EditorStyles.toolbarButton))
+        {
+            Debug.Log("Restart");
+        }
+        
+        GUILayout.FlexibleSpace();
+        DrawNotebookSelector();
+        EditorGUILayout.EndHorizontal();
     }
 
     private static void DrawNotebook(Notebook notebook)
@@ -62,10 +96,12 @@ public class NotebookWindow : EditorWindow
         {
             return;
         }
+        _scroll = EditorGUILayout.BeginScrollView(_scroll, false, false);
         foreach (var cell in notebook.cells)
         {
             DrawCell(cell);
         }
+        EditorGUILayout.EndScrollView();
     }
     
     private static void DrawCell(Notebook.Cell cell)
