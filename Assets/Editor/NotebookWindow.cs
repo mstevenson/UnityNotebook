@@ -135,6 +135,37 @@ public class NotebookWindow : EditorWindow
                 _notebook = AssetDatabase.LoadAssetAtPath<Notebook>(path);
             }
         }
+        
+        buttonRect.y += buttonHeight + 10;
+        
+        DrawNotebookAssetsPopup(buttonRect);
+    }
+    
+    private void DrawNotebookAssetsPopup(Rect rect)
+    {
+        var guids = AssetDatabase.FindAssets("t:Notebook");
+        var notebooks = new List<Notebook>();
+        foreach (var guid in guids)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            notebooks.Add(AssetDatabase.LoadAssetAtPath<Notebook>(path));
+        }
+        if (notebooks.Count == 0)
+        {
+            return;
+        }
+        notebooks.Sort((a, b) => string.Compare(a.name, b.name, StringComparison.Ordinal));
+        var notebookNames = new string[notebooks.Count];
+        for (var i = 0; i < notebooks.Count; i++)
+        {
+            notebookNames[i] = AssetDatabase.GetAssetPath(notebooks[i]);
+        }
+        
+        var index = EditorGUI.Popup(rect, "Notebooks", -1, notebookNames);
+        if (index >= 0)
+        {
+            _notebook = notebooks[index];
+        }
     }
 
     private void DrawNotebookSelector()
