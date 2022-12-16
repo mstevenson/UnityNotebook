@@ -10,11 +10,10 @@ namespace MG.MDV
         public GUIContent   Payload;
         public string       Link;
 
-        public float Width      { get { return Location.width; } }
-        public float Height     { get { return Location.height; } }
-        public bool  CanUpdate  { get { return false; } }
+        public float Width => Location.width;
+        public float Height => Location.height;
 
-        public Content( GUIContent payload, Style style, string link )
+        protected Content( GUIContent payload, Style style, string link )
         {
             Payload = payload;
             Style = style;

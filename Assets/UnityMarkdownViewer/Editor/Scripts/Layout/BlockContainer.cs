@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Markdig.Syntax;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace MG.MDV
@@ -14,7 +11,7 @@ namespace MG.MDV
         public bool IsTableRow = false;
         public bool IsTableHeader = false;
 
-        List<Block> mBlocks = new List<Block>();
+        private List<Block> mBlocks = new();
 
         public BlockContainer( float indent ) : base( indent ) { }
 
@@ -23,26 +20,6 @@ namespace MG.MDV
             block.Parent = this;
             mBlocks.Add( block );
             return block;
-        }
-
-        public override Block Find( string id )
-        {
-            if( id.Equals( ID, StringComparison.Ordinal ) )
-            {
-                return this;
-            }
-
-            foreach( var block in mBlocks )
-            {
-                var match = block.Find( id );
-
-                if( match != null )
-                {
-                    return match;
-                }
-            }
-
-            return null;
         }
 
         public override void Arrange( Context context, Vector2 pos, float maxWidth )
@@ -134,7 +111,7 @@ namespace MG.MDV
 
         public void RemoveTrailingSpace()
         {
-            if( mBlocks.Count > 0 && mBlocks[ mBlocks.Count - 1 ] is BlockSpace )
+            if( mBlocks.Count > 0 && mBlocks[^1] is BlockSpace )
             {
                 mBlocks.RemoveAt( mBlocks.Count - 1 );
             }

@@ -1,27 +1,20 @@
-﻿////////////////////////////////////////////////////////////////////////////////
-
-using Markdig.Renderers;
+﻿using Markdig.Renderers;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 
 namespace MG.MDV
 {
-    ////////////////////////////////////////////////////////////////////////////////
     /// <see cref="Markdig.Renderers.HtmlRenderer"/>
     /// <see cref="Markdig.Renderers.Normalize.NormalizeRenderer"/>
 
     public class RendererMarkdown : RendererBase
     {
         internal LayoutBuilder  Layout;
-        internal Style          Style   = new Style();
+        internal Style          Style;
         internal string         ToolTip = null;
         internal string         Link
         {
-            get
-            {
-                return mLink;
-            }
-
+            get => mLink;
             set
             {
                 mLink = value;
@@ -32,7 +25,7 @@ namespace MG.MDV
         public bool ConsumeSpace = false;
         public bool ConsumeNewLine = false;
 
-        private string mLink = null;
+        private string mLink;
 
         internal void Text( string text ) { Layout.Text( text, Style, Link, ToolTip ); }
 

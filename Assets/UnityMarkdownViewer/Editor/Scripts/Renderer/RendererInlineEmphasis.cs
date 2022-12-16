@@ -1,11 +1,8 @@
-﻿////////////////////////////////////////////////////////////////////////////////
-
-using Markdig.Renderers;
+﻿using Markdig.Renderers;
 using Markdig.Syntax.Inlines;
 
 namespace MG.MDV
 {
-    ////////////////////////////////////////////////////////////////////////////////
     // <b><i>...</i></b>
     /// <see cref="Markdig.Renderers.Html.Inlines.EmphasisInlineRenderer"/>
 
@@ -13,7 +10,7 @@ namespace MG.MDV
     {
         protected override void Write( RendererMarkdown renderer, EmphasisInline node )
         {
-            bool prev = false;
+            bool prev;
 
             if( node.IsDouble )
             {

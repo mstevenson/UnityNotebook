@@ -21,7 +21,7 @@ namespace MG.MDV
             {
                 context.Apply( Style );
                 var text = !string.IsNullOrEmpty( Alt ) ? Alt : URL;
-                Payload.text = string.Format( "[{0}]", text );
+                Payload.text = $"[{text}]";
             }
 
             Location.size = context.CalcSize( Payload );

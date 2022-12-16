@@ -22,9 +22,6 @@ namespace MG.MDV
             // limit the columns to the number of headers
             var numCols = ( table[ 0 ] as TableRow ).Count( c => ( c as TableCell ).Count > 0 );
 
-            // column alignment
-            var alignment = table.ColumnDefinitions.Select( cd => cd.Alignment.HasValue ? cd.Alignment.Value : TableColumnAlign.Left ).ToArray();
-
             foreach( TableRow row in table )
             {
                 if( row == null )

@@ -1,12 +1,9 @@
-﻿////////////////////////////////////////////////////////////////////////////////
-
-using Markdig.Renderers;
+﻿using Markdig.Renderers;
 using Markdig.Syntax;
 
 namespace MG.MDV
 {
     // <p>...</p>
-
     /// <see cref="Markdig.Renderers.Html.ParagraphRenderer"/>
 
     public class RendererBlockParagraph : MarkdownObjectRenderer<RendererMarkdown, ParagraphBlock>

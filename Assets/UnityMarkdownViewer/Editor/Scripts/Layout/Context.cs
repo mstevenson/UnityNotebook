@@ -18,12 +18,12 @@ namespace MG.MDV
 
         public Texture  FetchImage( string url )        { return mImages.FetchImage( url ); }
 
-        public float    LineHeight                      { get { return mStyleGUI.lineHeight; } }
-        public float    MinWidth                        { get { return LineHeight * 2.0f; } }
-        public float    IndentSize                      { get { return LineHeight * 1.5f; } }
+        public float    LineHeight => mStyleGUI.lineHeight;
+        public float    MinWidth => LineHeight * 2.0f;
+        public float    IndentSize => LineHeight * 1.5f;
 
-        public void     Reset()                         { Apply( Style.Default ); }
-        public GUIStyle Apply( Style style )            { mStyleGUI = mStyleConverter.Apply( style ); return mStyleGUI; }
-        public Vector2  CalcSize( GUIContent content )  { return mStyleGUI.CalcSize( content ); }
+        public void     Reset() => Apply( Style.Default );
+        public GUIStyle Apply( Style style ) { mStyleGUI = mStyleConverter.Apply( style ); return mStyleGUI; }
+        public Vector2  CalcSize( GUIContent content ) => mStyleGUI.CalcSize( content );
     }
 }

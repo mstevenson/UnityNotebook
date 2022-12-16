@@ -1,15 +1,10 @@
-﻿////////////////////////////////////////////////////////////////////////////////
-
-using System.Text;
+﻿using System.Text;
 using UnityEngine;
 
 namespace MG.MDV
 {
-    public class LayoutBuilder : IBuilder
+    public class LayoutBuilder
     {
-        ////////////////////////////////////////////////////////////////////////////////
-        // IMarkdownInterface
-
         public void Text( string text, Style style, string link, string tooltip )
         {
             if( mCurrentContent == null )
@@ -37,10 +32,8 @@ namespace MG.MDV
             mLink    = link;
             mTooltip = tooltip;
 
-            for( var i = 0; i < text.Length; i++ )
+            foreach (var ch in text)
             {
-                var ch = text[i];
-
                 if( ch == '\n' )
                 {
                     AddWord();
@@ -66,12 +59,12 @@ namespace MG.MDV
         public void Image( string url, string alt, string title )
         {
             var payload = new GUIContent();
-            var content = new ContentImage( payload, mStyle, mLink );
-
-            content.URL     = url;
-            content.Alt     = alt;
+            var content = new ContentImage( payload, mStyle, mLink )
+            {
+                URL = url,
+                Alt = alt
+            };
             payload.tooltip = !string.IsNullOrEmpty( title ) ? title : alt;
-
             AddContent( content );
         }
 
@@ -79,7 +72,7 @@ namespace MG.MDV
 
         public void NewLine()
         {
-            if( mCurrentContent != null && mCurrentContent.IsEmpty )
+            if( mCurrentContent is {IsEmpty: true} )
             {
                 return;
             }
@@ -89,7 +82,7 @@ namespace MG.MDV
 
         public void Space()
         {
-            if( CurrentBlock is BlockSpace || CurrentBlock is BlockContainer )
+            if( CurrentBlock is BlockSpace or BlockContainer )
             {
                 return;
             }
@@ -220,11 +213,7 @@ namespace MG.MDV
 
         Block CurrentBlock
         {
-            get
-            {
-                return mCurrentBlock;
-            }
-
+            get => mCurrentBlock;
             set
             {
                 mCurrentBlock   = value;

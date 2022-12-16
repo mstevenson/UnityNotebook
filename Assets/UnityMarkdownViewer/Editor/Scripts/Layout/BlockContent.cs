@@ -5,10 +5,10 @@ namespace MG.MDV
 {
     public class BlockContent : Block
     {
-        Content       mPrefix    = null;
-        List<Content> mContent   = new List<Content>();
+        Content       mPrefix;
+        List<Content> mContent = new();
 
-        public bool IsEmpty { get { return mContent.Count == 0; } }
+        public bool IsEmpty => mContent.Count == 0;
 
         public BlockContent( float indent ) : base( indent ) { }
 
@@ -84,7 +84,7 @@ namespace MG.MDV
             Rect.height = pos.y - origin.y;
         }
 
-        void LayoutRow( Vector2 pos, int from, int until, float rowHeight )
+        private void LayoutRow( Vector2 pos, int from, int until, float rowHeight )
         {
             for( var i = from; i < until; i++ )
             {

@@ -1,6 +1,4 @@
-﻿////////////////////////////////////////////////////////////////////////////////
-
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace MG.MDV
 {
@@ -10,12 +8,12 @@ namespace MG.MDV
         private GUIStyle[]  mWorking;
         private GUIStyle[]  mReference;
 
-        Color linkColor         = new Color(0.41f, 0.71f, 1.0f, 1.0f);
-        const int Variable      = 0;
-        const int FixedInline   = 7;
-        const int FixedBlock    = 8;
+        private Color linkColor         = new(0.41f, 0.71f, 1.0f, 1.0f);
+        private const int Variable      = 0;
+        private const int FixedInline   = 7;
+        private const int FixedBlock    = 8;
 
-        static readonly string[] CustomStyles = new string[] {
+        private static readonly string[] CustomStyles = {
             "variable",
             "h1",
             "h2",
@@ -38,10 +36,7 @@ namespace MG.MDV
                 mWorking[ i ]   = new GUIStyle( mReference[ i ] );
             }
         }
-
-
-        //------------------------------------------------------------------------------
-
+        
         public GUIStyle Apply( Style src )
         {
             if( src.Block )

@@ -1,4 +1,4 @@
-﻿////////////////////////////////////////////////////////////////////////////////
+﻿using UnityEngine;
 
 namespace MG.MDV
 {
@@ -13,17 +13,12 @@ namespace MG.MDV
             mDocument = doc;
         }
 
-        public float Height { get { return mDocument.Rect.height; } }
-
-        public Block Find( string id )
-        {
-            return mDocument.Find( id );
-        }
-
-        public void Arrange( float maxWidth )
+        public float Height => mDocument.Rect.height;
+        
+        public void Arrange( float maxWidth, float posY )
         {
             mContext.Reset();
-            mDocument.Arrange( mContext, MarkdownViewer.Margin, maxWidth );
+            mDocument.Arrange( mContext, MarkdownViewer.Margin + new Vector2(0, posY), maxWidth );
         }
 
         public void Draw()

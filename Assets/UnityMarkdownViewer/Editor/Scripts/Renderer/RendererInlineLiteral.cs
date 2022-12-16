@@ -1,6 +1,4 @@
-﻿////////////////////////////////////////////////////////////////////////////////
-
-using Markdig.Renderers;
+﻿using Markdig.Renderers;
 using Markdig.Syntax.Inlines;
 
 namespace MG.MDV

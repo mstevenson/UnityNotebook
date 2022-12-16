@@ -1,11 +1,8 @@
-﻿////////////////////////////////////////////////////////////////////////////////
-
-using Markdig.Renderers;
+﻿using Markdig.Renderers;
 using Markdig.Syntax;
 
 namespace MG.MDV
 {
-    ////////////////////////////////////////////////////////////////////////////////
     // <ul><li>...</li></ul>
     /// <see cref="Markdig.Renderers.Html.ListRenderer"/>
 
@@ -30,7 +27,7 @@ namespace MG.MDV
 
             for( var i = 0; i < block.Count; i++ )
             {
-                layout.Prefix( block.IsOrdered ? (i+1).ToString() + "." : "\u2022", prefixStyle );
+                layout.Prefix( block.IsOrdered ? $"{i + 1}." : "\u2022", prefixStyle );
                 renderer.WriteChildren( block[ i ] as ListItemBlock );
             }
 

@@ -1,11 +1,8 @@
-﻿////////////////////////////////////////////////////////////////////////////////
-
-using Markdig.Renderers;
+﻿using Markdig.Renderers;
 using Markdig.Syntax;
 
 namespace MG.MDV
 {
-    ////////////////////////////////////////////////////////////////////////////////
     /// <see cref="Markdig.Renderers.Html.HtmlBlockRenderer"/>
     /// <see cref="Markdig.Renderers.Normalize.HtmlBlockRenderer"/>
 

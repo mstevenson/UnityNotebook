@@ -55,19 +55,16 @@ namespace MG.MDV
 
         public void Draw()
         {
+            var prevSkin = GUI.skin;
             GUI.skin    = mSkin;
             GUI.enabled = true;
 
-            // useable width of inspector windows
             var contentWidth = EditorGUIUtility.currentViewWidth - mSkin.verticalScrollbar.fixedWidth - 2.0f * Margin.x;
 
-            // draw content
-            ClearBackground( mLayout.Height );
-            DrawMarkdown( contentWidth );
-        }
+            // // Clear background
+            // var rectFullScreen = new Rect( 0.0f, 0.0f, Screen.width, Mathf.Max( mLayout.Height, Screen.height ) );
+            // GUI.DrawTexture( rectFullScreen, mSkin.window.normal.background, ScaleMode.StretchToFill, false );
 
-        private void DrawMarkdown( float width )
-        {
             switch( Event.current.type )
             {
                 case EventType.Ignore:
@@ -78,12 +75,16 @@ namespace MG.MDV
                     break;
                 case EventType.Layout:
                     GUILayout.Space( mLayout.Height );
-                    mLayout.Arrange( width );
+                    // TODO how to get the y offset?
+                    var lastRect = GUILayoutUtility.GetLastRect();
+                    mLayout.Arrange( contentWidth, lastRect.y );
                     break;
                 default:
                     mLayout.Draw();
                     break;
             }
+
+            GUI.skin = prevSkin;
         }
     }
 }
