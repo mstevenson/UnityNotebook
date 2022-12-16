@@ -14,7 +14,10 @@ public class NotebookImporter : ScriptedImporter
 {
     public override void OnImportAsset(AssetImportContext ctx)
     {
-        var notebook = Notebook.Load(ctx.assetPath);
+        var json = System.IO.File.ReadAllText(ctx.assetPath);
+        var notebook = ScriptableObject.CreateInstance<Notebook>();
+        notebook.PopulateFromJson(json);
+        
         ctx.AddObjectToAsset("main", notebook);
         ctx.SetMainObject(notebook);
     }
@@ -46,14 +49,6 @@ public class Notebook : ScriptableObject
         AssetDatabase.Refresh();
     }
     
-    public static Notebook Load(string assetPath)
-    {
-        var json = System.IO.File.ReadAllText(assetPath);
-        var notebook = CreateInstance<Notebook>();
-        notebook.PopulateFromJson(json);
-        return notebook;
-    }
-
     public void PopulateFromJson(string json)
     {
         var nb = JObject.Parse(json);
