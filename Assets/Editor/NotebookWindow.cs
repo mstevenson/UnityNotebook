@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using MG.MDV;
 using UnityEditor;
@@ -17,7 +18,9 @@ public class NotebookWindow : EditorWindow
     public GUISkin MarkdownSkinDark;
 
     private static GUIStyle _textStyle;
+    private static GUIStyle _textStyleNoBackground;
     private static GUIStyle _codeStyle;
+    private static GUIStyle _codeStyleNoBackground;
     private static bool _tabPressed;
     private static int _caretPos;
     
@@ -38,6 +41,25 @@ public class NotebookWindow : EditorWindow
                 padding = new RectOffset(8, 8, 8, 8)
             };
         }
+        if (_textStyleNoBackground == null)
+        {
+            _textStyleNoBackground = new GUIStyle()
+            {
+                fontStyle = _textStyle.fontStyle,
+                fontSize = _textStyle.fontSize,
+                normal = _textStyle.normal,
+                active = _textStyle.active,
+                focused = _textStyle.focused,
+                hover = _textStyle.hover,
+                padding = _textStyle.padding,
+                wordWrap = _textStyle.wordWrap,
+                clipping = _textStyle.clipping,
+                stretchHeight = _textStyle.stretchHeight,
+                stretchWidth = _textStyle.stretchWidth,
+                font = _textStyle.font,
+                richText = _textStyle.richText
+            };
+        }
         if (_codeStyle == null)
         {
             _codeStyle = new GUIStyle(GUI.skin.textArea)
@@ -49,6 +71,25 @@ public class NotebookWindow : EditorWindow
                 stretchWidth = true,
                 font = AssetDatabase.LoadAssetAtPath<Font>("Assets/Editor/Menlo-Regular.ttf"),
                 richText = true
+            };
+        }
+        if (_codeStyleNoBackground == null)
+        {
+            _codeStyleNoBackground = new GUIStyle()
+            {
+                fontStyle = _codeStyle.fontStyle,
+                fontSize = _codeStyle.fontSize,
+                normal = _codeStyle.normal,
+                active = _codeStyle.active,
+                focused = _codeStyle.focused,
+                hover = _codeStyle.hover,
+                padding = _codeStyle.padding,
+                wordWrap = _codeStyle.wordWrap,
+                clipping = _codeStyle.clipping,
+                stretchHeight = _codeStyle.stretchHeight,
+                stretchWidth = _codeStyle.stretchWidth,
+                font = _codeStyle.font,
+                richText = _codeStyle.richText
             };
         }
         
@@ -121,21 +162,37 @@ public class NotebookWindow : EditorWindow
 
     private void DrawToolbar()
     {
+        EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+
+        if (Evaluator.IsRunning)
+        {
+            if (GUILayout.Button("Stop", EditorStyles.toolbarButton, GUILayout.Width(40)))
+            {
+                Evaluator.Stop();
+            }
+        }
         if (_notebook == null)
         {
             GUI.enabled = false;
         }
-        
-        EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-        
-        if (GUILayout.Button("Run", EditorStyles.toolbarButton))
+        if (!Evaluator.IsRunning && GUILayout.Button("Run", EditorStyles.toolbarButton, GUILayout.Width(40)))
         {
-            Debug.Log("Run");
+            foreach (var cell in _notebook.cells)
+            {
+                if (cell.cellType == Notebook.CellType.Code)
+                {
+                    Evaluator.Evaluate(cell);
+                }
+            }
         }
         EditorGUILayout.Space();
         if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
         {
-            Debug.Log("Clear");
+            Undo.RecordObject(_notebook, "Clear Output");
+            foreach (var cell in _notebook.cells)
+            {
+                cell.outputs.Clear();
+            }
         }
         if (GUILayout.Button("Restart", EditorStyles.toolbarButton))
         {
@@ -195,12 +252,14 @@ public class NotebookWindow : EditorWindow
         var buttonRect = new Rect(rect.x + rect.width / 2 - 85, rect.y, 80, 20);
         if (GUI.Button(buttonRect, "+ Code"))
         {
+            Undo.RecordObject(notebook, "Add Code Cell");
             notebook.cells.Insert(cellIndex, new Notebook.Cell { cellType = Notebook.CellType.Code });
             return true;
         }
         buttonRect.x += 85;
         if (GUI.Button(buttonRect, "+ Text"))
         {
+            Undo.RecordObject(notebook, "Add Text Cell");
             notebook.cells.Insert(cellIndex, new Notebook.Cell { cellType = Notebook.CellType.Markdown });
             return true;
         }
@@ -215,6 +274,7 @@ public class NotebookWindow : EditorWindow
         GUI.enabled = cellIndex > 0;
         if (GUI.Button(toolbarRect, "▲", EditorStyles.miniButtonLeft))
         {
+            Undo.RecordObject(notebook, "Move Cell Up");
             notebook.cells.Insert(cellIndex - 1, notebook.cells[cellIndex]);
             notebook.cells.RemoveAt(cellIndex + 1);
             return true;
@@ -227,6 +287,7 @@ public class NotebookWindow : EditorWindow
         }
         if (GUI.Button(toolbarRect, "▼", EditorStyles.miniButtonMid))
         {
+            Undo.RecordObject(notebook, "Move Cell Down");
             notebook.cells.Insert(cellIndex + 2, notebook.cells[cellIndex]);
             notebook.cells.RemoveAt(cellIndex);
             return true;
@@ -235,6 +296,7 @@ public class NotebookWindow : EditorWindow
         toolbarRect.x += 30;
         if (GUI.Button(toolbarRect, "✕", EditorStyles.miniButtonRight))
         {
+            Undo.RecordObject(notebook, "Delete Cell");
             notebook.cells.RemoveAt(cellIndex);
             return true;
         }
@@ -243,26 +305,15 @@ public class NotebookWindow : EditorWindow
     
     private static void DrawCell(Notebook.Cell cell)
     {
-        // Code area
-        GUILayout.BeginHorizontal();
-        if (cell.cellType == Notebook.CellType.Code)
+        switch (cell.cellType)
         {
-            if (GUILayout.Button("▶", GUILayout.Width(20), GUILayout.Height(20)))
-            {
-                Execute(cell);
-            }
+            case Notebook.CellType.Code:
+                DrawCodeCell(cell);
+                break;
+            case Notebook.CellType.Markdown:
+                DrawTextCell(cell);
+                break;
         }
-        GUILayout.BeginVertical();
-        if (cell.cellType == Notebook.CellType.Markdown)
-        {
-            DrawTextCell(cell);
-        }
-        else
-        {
-            DrawCodeEditor(cell, ref _caretPos);
-        }
-        GUILayout.EndVertical();
-        GUILayout.EndHorizontal();
     }
 
     private static void DrawTextCell(Notebook.Cell cell)
@@ -271,6 +322,64 @@ public class NotebookWindow : EditorWindow
         // cell.markdownViewer.Draw();
         var text = string.Join(null, cell.source);
         EditorGUILayout.TextArea(text, _textStyle);
+    }
+    
+    private static void DrawCodeCell(Notebook.Cell cell)
+    {
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("▶", GUILayout.Width(20), GUILayout.Height(20)))
+        {
+            Execute(cell);
+        }
+        GUILayout.BeginVertical();
+        DrawCodeEditor(cell, ref _caretPos);
+        GUILayout.EndVertical();
+        GUILayout.EndHorizontal();
+
+        if (cell.outputs.Count > 0)
+        {
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("✕", GUILayout.Width(20), GUILayout.Height(20)))
+            {
+                cell.outputs.Clear();
+                Execute(cell);
+            }
+            GUILayout.BeginVertical();
+            DrawOutput(cell);
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+        }
+    }
+
+    private static void DrawOutput(Notebook.Cell cell)
+    {
+        foreach (var output in cell.outputs)
+        {
+            switch (output.outputType)
+            {
+                case Notebook.OutputType.Stream:
+                    EditorGUILayout.TextArea(string.Join(null, output.text), _textStyleNoBackground);
+                    break;
+                case Notebook.OutputType.DisplayData:
+                case Notebook.OutputType.ExecuteResult:
+                    foreach (var data in output.data)
+                    {
+                        EditorGUILayout.TextArea(string.Join(null, data.stringData), _textStyleNoBackground);
+                    }
+                    break;
+                // TODO parse terminal control codes, set colors
+                case Notebook.OutputType.Error:
+                    var c = GUI.color;
+                    GUI.color = Color.red;
+                    GUILayout.Label(output.ename);
+                    // GUILayout.Label(output.evalue);
+                    GUI.color = c;
+                    EditorGUILayout.TextArea(string.Join("\n", output.traceback), _codeStyleNoBackground);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
     }
     
     
