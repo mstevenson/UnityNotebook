@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using MG.MDV;
 using UnityEditor;
 using UnityEngine;
@@ -57,7 +58,7 @@ public class NotebookWindow : EditorWindow
                 stretchHeight = _textStyle.stretchHeight,
                 stretchWidth = _textStyle.stretchWidth,
                 font = _textStyle.font,
-                richText = _textStyle.richText
+                richText = true
             };
         }
         if (_codeStyle == null)
@@ -89,7 +90,7 @@ public class NotebookWindow : EditorWindow
                 stretchHeight = _codeStyle.stretchHeight,
                 stretchWidth = _codeStyle.stretchWidth,
                 font = _codeStyle.font,
-                richText = _codeStyle.richText
+                richText = true
             };
         }
         
@@ -219,7 +220,7 @@ public class NotebookWindow : EditorWindow
         EditorGUILayout.Space();
         if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
         {
-            Undo.RecordObject(_notebook, "Clear Output");
+            Undo.RecordObject(_notebook, "Clear All Output");
             foreach (var cell in _notebook.cells)
             {
                 cell.outputs.Clear();
@@ -268,7 +269,7 @@ public class NotebookWindow : EditorWindow
                     // cells were modified, break out of the draw loop
                     break;
                 }
-                DrawCell(notebook.cells[cellIndex]);
+                DrawCell(notebook, notebook.cells[cellIndex]);
             }
             cellIndex++;
         } while (cellIndex < cellCount);
@@ -334,12 +335,12 @@ public class NotebookWindow : EditorWindow
         return false;
     }
     
-    private static void DrawCell(Notebook.Cell cell)
+    private static void DrawCell(Notebook notebook, Notebook.Cell cell)
     {
         switch (cell.cellType)
         {
             case Notebook.CellType.Code:
-                DrawCodeCell(cell);
+                DrawCodeCell(notebook, cell);
                 break;
             case Notebook.CellType.Markdown:
                 DrawTextCell(cell);
@@ -355,7 +356,7 @@ public class NotebookWindow : EditorWindow
         EditorGUILayout.TextArea(text, _textStyle);
     }
     
-    private static void DrawCodeCell(Notebook.Cell cell)
+    private static void DrawCodeCell(Notebook notebook, Notebook.Cell cell)
     {
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("▶", GUILayout.Width(20), GUILayout.Height(20)))
@@ -372,6 +373,7 @@ public class NotebookWindow : EditorWindow
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("✕", GUILayout.Width(20), GUILayout.Height(20)))
             {
+                Undo.RecordObject(notebook, "Clear Output");
                 cell.outputs.Clear();
                 Execute(cell);
             }
@@ -405,14 +407,15 @@ public class NotebookWindow : EditorWindow
                     GUILayout.Label(output.ename);
                     // GUILayout.Label(output.evalue);
                     GUI.color = c;
-                    EditorGUILayout.TextArea(string.Join("\n", output.traceback), _codeStyleNoBackground);
+                    // TODO convert ANSI escape sequences to HTML tags
+                    var str = string.Join(null, output.traceback);
+                    EditorGUILayout.TextArea(str, _codeStyleNoBackground);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
     }
-    
     
     // https://answers.unity.com/questions/275973/find-cursor-position-in-a-textarea.html
     
