@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using MG.MDV;
 using UnityEngine;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
@@ -100,6 +101,9 @@ public class Notebook : ScriptableObject
         
         // code
         public List<CellOutput> outputs = new();
+        
+        // UI rendering
+        [NonSerialized] public MarkdownViewer markdownViewer;
 
         public static Cell Parse(JToken rawCell)
         {

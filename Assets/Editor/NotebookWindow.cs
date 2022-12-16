@@ -24,15 +24,6 @@ public class NotebookWindow : EditorWindow
 
     private Vector2 _scroll;
 
-    // markdown rendering
-    // https://github.com/gwaredd/UnityMarkdownViewer
-    private static List<MarkdownViewer> _viewers = new();
-
-    private GUISkin GetMarkdownSkin()
-    {
-        return EditorGUIUtility.isProSkin ? MarkdownSkinDark : MarkdownSkinLight;
-    }
-    
     private void OnGUI()
     {
         if (_codeStyle == null)
@@ -55,8 +46,7 @@ public class NotebookWindow : EditorWindow
             {
                 if (cell.cellType == Notebook.CellType.Markdown)
                 {
-                    var viewer = new MarkdownViewer(EditorGUIUtility.isProSkin ? MarkdownSkinDark : MarkdownSkinLight, path, string.Join(null, cell.source));
-                    _viewers.Add(viewer);
+                    cell.markdownViewer = new MarkdownViewer(EditorGUIUtility.isProSkin ? MarkdownSkinDark : MarkdownSkinLight, path, string.Join(null, cell.source));
                 }
             }
         }
@@ -85,8 +75,7 @@ public class NotebookWindow : EditorWindow
         var text = string.Join(null, cell.source);
         if (cell.cellType == Notebook.CellType.Markdown)
         {
-            // TODO draw correct cell
-            _viewers[0].Draw();
+            cell.markdownViewer.Draw();
             EditorGUILayout.TextArea(text);
         }
         else
