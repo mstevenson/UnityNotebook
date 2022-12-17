@@ -337,6 +337,12 @@ public class NotebookWindow : EditorWindow
     
     private static void DrawCell(Notebook notebook, Notebook.Cell cell)
     {
+        if (cell.textBlock == null)
+        {
+            cell.textBlock = new TextBlock();
+            cell.textBlock.SetText(cell.source);
+        }
+        
         switch (cell.cellType)
         {
             case Notebook.CellType.Code:

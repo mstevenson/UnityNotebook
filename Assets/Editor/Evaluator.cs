@@ -3,6 +3,8 @@ using Microsoft.CodeAnalysis.Scripting;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Editor;
+using UnityEditor;
 using UnityEngine;
 
 // https://github.com/dotnet/roslyn/blob/315c2e149ba7889b0937d872274c33fcbfe9af5f/docs/wiki/Scripting-API-Samples.md
@@ -28,7 +30,7 @@ public class Evaluator
                     Assemblies.Add(assembly);
                 }
             }
-            _options = ScriptOptions.Default.WithReferences(Assemblies);
+            _options = ScriptOptions.Default.WithReferences(Assemblies).WithImports("UnityEngine", "UnityEditor", "System", "System.Collections", "System.Collections.Generic");
         }
     }
 
@@ -49,7 +51,7 @@ public class Evaluator
         IsRunning = false;
         if (script.Exception != null)
         {
-            cell.outputs.Add(Notebook.CellOutput.Exception(script.Exception));
+            cell.outputs.Add(NotebookUtils.Exception(script.Exception));
         }
         else
         {
@@ -58,13 +60,13 @@ public class Evaluator
                 case null:
                     break;
                 case string str:
-                    cell.outputs.Add(Notebook.CellOutput.DisplayData(str));
+                    cell.outputs.Add(NotebookUtils.DisplayData(str));
                     break;
                 case Texture2D tex:
-                    cell.outputs.Add(Notebook.CellOutput.DisplayData(tex));
+                    cell.outputs.Add(NotebookUtils.DisplayData(tex));
                     break;
                 default:
-                    cell.outputs.Add(Notebook.CellOutput.DisplayData(script.ReturnValue));
+                    cell.outputs.Add(NotebookUtils.DisplayData(script.ReturnValue));
                     break;
             }
         }
