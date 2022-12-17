@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Editor.Serialization;
 using MG.MDV;
 using Newtonsoft.Json;
 using UnityEngine;
-using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEditor.AssetImporters;
 
@@ -17,68 +15,38 @@ public class NotebookImporter : ScriptedImporter
     public override void OnImportAsset(AssetImportContext ctx)
     {
         var json = System.IO.File.ReadAllText(ctx.assetPath);
-        var notebook = ScriptableObject.CreateInstance<Notebook>();
-        notebook.PopulateFromJson(json);
-        
+        var notebook = JsonConvert.DeserializeObject<Notebook>(json);
         ctx.AddObjectToAsset("main", notebook);
         ctx.SetMainObject(notebook);
     }
 }
 
+[JsonConverter(typeof(NotebookConverter))]
 public class Notebook : ScriptableObject
 {
-    public int format;
+    public int format = 4;
     public int formatMinor;
     public Metadata metadata;
     public List<Cell> cells = new();
 
-    public static void Create(string path)
+    public static Notebook CreateAsset(string path)
     {
         var notebook = CreateInstance<Notebook>();
-        notebook.metadata = new Metadata();
-        notebook.format = 4;
-        notebook.formatMinor = 0;
-        notebook.cells = new List<Cell>();
-        notebook.Save(path);
+        var json = JsonConvert.SerializeObject(notebook, Formatting.Indented);
+        System.IO.File.WriteAllText(path, json);
+        AssetDatabase.ImportAsset(path);
+        return AssetDatabase.LoadAssetAtPath<Notebook>(path);
     }
 
-    public void Save(string path)
+    public void Save()
     {
         var assetPath = AssetDatabase.GetAssetPath(this);
-        var json = ConvertToJson();
+        var json = JsonConvert.SerializeObject(this);
         System.IO.File.WriteAllText(assetPath, json);
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
     }
-    
-    public void PopulateFromJson(string json)
-    {
-        var nb = JObject.Parse(json);
-        format = (nb["nbformat"] ?? 4).Value<int>();
-        formatMinor = (nb["nbformat_minor"] ?? 0).Value<int>();
-        
-        // TODO parse file metadata
-        // metadata = nb["metadata"] != null ? nb["metadata"].ToObject<Metadata>() : new Metadata();
 
-        foreach (var rawCell in nb["cells"]?.ToObject<JArray>())
-        {
-            var cell = rawCell.ToObject<Cell>();
-            cells.Add(cell);
-        }
-    }
-
-    public string ConvertToJson()
-    {
-        var nb = new JObject
-        {
-            ["nbformat"] = format,
-            ["nbformat_minor"] = formatMinor,
-            ["metadata"] = JsonConvert.SerializeObject(metadata),
-            ["cells"] = new JArray(cells.Select(JsonConvert.SerializeObject))
-        };
-        return nb.ToString();
-    }
-    
     [Serializable]
     public class Metadata
     {

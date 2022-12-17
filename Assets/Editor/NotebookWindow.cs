@@ -119,11 +119,16 @@ public class NotebookWindow : EditorWindow
         if (GUI.Button(buttonRect, "Create Notebook"))
         {
             var path = EditorUtility.SaveFilePanelInProject("Create Notebook", "Notebook", "ipynb", "Create Notebook");
-            if (!path.EndsWith(".ipynb"))
+            if (!string.IsNullOrEmpty(path))
             {
-                path += ".ipynb";
+                if (!path.EndsWith(".ipynb"))
+                {
+                    path += ".ipynb";
+                }
+                var nb = Notebook.CreateAsset(path);
+                AssetDatabase.Refresh();
+                EditorGUIUtility.PingObject(nb);
             }
-            Debug.Log(path);
         }
         buttonRect.y += buttonHeight + 10;
         if (GUI.Button(buttonRect, "Open Notebook"))
