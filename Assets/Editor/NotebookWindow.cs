@@ -1,17 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using MG.MDV;
 using UnityEditor;
+using UnityEditor.Callbacks;
 using UnityEngine;
 
 public class NotebookWindow : EditorWindow
 {
     [MenuItem("Window/Notebook")]
-    public static void ShowExample()
+    public static NotebookWindow Init()
     {
         var wnd = GetWindow<NotebookWindow>();
         wnd.titleContent = new GUIContent("Notebook");
+        return wnd;
     }
     
     // references are set in this script's inspector
@@ -28,6 +31,25 @@ public class NotebookWindow : EditorWindow
     private Notebook _notebook;
 
     private static Vector2 _scroll;
+    
+    [OnOpenAsset]
+    public static bool OnOpenAsset(int instanceID, int line)
+    {
+        var target = EditorUtility.InstanceIDToObject(instanceID);
+        if (target is not Notebook)
+        {
+            return false;
+        }
+        var path = AssetDatabase.GetAssetPath(instanceID);
+        if (Path.GetExtension(path) != ".ipynb")
+        {
+            return false;
+        }
+        var notebook = AssetDatabase.LoadAssetAtPath<Notebook>(path);
+        var wnd = Init();
+        wnd._notebook = notebook;
+        return true;
+    }
 
     private void OnGUI()
     {
