@@ -112,7 +112,7 @@ public class NotebookWindow : EditorWindow
         var buttonHeight = 50;
         var buttonRect = new Rect(
             position.width / 2 - buttonWidth / 2,
-            (position.height / 2 - buttonHeight / 2) - 20,
+            (position.height / 2 - buttonHeight / 2) - 35,
             buttonWidth,
             buttonHeight
         );
@@ -160,6 +160,9 @@ public class NotebookWindow : EditorWindow
         for (var i = 0; i < notebooks.Count; i++)
         {
             notebookNames[i] = AssetDatabase.GetAssetPath(notebooks[i]);
+            // Print forward slashes instead of using them as submenu separators.
+            // Replaces the slash with division character.
+            notebookNames[i] = notebookNames[i].Replace("/", " \u2215 ");
         }
         
         var index = EditorGUI.Popup(rect, "Notebooks", -1, notebookNames);
