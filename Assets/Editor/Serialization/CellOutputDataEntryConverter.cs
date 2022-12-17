@@ -16,7 +16,11 @@ namespace Editor.Serialization
 
         public override Notebook.CellOutputDataEntry ReadJson(JsonReader reader, Type objectType, Notebook.CellOutputDataEntry existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            var obj = JObject.Load(reader);
+            var obj = JToken.Load(reader);
+            if (!obj.HasValues)
+            {
+                return new Notebook.CellOutputDataEntry();
+            }
             
             // var str = reader.ReadAsString();
             //

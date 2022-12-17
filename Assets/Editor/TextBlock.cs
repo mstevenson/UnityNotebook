@@ -1,12 +1,19 @@
+using UnityEngine;
+
 public class TextBlock
 {
-    private int _lineCount;
-    private static readonly int[] LineCharCounts = new int[1000];
-    private static readonly char[] Buffer = new char[100000];
+    public int LineCount { get; private set; }
+    public int CharacterCount { get; private set; }
+    private int[] _lineCharCounts = new int[1000];
+    private char[] _buffer = new char[100000];
     
     public void SetText(params string[] strings)
     {
-        _lineCount = 0;
+        _memoizedLines = null;
+        _memoizedString = null;
+        
+        CharacterCount = 0;
+        LineCount = 0;
         uint bufferIndex = 0;
         uint lineIndex = 0;
         ushort currentLineCharCount = 0;
@@ -19,12 +26,13 @@ public class TextBlock
                     continue;
                 }
                 bufferIndex++;
-                Buffer[bufferIndex] = c;
+                _buffer[bufferIndex] = c;
+                CharacterCount++;
                 currentLineCharCount++;
                 if (c == '\n')
                 {
-                    _lineCount++;
-                    LineCharCounts[lineIndex] = currentLineCharCount;
+                    LineCount++;
+                    _lineCharCounts[lineIndex] = currentLineCharCount;
                     currentLineCharCount = 0;
                     lineIndex++;
                 }
@@ -32,17 +40,33 @@ public class TextBlock
         }
     }
 
+    private string[] _memoizedLines;
     public string[] GetLines()
     {
-        var lines = new string[_lineCount];
-        var bufferIndex = 0;
-        for (var lineIndex = 0; lineIndex < _lineCount; lineIndex++)
+        if (_memoizedLines != null)
         {
-            var lineCharCount = LineCharCounts[lineIndex];
-            var line = new string(Buffer, bufferIndex, lineCharCount);
-            lines[lineIndex] = line;
+            return _memoizedLines;
+        }
+        _memoizedLines = new string[LineCount];
+        var bufferIndex = 0;
+        for (var lineIndex = 0; lineIndex < LineCount; lineIndex++)
+        {
+            var lineCharCount = _lineCharCounts[lineIndex];
+            var line = new string(_buffer, bufferIndex, lineCharCount);
+            _memoizedLines[lineIndex] = line;
             bufferIndex += lineCharCount;
         }
-        return lines;
+        return _memoizedLines;
+    }
+
+    private string _memoizedString;
+    public override string ToString()
+    {
+        if (_memoizedString != null)
+        {
+            return _memoizedString;
+        }
+        _memoizedString = new string(_buffer, 0, CharacterCount);
+        return _memoizedString;
     }
 }

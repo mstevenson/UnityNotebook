@@ -14,6 +14,7 @@ public class NotebookImporter : ScriptedImporter
 {
     public override void OnImportAsset(AssetImportContext ctx)
     {
+        Debug.Log("import asset");
         var json = System.IO.File.ReadAllText(ctx.assetPath);
         var notebook = JsonConvert.DeserializeObject<Notebook>(json);
         ctx.AddObjectToAsset("main", notebook);
@@ -22,12 +23,40 @@ public class NotebookImporter : ScriptedImporter
 }
 
 [JsonConverter(typeof(NotebookConverter))]
-public class Notebook : ScriptableObject
+public class Notebook : ScriptableObject, ISerializationCallbackReceiver
 {
     public int format = 4;
     public int formatMinor;
     public Metadata metadata;
     public List<Cell> cells = new();
+    
+    public void OnBeforeSerialize()
+    {
+        // foreach (var cell in cells)
+        // {
+        //     if (cell.textBlock != null && cell.textBlock.CharacterCount > 0)
+        //     {
+        //         cell.source = cell.textBlock.GetLines();
+        //     }
+        // }
+        
+        // TODO write to json file?
+        // Will this trigger a reimport loop?
+        
+    }
+
+    public void OnAfterDeserialize()
+    {
+        // foreach (var cell in cells)
+        // {
+        //     if (cell.textBlock == null)
+        //     {
+        //         cell.textBlock = new TextBlock();
+        //     }
+        //     cell.textBlock.SetText(cell.source);
+        //     Debug.Log("Characters: " + cell.textBlock.CharacterCount);
+        // }
+    }
 
     public static Notebook CreateAsset(string path)
     {
@@ -36,15 +65,6 @@ public class Notebook : ScriptableObject
         System.IO.File.WriteAllText(path, json);
         AssetDatabase.ImportAsset(path);
         return AssetDatabase.LoadAssetAtPath<Notebook>(path);
-    }
-
-    public void Save()
-    {
-        var assetPath = AssetDatabase.GetAssetPath(this);
-        var json = JsonConvert.SerializeObject(this);
-        System.IO.File.WriteAllText(assetPath, json);
-        AssetDatabase.SaveAssets();
-        AssetDatabase.Refresh();
     }
 
     [Serializable]
@@ -76,8 +96,28 @@ public class Notebook : ScriptableObject
         public List<CellOutput> outputs = new();
         
         // UI rendering
-        [NonSerialized] public MarkdownViewer markdownViewer;
-        [NonSerialized] public TextBlock textBlock;
+        private MarkdownViewer markdownViewer;
+        private TextBlock textBlock;
+
+        public string GetSource()
+        {
+            if (textBlock == null)
+            {
+                textBlock = new TextBlock();
+                textBlock.SetText(source);
+            }
+            return textBlock.ToString();
+        }
+
+        public void SetSource(string code)
+        {
+            if (textBlock == null)
+            {
+                textBlock = new TextBlock();
+            }
+            // textBlock.SetText(code);
+            // source = textBlock.GetLines();
+        }
     }
     
     public enum AutoScroll { True, False, Auto }
@@ -88,7 +128,7 @@ public class Notebook : ScriptableObject
     {
         public bool collapsed;
         public AutoScroll autoscroll;
-        public bool deletable;
+        public bool deletable = true;
         // TODO support Raw NBConvert Cell
         public string format; // The mime-type of a Raw NBConvert Cell
         public string name;

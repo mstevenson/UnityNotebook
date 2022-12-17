@@ -192,10 +192,11 @@ public class NotebookWindow : EditorWindow
             var path = AssetDatabase.GetAssetPath(_notebook);
             foreach (var cell in _notebook.cells)
             {
-                if (cell.cellType == Notebook.CellType.Markdown)
-                {
-                    cell.markdownViewer = new MarkdownViewer(EditorGUIUtility.isProSkin ? MarkdownSkinDark : MarkdownSkinLight, path, string.Concat(cell.source));
-                }
+                // TODO markdown
+                // if (cell.cellType == Notebook.CellType.Markdown)
+                // {
+                //     cell.markdownViewer = new MarkdownViewer(EditorGUIUtility.isProSkin ? MarkdownSkinDark : MarkdownSkinLight, path, cell.textBlock);
+                // }
             }
         }
     }
@@ -204,49 +205,51 @@ public class NotebookWindow : EditorWindow
     {
         EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-        if (Evaluator.IsRunning)
+        using (new EditorGUI.DisabledScope(_notebook == null))
         {
-            if (GUILayout.Button("Stop", EditorStyles.toolbarButton, GUILayout.Width(40)))
+            if (Evaluator.IsRunning)
             {
-                Evaluator.Stop();
-            }
-        }
-        if (_notebook == null)
-        {
-            GUI.enabled = false;
-        }
-        if (!Evaluator.IsRunning && GUILayout.Button("Run", EditorStyles.toolbarButton, GUILayout.Width(40)))
-        {
-            foreach (var cell in _notebook.cells)
-            {
-                if (cell.cellType == Notebook.CellType.Code)
+                if (GUILayout.Button("Stop", EditorStyles.toolbarButton, GUILayout.Width(40)))
                 {
-                    Evaluator.Execute(cell);
+                    Evaluator.Stop();
                 }
             }
-        }
-        EditorGUILayout.Space();
-        if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
-        {
-            Undo.RecordObject(_notebook, "Clear All Output");
-            foreach (var cell in _notebook.cells)
+            if (!Evaluator.IsRunning && GUILayout.Button("Run", EditorStyles.toolbarButton, GUILayout.Width(40)))
             {
-                cell.outputs.Clear();
+                foreach (var cell in _notebook.cells)
+                {
+                    if (cell.cellType == Notebook.CellType.Code)
+                    {
+                        Evaluator.Execute(cell);
+                    }
+                }
+            }
+            if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
+            {
+                Undo.RecordObject(_notebook, "Clear All Output");
+                foreach (var cell in _notebook.cells)
+                {
+                    cell.outputs.Clear();
+                }
+            }
+            if (GUILayout.Button("Restart", EditorStyles.toolbarButton))
+            {
+                Debug.Log("Restart");
+            }
+            
+            EditorGUILayout.Space();
+        
+            if (GUILayout.Button("Save", EditorStyles.toolbarButton))
+            {
+                EditorUtility.SetDirty(_notebook);
+                AssetDatabase.SaveAssets();
+            }
+            if (GUILayout.Button("Edit", EditorStyles.toolbarButton))
+            {
+                AssetDatabase.OpenAsset(_notebook);
             }
         }
-        if (GUILayout.Button("Restart", EditorStyles.toolbarButton))
-        {
-            Debug.Log("Restart");
-        }
-        EditorGUILayout.Space();
-        if (GUILayout.Button("Edit", EditorStyles.toolbarButton))
-        {
-            // var path = AssetDatabase.GetAssetPath(_notebook);
-            AssetDatabase.OpenAsset(_notebook);
-        }
-        
-        GUI.enabled = true;
-        
+
         GUILayout.FlexibleSpace();
         DrawNotebookSelector();
         EditorGUILayout.EndHorizontal();
@@ -345,12 +348,6 @@ public class NotebookWindow : EditorWindow
     
     private static void DrawCell(Notebook notebook, Notebook.Cell cell)
     {
-        if (cell.textBlock == null)
-        {
-            cell.textBlock = new TextBlock();
-            cell.textBlock.SetText(cell.source);
-        }
-        
         switch (cell.cellType)
         {
             case Notebook.CellType.Code:
@@ -440,19 +437,19 @@ public class NotebookWindow : EditorWindow
             Evaluator.Execute(cell);
             Event.current.Use();
         }
-        
-        // TODO edit text directly as array of string in cell.source
-        var text = string.Concat(cell.source);
+
+        var text = cell.GetSource();
         
         // Code window
         GUI.SetNextControlName("code");
-        text = GUILayout.TextArea(text, _codeStyle);
+        
+        var newText = GUILayout.TextArea(text, _codeStyle);
         var editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
         
         // Tab key inserts spaces
         if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Tab)
         {
-            text = text.Insert(editor.cursorIndex, "    ");
+            newText = newText.Insert(editor.cursorIndex, "    ");
             caretPos = editor.cursorIndex + 4;
         }
         if (Event.current.keyCode == KeyCode.Tab && Event.current.type == EventType.KeyUp)
@@ -466,6 +463,13 @@ public class NotebookWindow : EditorWindow
             editor.cursorIndex = caretPos;
             editor.selectIndex = caretPos;
             _tabPressed = false;
+        }
+        
+        // Update cell code
+        if (newText != text)
+        {
+            Debug.Log("update");
+            cell.SetSource(newText);
         }
     }
 }
