@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using MG.MDV;
 using UnityEngine;
@@ -176,6 +177,68 @@ public class Notebook : ScriptableObject
         public string evalue;
         public List<string> traceback = new();
 
+        public static CellOutput Stream(string name, IEnumerable<string> text)
+        {
+            var output = new CellOutput
+            {
+                outputType = OutputType.Stream,
+                name = name,
+                text = text.ToList()
+            };
+            return output;
+        }
+
+        public static CellOutput Exception(Exception exception)
+        {
+            var output = new CellOutput
+            {
+                outputType = OutputType.Error,
+                ename = exception.GetType().Name,
+                evalue = exception.Message,
+                traceback = new List<string>(exception.StackTrace.Split('\n'))
+            };
+            return output;
+        }
+        
+        public static CellOutput DisplayData(string text)
+        {
+            var output = new CellOutput
+            {
+                outputType = OutputType.DisplayData,
+                data = new List<CellOutputDataEntry>
+                {
+                    new("text/plain", text)
+                }
+            };
+            return output;
+        }
+        
+        public static CellOutput DisplayData(Texture2D texture)
+        {
+            var output = new CellOutput
+            {
+                outputType = OutputType.DisplayData,
+                data = new List<CellOutputDataEntry>
+                {
+                    new("image/png", texture.EncodeToPNG())
+                }
+            };
+            return output;
+        }
+
+        public static CellOutput DisplayData<T>(T value)
+        {
+            var output = new CellOutput
+            {
+                outputType = OutputType.DisplayData,
+                data = new List<CellOutputDataEntry>
+                {
+                    new("text/plain", value.ToString())
+                }
+            };
+            return output;
+        }
+
         public static CellOutput Parse(JToken rawOutput)
         {
             var output = new CellOutput();
@@ -224,6 +287,23 @@ public class Notebook : ScriptableObject
         public string mimeType;
         public List<string> stringData = new();
         public Texture2D imageData;
+
+        private CellOutputDataEntry()
+        {
+        }
+        
+        public CellOutputDataEntry(string mimeType, string data)
+        {
+            this.mimeType = mimeType;
+            stringData.Add(data);
+        }
+        
+        public CellOutputDataEntry(string mimeType, byte[] imageData)
+        {
+            this.mimeType = mimeType;
+            this.imageData = new Texture2D(2, 2);
+            this.imageData.LoadImage(imageData);
+        }
 
         public static CellOutputDataEntry Parse(KeyValuePair<string, JToken> rawOutputData)
         {

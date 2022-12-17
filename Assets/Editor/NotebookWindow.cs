@@ -186,7 +186,7 @@ public class NotebookWindow : EditorWindow
             {
                 if (cell.cellType == Notebook.CellType.Markdown)
                 {
-                    cell.markdownViewer = new MarkdownViewer(EditorGUIUtility.isProSkin ? MarkdownSkinDark : MarkdownSkinLight, path, string.Join(null, cell.source));
+                    cell.markdownViewer = new MarkdownViewer(EditorGUIUtility.isProSkin ? MarkdownSkinDark : MarkdownSkinLight, path, string.Concat(cell.source));
                 }
             }
         }
@@ -213,7 +213,7 @@ public class NotebookWindow : EditorWindow
             {
                 if (cell.cellType == Notebook.CellType.Code)
                 {
-                    Evaluator.Evaluate(cell);
+                    Evaluator.Execute(cell);
                 }
             }
         }
@@ -352,7 +352,7 @@ public class NotebookWindow : EditorWindow
     {
         // TODO draw markdown
         // cell.markdownViewer.Draw();
-        var text = string.Join(null, cell.source);
+        var text = string.Concat(cell.source);
         EditorGUILayout.TextArea(text, _textStyle);
     }
     
@@ -361,7 +361,7 @@ public class NotebookWindow : EditorWindow
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("▶", GUILayout.Width(20), GUILayout.Height(20)))
         {
-            Execute(cell);
+            Evaluator.Execute(cell);
         }
         GUILayout.BeginVertical();
         DrawCodeEditor(cell, ref _caretPos);
@@ -375,7 +375,6 @@ public class NotebookWindow : EditorWindow
             {
                 Undo.RecordObject(notebook, "Clear Output");
                 cell.outputs.Clear();
-                Execute(cell);
             }
             GUILayout.BeginVertical();
             DrawOutput(cell);
@@ -391,13 +390,13 @@ public class NotebookWindow : EditorWindow
             switch (output.outputType)
             {
                 case Notebook.OutputType.Stream:
-                    EditorGUILayout.TextArea(string.Join(null, output.text), _textStyleNoBackground);
+                    EditorGUILayout.TextArea(string.Concat(output.text), _textStyleNoBackground);
                     break;
                 case Notebook.OutputType.DisplayData:
                 case Notebook.OutputType.ExecuteResult:
                     foreach (var data in output.data)
                     {
-                        EditorGUILayout.TextArea(string.Join(null, data.stringData), _textStyleNoBackground);
+                        EditorGUILayout.TextArea(string.Concat(data.stringData), _textStyleNoBackground);
                     }
                     break;
                 // TODO parse terminal control codes, set colors
@@ -408,7 +407,7 @@ public class NotebookWindow : EditorWindow
                     // GUILayout.Label(output.evalue);
                     GUI.color = c;
                     // TODO convert ANSI escape sequences to HTML tags
-                    var str = string.Join(null, output.traceback);
+                    var str = string.Concat(output.traceback);
                     EditorGUILayout.TextArea(str, _codeStyleNoBackground);
                     break;
                 default:
@@ -424,12 +423,12 @@ public class NotebookWindow : EditorWindow
         // Execute code
         if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return && Event.current.shift)
         {
-            Execute(cell);
+            Evaluator.Execute(cell);
             Event.current.Use();
         }
         
         // TODO edit text directly as array of string in cell.source
-        var text = string.Join(null, cell.source);
+        var text = string.Concat(cell.source);
         
         // Code window
         GUI.SetNextControlName("code");
@@ -454,10 +453,5 @@ public class NotebookWindow : EditorWindow
             editor.selectIndex = caretPos;
             _tabPressed = false;
         }
-    }
-
-    private static void Execute(Notebook.Cell cell)
-    {
-        
     }
 }
