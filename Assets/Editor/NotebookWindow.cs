@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Editor;
 using MG.MDV;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -328,15 +329,15 @@ public class NotebookWindow : EditorWindow
     {
         // Add cell buttons
         rect = GUILayoutUtility.GetRect(0, 20, GUILayout.ExpandWidth(true));
-        var buttonRect = new Rect(rect.x + rect.width / 2 - 85, rect.y, 80, 20);
-        if (GUI.Button(buttonRect, "+ Code"))
+        var buttonRect = new Rect(rect.x + rect.width / 2 - 65, rect.y + 1, 60, 20);
+        if (GUI.Button(buttonRect, "+ Code", EditorStyles.miniButton))
         {
             Undo.RecordObject(notebook, "Add Code Cell");
             notebook.cells.Insert(cellIndex, new Notebook.Cell { cellType = Notebook.CellType.Code });
             return true;
         }
-        buttonRect.x += 85;
-        if (GUI.Button(buttonRect, "+ Text"))
+        buttonRect.x += 65;
+        if (GUI.Button(buttonRect, "+ Text", EditorStyles.miniButton))
         {
             Undo.RecordObject(notebook, "Add Text Cell");
             notebook.cells.Insert(cellIndex, new Notebook.Cell { cellType = Notebook.CellType.Markdown });
@@ -484,12 +485,13 @@ public class NotebookWindow : EditorWindow
             Event.current.Use();
         }
 
-        var text = cell.GetSource();
+        var codeRaw = cell.GetSource();
         
         // Code window
         GUI.SetNextControlName("code");
         
-        var newText = GUILayout.TextArea(text, _codeStyle);
+        var highlighted = cell.GetSourceHighlighted();
+        var newText = GUILayout.TextArea(highlighted, _codeStyle);
         var editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
         
         // Tab key inserts spaces
@@ -512,10 +514,10 @@ public class NotebookWindow : EditorWindow
         }
         
         // Update cell code
-        if (newText != text)
-        {
-            Debug.Log("update");
-            cell.SetSource(newText);
-        }
+        // if (newText != text)
+        // {
+        //     Debug.Log("update");
+        //     cell.SetSource(newText);
+        // }
     }
 }

@@ -119,7 +119,17 @@ public class Notebook : ScriptableObject, ISerializationCallbackReceiver
                 textBlock = new TextBlock();
                 textBlock.SetText(source);
             }
-            return textBlock.ToString();
+            return textBlock.RawString();
+        }
+
+        public string GetSourceHighlighted()
+        {
+            if (textBlock == null)
+            {
+                textBlock = new TextBlock();
+                textBlock.SetText(source);
+            }
+            return textBlock.HighlightedString();
         }
 
         public void SetSource(string code)

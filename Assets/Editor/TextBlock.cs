@@ -1,3 +1,4 @@
+using Editor;
 using UnityEngine;
 
 public class TextBlock
@@ -7,6 +8,10 @@ public class TextBlock
     private int[] _lineCharCounts = new int[1000];
     private char[] _buffer = new char[100000];
     
+    private string[] _memoizedLines;
+    private string _memoizedRawString;
+    private string _memoizedHighlighting;
+    
     public void SetText(params string[] strings)
     {
         if (strings == null)
@@ -14,7 +19,8 @@ public class TextBlock
             return;
         }
         _memoizedLines = null;
-        _memoizedString = null;
+        _memoizedRawString = null;
+        _memoizedHighlighting = null;
         
         CharacterCount = 0;
         LineCount = 0;
@@ -43,8 +49,7 @@ public class TextBlock
             }
         }
     }
-
-    private string[] _memoizedLines;
+    
     public string[] GetLines()
     {
         if (_memoizedLines != null)
@@ -62,15 +67,24 @@ public class TextBlock
         }
         return _memoizedLines;
     }
-
-    private string _memoizedString;
-    public override string ToString()
+    
+    public string RawString()
     {
-        if (_memoizedString != null)
+        if (_memoizedRawString != null)
         {
-            return _memoizedString;
+            return _memoizedRawString;
         }
-        _memoizedString = new string(_buffer, 0, CharacterCount);
-        return _memoizedString;
+        _memoizedRawString = new string(_buffer, 0, CharacterCount);
+        return _memoizedRawString;
+    }
+
+    public string HighlightedString()
+    {
+        if (_memoizedHighlighting != null)
+        {
+            return _memoizedHighlighting;
+        }
+        _memoizedHighlighting = SyntaxHighlighting.SyntaxToHtml(RawString());
+        return _memoizedHighlighting;
     }
 }
