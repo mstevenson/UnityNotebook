@@ -74,9 +74,10 @@ public class NotebookWindow : EditorWindow
         OpenedNotebook = notebook;
     }
 
-    private void OnDisable()
+    private void OnEnable()
     {
-        ChangeNotebook(null);
+        Debug.Log(NotebookWindowData.instance.openedNotebook);
+        ChangeNotebook(NotebookWindowData.instance.openedNotebook);
     }
 
     private void OnGUI()
