@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using Editor;
 using UnityEditor;
 using UnityEngine;
@@ -29,11 +30,17 @@ public class Evaluator
                     Assemblies.Add(assembly);
                 }
             }
-            _options = ScriptOptions.Default.WithReferences(Assemblies).WithImports("UnityEngine", "UnityEditor", "System", "System.Collections", "System.Collections.Generic");
+            var imports = new[] { "UnityEngine", "UnityEditor", "System", "System.Collections", "System.Collections.Generic" };
+            _options = ScriptOptions.Default.WithReferences(Assemblies).WithImports(imports);
         }
     }
-    
-    public static async void Execute(Notebook notebook, Notebook.Cell cell)
+
+    public static void Execute(Notebook notebook, Notebook.Cell cell)
+    {
+        Task.Run(() => ExecuteInternal(notebook, cell));
+    }
+
+    private static async Task ExecuteInternal(Notebook notebook, Notebook.Cell cell)
     {
         // cancel the current token from notebook.cancellationTokenSource if it exists
         notebook.cancellationTokenSource?.Cancel();
@@ -46,13 +53,11 @@ public class Evaluator
         {
             if (notebook.scriptState == null)
             {
-                notebook.scriptState = await CSharpScript.RunAsync(string.Concat(cell.source), _options,
-                    cancellationToken: cancellationToken);
+                notebook.scriptState = await CSharpScript.RunAsync(string.Concat(cell.source), _options, cancellationToken: cancellationToken);
             }
             else
             {
-                notebook.scriptState = await notebook.scriptState.ContinueWithAsync(string.Concat(cell.source),
-                    _options, cancellationToken: cancellationToken);
+                notebook.scriptState = await notebook.scriptState.ContinueWithAsync(string.Concat(cell.source), _options, cancellationToken: cancellationToken);
             }
             if (notebook.scriptState.Exception != null)
             {
