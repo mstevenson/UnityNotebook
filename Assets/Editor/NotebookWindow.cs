@@ -29,16 +29,22 @@ public class NotebookWindow : EditorWindow
     private static bool _tabPressed;
     private static int _caretPos;
     
-    private Notebook _notebook;
+    private static bool _openExternally;
 
-    private static Vector2 _scroll;
+    private static Notebook OpenedNotebook
+    {
+        get => NotebookWindowData.instance.openedNotebook;
+        set
+        {
+            NotebookWindowData.instance.openedNotebook = value;
+            NotebookWindowData.instance.Save();
+        }
+    }
 
-    public static bool openExternally;
-    
     [OnOpenAsset]
     public static bool OnOpenAsset(int instanceID, int line)
     {
-        if (openExternally)
+        if (_openExternally)
         {
             return false;
         }
@@ -54,18 +60,18 @@ public class NotebookWindow : EditorWindow
         }
         var notebook = AssetDatabase.LoadAssetAtPath<Notebook>(path);
         var wnd = Init();
-        wnd._notebook = notebook;
+        OpenedNotebook = notebook;
         return true;
     }
 
     public void ChangeNotebook(Notebook notebook)
     {
-        if (_notebook != null)
+        if (OpenedNotebook != null)
         {
             // TODO Save notebook
-            _notebook.cancellationTokenSource?.Cancel();
+            OpenedNotebook.IsRunning = false;
         }
-        _notebook = notebook;
+        OpenedNotebook = notebook;
     }
 
     private void OnDisable()
@@ -140,13 +146,13 @@ public class NotebookWindow : EditorWindow
         
         DrawToolbar();
         
-        if (_notebook == null)
+        if (OpenedNotebook == null)
         {
             DrawCreateNotebook();
         }
         else
         {
-            DrawNotebook(_notebook);
+            DrawNotebook(OpenedNotebook);
         }
     }
 
@@ -225,18 +231,18 @@ public class NotebookWindow : EditorWindow
     private void DrawNotebookSelector()
     {
         EditorGUI.BeginChangeCheck();
-        var nb = EditorGUILayout.ObjectField(_notebook, typeof(Notebook), true) as Notebook;
+        var nb = EditorGUILayout.ObjectField(OpenedNotebook, typeof(Notebook), true) as Notebook;
         if (EditorGUI.EndChangeCheck())
         {
             ChangeNotebook(nb);
             _caretPos = 0;
-            if (_notebook == null)
+            if (OpenedNotebook == null)
             {
                 return;
             }
             // get asset path
-            var path = AssetDatabase.GetAssetPath(_notebook);
-            foreach (var cell in _notebook.cells)
+            var path = AssetDatabase.GetAssetPath(OpenedNotebook);
+            foreach (var cell in OpenedNotebook.cells)
             {
                 // TODO markdown
                 // if (cell.cellType == Notebook.CellType.Markdown)
@@ -251,60 +257,61 @@ public class NotebookWindow : EditorWindow
     {
         EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-        using (new EditorGUI.DisabledScope(_notebook == null))
+        using (new EditorGUI.DisabledScope(OpenedNotebook == null))
         {
-            if (_notebook != null && _notebook.IsRunning)
+            if (OpenedNotebook != null && OpenedNotebook.IsRunning)
             {
                 if (GUILayout.Button("Stop", EditorStyles.toolbarButton, GUILayout.Width(40)))
                 {
-                    Evaluator.Stop(_notebook);
+                    Debug.Log("not implemented");
+                    // Evaluator.Stop(OpenedNotebook);
                 }
             }
             else
             {
                 if (GUILayout.Button("Run", EditorStyles.toolbarButton, GUILayout.Width(40)))
                 {
-                    foreach (var cell in _notebook.cells)
+                    foreach (var cell in OpenedNotebook.cells)
                     {
                         if (cell.cellType == Notebook.CellType.Code)
                         {
-                            Execute(_notebook, cell);
+                            Execute(OpenedNotebook, cell);
                         }
                     }
                 }
             }
-            using (new EditorGUI.DisabledScope(_notebook == null || _notebook.IsRunning))
+            using (new EditorGUI.DisabledScope(OpenedNotebook == null || OpenedNotebook.IsRunning))
             {
                 if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
                 {
-                    Undo.RecordObject(_notebook, "Clear All Output");
-                    foreach (var cell in _notebook.cells)
+                    Undo.RecordObject(OpenedNotebook, "Clear All Output");
+                    foreach (var cell in OpenedNotebook.cells)
                     {
                         cell.outputs.Clear();
                     }
                 }
                 if (GUILayout.Button("Restart", EditorStyles.toolbarButton))
                 {
-                    _notebook.scriptState = null;
+                    OpenedNotebook.scriptState = null;
                 }
             
                 EditorGUILayout.Space();
         
                 if (GUILayout.Button("Save", EditorStyles.toolbarButton))
                 {
-                    EditorUtility.SetDirty(_notebook);
+                    EditorUtility.SetDirty(OpenedNotebook);
                     AssetDatabase.SaveAssets();
                 }
                 if (GUILayout.Button("Edit", EditorStyles.toolbarButton))
                 {
-                    openExternally = true;
-                    AssetDatabase.OpenAsset(_notebook);
-                    openExternally = false;
+                    _openExternally = true;
+                    AssetDatabase.OpenAsset(OpenedNotebook);
+                    _openExternally = false;
                 }
             }
         }
 
-        using (new EditorGUI.DisabledScope(_notebook != null && _notebook.IsRunning))
+        using (new EditorGUI.DisabledScope(OpenedNotebook != null && OpenedNotebook.IsRunning))
         {
             GUILayout.FlexibleSpace();
             DrawNotebookSelector();
@@ -322,7 +329,7 @@ public class NotebookWindow : EditorWindow
     private void DoRepaint()
     {
         Repaint();
-        if (_notebook != null && !_notebook.IsRunning)
+        if (OpenedNotebook != null && !OpenedNotebook.IsRunning)
         {
             EditorApplication.update -= DoRepaint;
         }
@@ -335,7 +342,7 @@ public class NotebookWindow : EditorWindow
             return;
         }
         
-        _scroll = EditorGUILayout.BeginScrollView(_scroll, false, false);
+        NotebookWindowData.instance.scroll = EditorGUILayout.BeginScrollView(NotebookWindowData.instance.scroll, false, false);
         
         var cellCount = notebook.cells.Count;
         var cellIndex = 0;
@@ -450,7 +457,8 @@ public class NotebookWindow : EditorWindow
         {
             if (GUILayout.Button("■", GUILayout.Width(20), GUILayout.Height(20)))
             {
-                Evaluator.Stop(notebook);
+                Debug.Log("not implemented");
+                // Evaluator.Stop(notebook);
             }
         }
         else

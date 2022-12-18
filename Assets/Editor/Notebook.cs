@@ -7,21 +7,8 @@ using Microsoft.CodeAnalysis.Scripting;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEditor;
-using UnityEditor.AssetImporters;
 
 // https://ipython.org/ipython-doc/3/notebook/nbformat.html
-
-[ScriptedImporter(1, "ipynb")]
-public class NotebookImporter : ScriptedImporter
-{
-    public override void OnImportAsset(AssetImportContext ctx)
-    {
-        var json = System.IO.File.ReadAllText(ctx.assetPath);
-        var notebook = JsonConvert.DeserializeObject<Notebook>(json);
-        ctx.AddObjectToAsset("main", notebook);
-        ctx.SetMainObject(notebook);
-    }
-}
 
 [JsonConverter(typeof(NotebookConverter))]
 public class Notebook : ScriptableObject, ISerializationCallbackReceiver
@@ -32,9 +19,8 @@ public class Notebook : ScriptableObject, ISerializationCallbackReceiver
     public List<Cell> cells = new();
     
     [NonSerialized] public ScriptState scriptState;
-    [NonSerialized] public CancellationTokenSource cancellationTokenSource;
     
-    public bool IsRunning => cancellationTokenSource is {IsCancellationRequested: false};
+    public bool IsRunning { get; set; }
 
     public void OnBeforeSerialize()
     {

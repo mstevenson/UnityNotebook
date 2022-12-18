@@ -37,27 +37,25 @@ public class Evaluator
 
     public static void Execute(Notebook notebook, Notebook.Cell cell)
     {
+        notebook.IsRunning = true;
         Task.Run(() => ExecuteInternal(notebook, cell));
     }
 
     private static async Task ExecuteInternal(Notebook notebook, Notebook.Cell cell)
     {
         // cancel the current token from notebook.cancellationTokenSource if it exists
-        notebook.cancellationTokenSource?.Cancel();
-        notebook.cancellationTokenSource = new CancellationTokenSource();
-        var cancellationToken = notebook.cancellationTokenSource.Token;
-
+        
         Init();
         cell.outputs.Clear();
         try
         {
             if (notebook.scriptState == null)
             {
-                notebook.scriptState = await CSharpScript.RunAsync(string.Concat(cell.source), _options, cancellationToken: cancellationToken);
+                notebook.scriptState = await CSharpScript.RunAsync(string.Concat(cell.source), _options);
             }
             else
             {
-                notebook.scriptState = await notebook.scriptState.ContinueWithAsync(string.Concat(cell.source), _options, cancellationToken: cancellationToken);
+                notebook.scriptState = await notebook.scriptState.ContinueWithAsync(string.Concat(cell.source), _options);
             }
             if (notebook.scriptState.Exception != null)
             {
@@ -83,19 +81,7 @@ public class Evaluator
         }
         finally
         {
-            notebook.cancellationTokenSource = null;
-        }
-    }
-    
-    public static void Stop(Notebook notebook)
-    {
-        if (notebook.cancellationTokenSource == null)
-        {
-            return;
-        }
-        if (notebook.cancellationTokenSource.Token.CanBeCanceled)
-        {
-            notebook.cancellationTokenSource.Cancel();
+            notebook.IsRunning = false;
         }
     }
 }
