@@ -16,7 +16,6 @@ public class NotebookImporter : ScriptedImporter
 {
     public override void OnImportAsset(AssetImportContext ctx)
     {
-        Debug.Log("import asset");
         var json = System.IO.File.ReadAllText(ctx.assetPath);
         var notebook = JsonConvert.DeserializeObject<Notebook>(json);
         ctx.AddObjectToAsset("main", notebook);
