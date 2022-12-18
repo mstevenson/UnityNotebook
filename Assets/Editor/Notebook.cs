@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Editor.Serialization;
 using MG.MDV;
+using Microsoft.CodeAnalysis.Scripting;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEditor;
@@ -30,6 +32,11 @@ public class Notebook : ScriptableObject, ISerializationCallbackReceiver
     public Metadata metadata;
     public List<Cell> cells = new();
     
+    [NonSerialized] public ScriptState scriptState;
+    [NonSerialized] public CancellationTokenSource cancellationTokenSource;
+    
+    public bool IsRunning => cancellationTokenSource is {IsCancellationRequested: false};
+
     public void OnBeforeSerialize()
     {
         // foreach (var cell in cells)

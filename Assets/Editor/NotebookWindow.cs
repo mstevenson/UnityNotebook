@@ -31,10 +31,16 @@ public class NotebookWindow : EditorWindow
     private Notebook _notebook;
 
     private static Vector2 _scroll;
+
+    public static bool openExternally;
     
     [OnOpenAsset]
     public static bool OnOpenAsset(int instanceID, int line)
     {
+        if (openExternally)
+        {
+            return false;
+        }
         var target = EditorUtility.InstanceIDToObject(instanceID);
         if (target is not Notebook)
         {
@@ -229,46 +235,54 @@ public class NotebookWindow : EditorWindow
 
         using (new EditorGUI.DisabledScope(_notebook == null))
         {
-            if (Evaluator.IsRunning)
+            if (_notebook != null && _notebook.IsRunning)
             {
                 if (GUILayout.Button("Stop", EditorStyles.toolbarButton, GUILayout.Width(40)))
                 {
-                    Evaluator.Stop();
+                    Evaluator.Stop(_notebook);
                 }
             }
-            if (!Evaluator.IsRunning && GUILayout.Button("Run", EditorStyles.toolbarButton, GUILayout.Width(40)))
+            else
             {
-                foreach (var cell in _notebook.cells)
+                if (GUILayout.Button("Run", EditorStyles.toolbarButton, GUILayout.Width(40)))
                 {
-                    if (cell.cellType == Notebook.CellType.Code)
+                    foreach (var cell in _notebook.cells)
                     {
-                        Evaluator.Execute(cell);
+                        if (cell.cellType == Notebook.CellType.Code)
+                        {
+                            Evaluator.Execute(_notebook, cell);
+                        }
                     }
                 }
             }
-            if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
+            using (new EditorGUI.DisabledScope(_notebook == null || _notebook.IsRunning))
             {
-                Undo.RecordObject(_notebook, "Clear All Output");
-                foreach (var cell in _notebook.cells)
+                if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
                 {
-                    cell.outputs.Clear();
+                    Undo.RecordObject(_notebook, "Clear All Output");
+                    foreach (var cell in _notebook.cells)
+                    {
+                        cell.outputs.Clear();
+                    }
                 }
-            }
-            if (GUILayout.Button("Restart", EditorStyles.toolbarButton))
-            {
-                Debug.Log("Restart");
-            }
+                if (GUILayout.Button("Restart", EditorStyles.toolbarButton))
+                {
+                    _notebook.scriptState = null;
+                }
             
-            EditorGUILayout.Space();
+                EditorGUILayout.Space();
         
-            if (GUILayout.Button("Save", EditorStyles.toolbarButton))
-            {
-                EditorUtility.SetDirty(_notebook);
-                AssetDatabase.SaveAssets();
-            }
-            if (GUILayout.Button("Edit", EditorStyles.toolbarButton))
-            {
-                AssetDatabase.OpenAsset(_notebook);
+                if (GUILayout.Button("Save", EditorStyles.toolbarButton))
+                {
+                    EditorUtility.SetDirty(_notebook);
+                    AssetDatabase.SaveAssets();
+                }
+                if (GUILayout.Button("Edit", EditorStyles.toolbarButton))
+                {
+                    openExternally = true;
+                    AssetDatabase.OpenAsset(_notebook);
+                    openExternally = false;
+                }
             }
         }
 
@@ -392,12 +406,22 @@ public class NotebookWindow : EditorWindow
     private static void DrawCodeCell(Notebook notebook, Notebook.Cell cell)
     {
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("▶", GUILayout.Width(20), GUILayout.Height(20)))
+        if (notebook.IsRunning)
         {
-            Evaluator.Execute(cell);
+            if (GUILayout.Button("■", GUILayout.Width(20), GUILayout.Height(20)))
+            {
+                Evaluator.Stop(notebook);
+            }
+        }
+        else
+        {
+            if (GUILayout.Button("▶", GUILayout.Width(20), GUILayout.Height(20)))
+            {
+                Evaluator.Execute(notebook, cell);
+            }
         }
         GUILayout.BeginVertical();
-        DrawCodeEditor(cell, ref _caretPos);
+        DrawCodeEditor(notebook, cell, ref _caretPos);
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
 
@@ -451,12 +475,12 @@ public class NotebookWindow : EditorWindow
     
     // https://answers.unity.com/questions/275973/find-cursor-position-in-a-textarea.html
     
-    private static void DrawCodeEditor(Notebook.Cell cell, ref int caretPos)
+    private static void DrawCodeEditor(Notebook notebook, Notebook.Cell cell, ref int caretPos)
     {
         // Execute code
         if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return && Event.current.shift)
         {
-            Evaluator.Execute(cell);
+            Evaluator.Execute(notebook, cell);
             Event.current.Use();
         }
 

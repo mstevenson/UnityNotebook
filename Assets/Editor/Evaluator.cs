@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.Scripting;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 using Editor;
 using UnityEditor;
 using UnityEngine;
@@ -12,8 +13,6 @@ using UnityEngine;
 
 public class Evaluator
 {
-    public static bool IsRunning { get; private set; }
-    
     private static readonly List<Assembly> Assemblies = new();
     private static ScriptOptions _options;
 
@@ -33,46 +32,65 @@ public class Evaluator
             _options = ScriptOptions.Default.WithReferences(Assemblies).WithImports("UnityEngine", "UnityEditor", "System", "System.Collections", "System.Collections.Generic");
         }
     }
-
-    public static void Execute(string code)
+    
+    public static async void Execute(Notebook notebook, Notebook.Cell cell)
     {
-        IsRunning = true;
-        Init();
-        CSharpScript.RunAsync(code, _options);
-        IsRunning = false;
-    }
+        // cancel the current token from notebook.cancellationTokenSource if it exists
+        notebook.cancellationTokenSource?.Cancel();
+        notebook.cancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = notebook.cancellationTokenSource.Token;
 
-    public static async void Execute(Notebook.Cell cell)
-    {
-        IsRunning = true;
         Init();
         cell.outputs.Clear();
-        var script = await CSharpScript.RunAsync(string.Concat(cell.source), _options);
-        IsRunning = false;
-        if (script.Exception != null)
+        try
         {
-            cell.outputs.Add(NotebookUtils.Exception(script.Exception));
-        }
-        else
-        {
-            switch (script.ReturnValue)
+            if (notebook.scriptState == null)
             {
-                case null:
-                    break;
-                case string str:
-                    cell.outputs.Add(NotebookUtils.DisplayData(str));
-                    break;
-                case Texture2D tex:
-                    cell.outputs.Add(NotebookUtils.DisplayData(tex));
-                    break;
-                default:
-                    cell.outputs.Add(NotebookUtils.DisplayData(script.ReturnValue));
-                    break;
+                notebook.scriptState = await CSharpScript.RunAsync(string.Concat(cell.source), _options,
+                    cancellationToken: cancellationToken);
             }
+            else
+            {
+                notebook.scriptState = await notebook.scriptState.ContinueWithAsync(string.Concat(cell.source),
+                    _options, cancellationToken: cancellationToken);
+            }
+            if (notebook.scriptState.Exception != null)
+            {
+                cell.outputs.Add(NotebookUtils.Exception(notebook.scriptState.Exception));
+            }
+            else
+            {
+                switch (notebook.scriptState.ReturnValue)
+                {
+                    case null:
+                        break;
+                    case string str:
+                        cell.outputs.Add(NotebookUtils.DisplayData(str));
+                        break;
+                    case Texture2D tex:
+                        cell.outputs.Add(NotebookUtils.DisplayData(tex));
+                        break;
+                    default:
+                        cell.outputs.Add(NotebookUtils.DisplayData(notebook.scriptState.ReturnValue));
+                        break;
+                }
+            }
+        }
+        finally
+        {
+            notebook.cancellationTokenSource = null;
         }
     }
     
-    public static void Stop()
+    public static void Stop(Notebook notebook)
     {
+        if (notebook.cancellationTokenSource == null)
+        {
+            return;
+        }
+        if (notebook.cancellationTokenSource.Token.CanBeCanceled)
+        {
+            notebook.cancellationTokenSource.Cancel();
+        }
     }
 }
