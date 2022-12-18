@@ -68,7 +68,7 @@ public class NotebookWindow : EditorWindow
                 wordWrap = true,
                 stretchHeight = false,
                 stretchWidth = true,
-                padding = new RectOffset(8, 8, 8, 8)
+                padding = new RectOffset(12, 12, 12, 12)
             };
         }
         if (_textStyleNoBackground == null)
@@ -94,7 +94,7 @@ public class NotebookWindow : EditorWindow
         {
             _codeStyle = new GUIStyle(GUI.skin.textArea)
             {
-                padding = new RectOffset(8, 8, 8, 8),
+                padding = new RectOffset(12, 12, 12, 12),
                 wordWrap = false,
                 clipping = TextClipping.Clip,
                 stretchHeight = false,
@@ -305,18 +305,21 @@ public class NotebookWindow : EditorWindow
         var cellIndex = 0;
         do
         {
-            if (DrawAddCellButtons(notebook, cellIndex, out var headerRect))
-            {
-                // added a cell, loop invalidated
-                break;
-            }
+            // TODO restore toolbar once editing works
+            GUILayout.Space(20);
+            // if (DrawAddCellButtons(notebook, cellIndex, out var headerRect))
+            // {
+            //     // added a cell, loop invalidated
+            //     break;
+            // }
             if (cellCount > 0)
             {
-                if (DrawCellToolbar(notebook, cellIndex, headerRect))
-                {
-                    // cells were modified, break out of the draw loop
-                    break;
-                }
+                // TODO restore toolbar once editing works
+                // if (DrawCellToolbar(notebook, cellIndex, headerRect))
+                // {
+                //     // cells were modified, break out of the draw loop
+                //     break;
+                // }
                 DrawCell(notebook, notebook.cells[cellIndex]);
             }
             cellIndex++;
