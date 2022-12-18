@@ -9,6 +9,10 @@ public class TextBlock
     
     public void SetText(params string[] strings)
     {
+        if (strings == null)
+        {
+            return;
+        }
         _memoizedLines = null;
         _memoizedString = null;
         
