@@ -400,7 +400,7 @@ public class NotebookWindow : EditorWindow
     {
         // TODO draw markdown
         // cell.markdownViewer.Draw();
-        var text = string.Concat(cell.source);
+        var text = cell.source == null ? string.Empty : string.Concat(cell.source);
         EditorGUILayout.TextArea(text, _textStyle);
     }
     
