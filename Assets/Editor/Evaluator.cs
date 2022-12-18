@@ -43,7 +43,7 @@ public class Evaluator
         ExecuteInternal(notebook, cell);
     }
 
-    private static async Task ExecuteInternal(Notebook notebook, Notebook.Cell cell)
+    private static async void ExecuteInternal(Notebook notebook, Notebook.Cell cell)
     {
         // cancel the current token from notebook.cancellationTokenSource if it exists
         
@@ -61,6 +61,7 @@ public class Evaluator
             }
             if (notebook.scriptState.Exception != null)
             {
+                Debug.LogError(notebook.scriptState.Exception.Message);
                 cell.outputs.Add(NotebookUtils.Exception(notebook.scriptState.Exception));
             }
             else
