@@ -38,7 +38,9 @@ public class Evaluator
     public static void Execute(Notebook notebook, Notebook.Cell cell)
     {
         notebook.IsRunning = true;
-        Task.Run(() => ExecuteInternal(notebook, cell));
+        // TODO can't call Unity APIs from a thread other than the main thread
+        // Task.Run(() => ExecuteInternal(notebook, cell));
+        ExecuteInternal(notebook, cell);
     }
 
     private static async Task ExecuteInternal(Notebook notebook, Notebook.Cell cell)
