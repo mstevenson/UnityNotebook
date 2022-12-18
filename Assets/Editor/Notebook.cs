@@ -28,8 +28,8 @@ public class NotebookImporter : ScriptedImporter
 public class Notebook : ScriptableObject, ISerializationCallbackReceiver
 {
     public int format = 4;
-    public int formatMinor;
-    public Metadata metadata;
+    public int formatMinor = 2;
+    public Metadata metadata = new();
     public List<Cell> cells = new();
     
     [NonSerialized] public ScriptState scriptState;
@@ -77,9 +77,15 @@ public class Notebook : ScriptableObject, ISerializationCallbackReceiver
     [Serializable]
     public class Metadata
     {
-        public string signature;
-        public string kernel_info;
-        public string language_info;
+        // TODO preserve existing metadata during deserialization / reserialization
+        public Kernelspec kernelspec = new();
+    }
+
+    public class Kernelspec
+    {
+        public string display_name = ".Net (C#)";
+        public string language = "C#";
+        public string name = ".net-csharp";
     }
     
     [Serializable]

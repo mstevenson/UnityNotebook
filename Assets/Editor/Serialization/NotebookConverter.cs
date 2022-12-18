@@ -14,7 +14,7 @@ namespace Editor.Serialization
             {
                 ["nbformat"] = value.format,
                 ["nbformat_minor"] = value.formatMinor,
-                // ["metadata"] = value.metadata != null ? JObject.FromObject(value.metadata) : null,
+                ["metadata"] = value.metadata != null ? JObject.FromObject(value.metadata) : null,
                 ["cells"] = new JArray(value.cells.Select(JsonConvert.SerializeObject))
             };
             nb.WriteTo(writer);
@@ -30,9 +30,9 @@ namespace Editor.Serialization
             var nb = hasExistingValue ? existingValue : ScriptableObject.CreateInstance<Notebook>();;
             
             nb.format = (obj["nbformat"] ?? 4).Value<int>();
-            nb.formatMinor = (obj["nbformat_minor"] ?? 0).Value<int>();
+            nb.formatMinor = (obj["nbformat_minor"] ?? 2).Value<int>();
             // TODO don't require all fields
-            // nb.metadata = obj["metadata"]?.ToObject<Notebook.Metadata>();
+            if (obj["metadata"] != null) nb.metadata = obj["metadata"].ToObject<Notebook.Metadata>();
             var cells = obj["cells"];
             if (cells != null)
             {
