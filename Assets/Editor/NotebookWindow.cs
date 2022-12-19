@@ -26,8 +26,8 @@ public class NotebookWindow : EditorWindow
     private static GUIStyle _textStyleNoBackground;
     private static GUIStyle _codeStyle;
     private static GUIStyle _codeStyleNoBackground;
-    private static bool _tabPressed;
-    private static int _caretPos;
+    
+    // private static int _caretPos;
     
     private static bool _openExternally;
 
@@ -236,7 +236,7 @@ public class NotebookWindow : EditorWindow
         if (EditorGUI.EndChangeCheck())
         {
             ChangeNotebook(nb);
-            _caretPos = 0;
+            // _caretPos = 0;
             if (OpenedNotebook == null)
             {
                 return;
@@ -470,7 +470,14 @@ public class NotebookWindow : EditorWindow
             }
         }
         GUILayout.BeginVertical();
-        DrawCodeEditor(notebook, cell, ref _caretPos);
+        
+        cell.rawText ??= string.Concat(cell.source);
+        CodeArea.Draw(ref cell.rawText, ref cell.highlightedText, _codeStyle);
+        if (GUI.changed)
+        {
+            cell.source = cell.rawText.Split(new[] { '\n' }, StringSplitOptions.None);
+        }
+        
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
 
@@ -520,52 +527,5 @@ public class NotebookWindow : EditorWindow
                     throw new ArgumentOutOfRangeException();
             }
         }
-    }
-    
-    // https://answers.unity.com/questions/275973/find-cursor-position-in-a-textarea.html
-    
-    private void DrawCodeEditor(Notebook notebook, Notebook.Cell cell, ref int caretPos)
-    {
-        // Execute code
-        if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return && Event.current.shift)
-        {
-            Execute(notebook, cell);
-            Event.current.Use();
-        }
-
-        var codeRaw = cell.GetSource();
-        
-        // Code window
-        GUI.SetNextControlName("code");
-        
-        var highlighted = cell.GetSourceHighlighted();
-        var newText = GUILayout.TextArea(highlighted, _codeStyle);
-        var editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
-        
-        // Tab key inserts spaces
-        if (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Tab)
-        {
-            newText = newText.Insert(editor.cursorIndex, "    ");
-            caretPos = editor.cursorIndex + 4;
-        }
-        if (Event.current.keyCode == KeyCode.Tab && Event.current.type == EventType.KeyUp)
-        {
-            GUI.FocusControl("code");
-            Event.current.Use();
-            _tabPressed = true;
-        }
-        if (Event.current.type == EventType.Layout && _tabPressed)
-        {
-            editor.cursorIndex = caretPos;
-            editor.selectIndex = caretPos;
-            _tabPressed = false;
-        }
-        
-        // Update cell code
-        // if (newText != text)
-        // {
-        //     Debug.Log("update");
-        //     cell.SetSource(newText);
-        // }
     }
 }

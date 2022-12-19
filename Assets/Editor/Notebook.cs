@@ -93,39 +93,10 @@ public class Notebook : ScriptableObject, ISerializationCallbackReceiver
         // code
         public List<CellOutput> outputs = new();
         
-        // UI rendering
-        private MarkdownViewer markdownViewer;
-        private TextBlock textBlock;
-
-        public string GetSource()
-        {
-            if (textBlock == null)
-            {
-                textBlock = new TextBlock();
-                textBlock.SetText(source);
-            }
-            return textBlock.RawString();
-        }
-
-        public string GetSourceHighlighted()
-        {
-            if (textBlock == null)
-            {
-                textBlock = new TextBlock();
-                textBlock.SetText(source);
-            }
-            return textBlock.HighlightedString();
-        }
-
-        public void SetSource(string code)
-        {
-            if (textBlock == null)
-            {
-                textBlock = new TextBlock();
-            }
-            // textBlock.SetText(code);
-            // source = textBlock.GetLines();
-        }
+        // UI
+        [NonSerialized] public MarkdownViewer markdownViewer;
+        [NonSerialized] public string rawText;
+        [NonSerialized] public string highlightedText = "";
     }
     
     public enum AutoScroll { True, False, Auto }
