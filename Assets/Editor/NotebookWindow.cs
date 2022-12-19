@@ -344,30 +344,29 @@ public class NotebookWindow : EditorWindow
         }
         
         NotebookWindowData.instance.scroll = EditorGUILayout.BeginScrollView(NotebookWindowData.instance.scroll, false, false);
+
+        EditorGUILayout.Space(2);
         
         var cellCount = notebook.cells.Count;
         var cellIndex = 0;
         do
         {
-            // TODO restore toolbar once editing works
-            GUILayout.Space(20);
-            // if (DrawAddCellButtons(notebook, cellIndex, out var headerRect))
-            // {
-            //     // added a cell, loop invalidated
-            //     break;
-            // }
-            if (cellCount > 0)
+            if (DrawAddCellButtons(notebook, cellIndex, out var headerRect))
             {
-                // TODO restore toolbar once editing works
-                // if (DrawCellToolbar(notebook, cellIndex, headerRect))
-                // {
-                //     // cells were modified, break out of the draw loop
-                //     break;
-                // }
+                // added a cell, loop invalidated
+                break;
+            }
+            if (cellCount > 0 && cellIndex < cellCount)
+            {
+                if (DrawCellToolbar(notebook, cellIndex, headerRect))
+                {
+                    // cells were modified, break out of the draw loop
+                    break;
+                }
                 DrawCell(notebook, notebook.cells[cellIndex]);
             }
             cellIndex++;
-        } while (cellIndex < cellCount);
+        } while (cellIndex < cellCount + 1);
         
         EditorGUILayout.EndScrollView();
     }
@@ -375,16 +374,16 @@ public class NotebookWindow : EditorWindow
     private static bool DrawAddCellButtons(Notebook notebook, int cellIndex, out Rect rect)
     {
         // Add cell buttons
-        rect = GUILayoutUtility.GetRect(0, 20, GUILayout.ExpandWidth(true));
-        var buttonRect = new Rect(rect.x + rect.width / 2 - 65, rect.y + 1, 60, 20);
-        if (GUI.Button(buttonRect, "+ Code", EditorStyles.miniButton))
+        rect = GUILayoutUtility.GetRect(0, 16, GUILayout.ExpandWidth(true));
+        var buttonRect = new Rect(rect.x + rect.width / 2 - 60, rect.y - 2, 60, 16);
+        if (GUI.Button(buttonRect, "+ Code", EditorStyles.toolbarButton))
         {
             Undo.RecordObject(notebook, "Add Code Cell");
             notebook.cells.Insert(cellIndex, new Notebook.Cell { cellType = Notebook.CellType.Code });
             return true;
         }
-        buttonRect.x += 65;
-        if (GUI.Button(buttonRect, "+ Text", EditorStyles.miniButton))
+        buttonRect.x += 60;
+        if (GUI.Button(buttonRect, "+ Text", EditorStyles.toolbarButton))
         {
             Undo.RecordObject(notebook, "Add Text Cell");
             notebook.cells.Insert(cellIndex, new Notebook.Cell { cellType = Notebook.CellType.Markdown });
@@ -396,7 +395,7 @@ public class NotebookWindow : EditorWindow
     private static bool DrawCellToolbar(Notebook notebook, int cellIndex, Rect rect)
     {
         // Cell toolbar
-        var toolbarRect = new Rect(rect.x + rect.width - 95, rect.y+4, 90, 20);
+        var toolbarRect = new Rect(rect.x + rect.width - 95, rect.y+2, 90, 20);
         toolbarRect.width = 30;
         GUI.enabled = cellIndex > 0;
         if (GUI.Button(toolbarRect, "▲", EditorStyles.miniButtonLeft))

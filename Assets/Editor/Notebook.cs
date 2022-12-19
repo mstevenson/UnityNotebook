@@ -88,7 +88,7 @@ public class Notebook : ScriptableObject, ISerializationCallbackReceiver
         // common
         public CellType cellType; // markdown, code
         public CellMetadata metadata; // empty object if its a markdown cell
-        public string[] source; // could be a single string or a list of strings
+        public string[] source = Array.Empty<string>(); // could be a single string or a list of strings
         
         // code
         public List<CellOutput> outputs = new();
