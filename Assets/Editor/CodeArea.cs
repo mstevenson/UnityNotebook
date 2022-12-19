@@ -5,7 +5,7 @@ using UnityEngine;
 
 public static class CodeArea
 {
-    public static void Draw(ref string rawText, ref string highlightedText, GUIStyle style, params GUILayoutOption[] options)
+    public static void Draw(ref string rawText, ref string highlightedText, SyntaxTheme theme, GUIStyle style, params GUILayoutOption[] options)
     {
         var controlId = GUIUtility.GetControlID(FocusType.Keyboard);
         var content = new GUIContent(rawText);
@@ -18,17 +18,17 @@ public static class CodeArea
         editor.multiline = true;
         editor.style = style;
         editor.DetectFocusChange();
-        HandleTextFieldEvent(rect, controlId, content, ref highlightedText, style, editor);
+        HandleTextFieldEvent(rect, controlId, content, ref highlightedText, theme, style, editor);
         editor.UpdateScrollOffsetIfNeeded(Event.current);
 
         rawText = content.text;
         
         // TODO only update highlighted text if gui changed
         
-        highlightedText = SyntaxHighlighting.SyntaxToHtml(rawText);
+        highlightedText = SyntaxHighlighting.SyntaxToHtml(rawText, theme);
     }
     
-    private static void HandleTextFieldEvent(Rect position, int id, GUIContent content, ref string highlightedText, GUIStyle style, TextEditor editor)
+    private static void HandleTextFieldEvent(Rect position, int id, GUIContent content, ref string highlightedText, SyntaxTheme theme, GUIStyle style, TextEditor editor)
     {
         var current = Event.current;
         var flag = false;
@@ -105,7 +105,7 @@ public static class CodeArea
                     break;
                 }
                 
-                highlightedText = SyntaxHighlighting.SyntaxToHtml(content.text);
+                highlightedText = SyntaxHighlighting.SyntaxToHtml(content.text, theme);
 
                 flag = true;
                 

@@ -471,15 +471,20 @@ public class NotebookWindow : EditorWindow
         GUILayout.BeginVertical();
         
         cell.rawText ??= string.Concat(cell.source);
-        CodeArea.Draw(ref cell.rawText, ref cell.highlightedText, _codeStyle);
+        var syntaxTheme = EditorGUIUtility.isProSkin ? SyntaxTheme.Dark : SyntaxTheme.Light;
+        CodeArea.Draw(ref cell.rawText, ref cell.highlightedText, syntaxTheme, _codeStyle);
         // split code area's text into separate lines to store in scriptable object
         if (GUI.changed)
         {
             cell.source = cell.rawText.Split('\n');
+            
             // add stripped newline char back onto each line
             for (var i = 0; i < cell.source.Length; i++)
             {
-                cell.source[i] += '\n';
+                if (i < cell.source.Length - 1)
+                {
+                    cell.source[i] += '\n';
+                }
             }
             EditorUtility.SetDirty(notebook);
         }
