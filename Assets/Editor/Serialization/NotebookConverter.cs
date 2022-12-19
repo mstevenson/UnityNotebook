@@ -1,5 +1,5 @@
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -28,17 +28,10 @@ namespace Editor.Serialization
                 return ScriptableObject.CreateInstance<Notebook>();
             }
             var nb = hasExistingValue ? existingValue : ScriptableObject.CreateInstance<Notebook>();;
-            
-            nb.format = (obj["nbformat"] ?? 4).Value<int>();
-            nb.formatMinor = (obj["nbformat_minor"] ?? 2).Value<int>();
-            // TODO don't require all fields
-            if (obj["metadata"] != null) nb.metadata = obj["metadata"].ToObject<Notebook.Metadata>();
-            var cells = obj["cells"];
-            if (cells != null)
-            {
-                nb.cells.AddRange(cells.ToObject<Notebook.Cell[]>());
-            }
-            
+            nb.format = obj["nbformat"]?.Value<int>() ?? 4;
+            nb.formatMinor = obj["nbformat_minor"]?.Value<int>() ?? 2;
+            nb.metadata = obj["metadata"]?.ToObject<Notebook.Metadata>() ?? new Notebook.Metadata();
+            nb.cells = obj["cells"]?.ToObject<List<Notebook.Cell>>() ?? new List<Notebook.Cell>();
             return nb;
         }
     }

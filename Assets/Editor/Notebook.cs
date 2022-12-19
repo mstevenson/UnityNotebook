@@ -67,6 +67,7 @@ public class Notebook : ScriptableObject
     {
         // common
         public CellType cellType; // markdown, code
+        public int executionCount;
         public CellMetadata metadata; // empty object if its a markdown cell
         public string[] source = Array.Empty<string>(); // could be a single string or a list of strings
         
@@ -110,7 +111,7 @@ public class Notebook : ScriptableObject
         // display data output or execute result output
         public List<CellOutputDataEntry> data = new(); // mime-type -> data, often text/plain, image/png, application/json
         public List<CellOutputMetadataEntry> metadata = new(); // mime-type -> metadata
-        
+
         // execute result output
         public int executionCount;
         

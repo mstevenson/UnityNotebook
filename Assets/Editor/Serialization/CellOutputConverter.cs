@@ -69,28 +69,28 @@ public class CellOutputConverter: JsonConverter<Notebook.CellOutput>
                 output.text = obj["text"]?.ToObject<List<string>>();
                 break;
             case ExecuteResult:
-                output.executionCount = (obj["execution_count"] ?? 0).Value<int>();
+                output.executionCount = obj["execution_count"]?.Value<int>() ?? 0;
                 break;
             case Error:
-                output.ename = obj["ename"]?.Value<string>();
-                output.evalue = obj["evalue"]?.Value<string>();
-                output.traceback = obj["traceback"]?.ToObject<List<string>>();
+                output.ename = obj["ename"]?.Value<string>() ?? string.Empty;
+                output.evalue = obj["evalue"]?.Value<string>() ?? string.Empty;
+                output.traceback = obj["traceback"]?.ToObject<List<string>>() ?? new List<string>();
                 break;
         }
         if (output.outputType is DisplayData or ExecuteResult)
         {
-            foreach (var (key, value) in obj["data"]?.ToObject<JObject>())
-            {
-                // TODO
-                // var entry = Notebook.CellOutputDataEntry.Parse(kvp);
-                // output.data.Add(entry);
-            }
-            foreach (var rawOutputMetadata in obj["metadata"]?.ToObject<JObject>())
-            {
-                // TODO
-                // var entry = Notebook.CellOutputMetadataEntry.Parse(rawOutputMetadata);
-                // output.metadata.Add(entry);
-            }
+            // foreach (var (key, value) in obj["data"]?.ToObject<JObject>())
+            // {
+            //     // TODO
+            //     // var entry = Notebook.CellOutputDataEntry.Parse(kvp);
+            //     // output.data.Add(entry);
+            // }
+            // foreach (var rawOutputMetadata in obj["metadata"]?.ToObject<JObject>())
+            // {
+            //     // TODO
+            //     // var entry = Notebook.CellOutputMetadataEntry.Parse(rawOutputMetadata);
+            //     // output.metadata.Add(entry);
+            // }
         }
         return output;
     }

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using UnityEngine;
 using static Notebook.CellType;
 
 public class CellConverter : JsonConverter<Notebook.Cell>
@@ -12,12 +11,12 @@ public class CellConverter : JsonConverter<Notebook.Cell>
         var cell = new JObject
         {
             ["cell_type"] = value.cellType.ToString().ToLower(),
-            // TODO metadata
-            // ["metadata"] = JsonConvert.SerializeObject(value.metadata),
+            ["metadata"] = JObject.FromObject(value.metadata),
             ["source"] = JArray.FromObject(value.source)
         };
         if (value.cellType == Code)
         {
+            cell["execution_count"] = value.executionCount;
             cell["outputs"] = JArray.FromObject(value.outputs);
         }
         cell.WriteTo(writer);
@@ -39,17 +38,11 @@ public class CellConverter : JsonConverter<Notebook.Cell>
             "raw" => Raw,
             _ => Code
         };
-        
-        // TODO metadata
-        // cell.metadata = obj["metadata"]?.ToObject<Notebook.CellMetadata>();
-        cell.source = obj["source"]?.ToObject<string[]>();
+        cell.metadata = obj["metadata"]?.ToObject<Notebook.CellMetadata>() ?? new Notebook.CellMetadata();
+        cell.source = obj["source"]?.ToObject<string[]>() ?? Array.Empty<string>();
         if (cell.cellType == Code)
         {
-            var outputs = obj["outputs"];
-            if (outputs != null)
-            {
-                cell.outputs.AddRange(outputs.ToObject<List<Notebook.CellOutput>>());
-            }
+            cell.outputs = obj["outputs"]?.ToObject<List<Notebook.CellOutput>>() ?? new List<Notebook.CellOutput>();
         }
         return cell;
     }
