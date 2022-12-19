@@ -179,6 +179,8 @@ public class NotebookWindow : EditorWindow
                 var nb = Notebook.CreateAsset(path);
                 AssetDatabase.Refresh();
                 EditorGUIUtility.PingObject(nb);
+                nb.cells.Add(new Notebook.Cell { cellType = Notebook.CellType.Code });
+                OpenedNotebook = nb;
             }
         }
         buttonRect.y += buttonHeight + 10;
