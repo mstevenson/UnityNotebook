@@ -76,7 +76,6 @@ public class NotebookWindow : EditorWindow
 
     private void OnEnable()
     {
-        Debug.Log(NotebookWindowData.instance.openedNotebook);
         ChangeNotebook(NotebookWindowData.instance.openedNotebook);
     }
 
@@ -300,7 +299,7 @@ public class NotebookWindow : EditorWindow
                 
                 EditorGUILayout.Space();
                 
-                if (GUILayout.Button("Commit", EditorStyles.toolbarButton))
+                if (GUILayout.Button("Save", EditorStyles.toolbarButton))
                 {
                     EditorUtility.SetDirty(OpenedNotebook);
                     OpenedNotebook.SaveJson();
@@ -327,6 +326,7 @@ public class NotebookWindow : EditorWindow
     {
         // Continuously repaint the editor while the notebook is running.
         EditorApplication.update += DoRepaint;
+        NotebookWindowData.instance.runningCell = cell;
         Evaluator.Execute(notebook, cell);
     }
     
@@ -335,6 +335,7 @@ public class NotebookWindow : EditorWindow
         Repaint();
         if (OpenedNotebook != null && !OpenedNotebook.IsRunning)
         {
+            NotebookWindowData.instance.runningCell = null;
             EditorApplication.update -= DoRepaint;
         }
     }

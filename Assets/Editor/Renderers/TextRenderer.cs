@@ -1,6 +1,6 @@
 namespace Editor.Renderers
 {
-    public class TextRenderer : Renderer
+    public class TextRenderer : NotebookRenderer
     {
         public override string[] MimeTypes { get; } = { "text/plain", "text/markdown", "application/json" };
         

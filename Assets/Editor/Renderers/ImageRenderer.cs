@@ -1,6 +1,6 @@
 namespace Editor.Renderers
 {
-    public class ImageRenderer : Renderer
+    public class ImageRenderer : NotebookRenderer
     {
         public override string[] MimeTypes { get; } = { "image/png", "image/jpeg" };
         
