@@ -291,9 +291,12 @@ public class NotebookWindow : EditorWindow
                         cell.outputs.Clear();
                     }
                 }
-                if (GUILayout.Button("Restart", EditorStyles.toolbarButton))
+                using (new EditorGUI.DisabledScope(OpenedNotebook != null && OpenedNotebook.scriptState == null))
                 {
-                    OpenedNotebook.scriptState = null;
+                    if (GUILayout.Button("Restart", EditorStyles.toolbarButton))
+                    {
+                        OpenedNotebook.scriptState = null;
+                    }
                 }
             
                 EditorGUILayout.Space();
