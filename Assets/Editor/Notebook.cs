@@ -97,6 +97,7 @@ public class Notebook : ScriptableObject, ISerializationCallbackReceiver
         [NonSerialized] public MarkdownViewer markdownViewer;
         [NonSerialized] public string rawText;
         [NonSerialized] public string highlightedText = "";
+        [NonSerialized] public Vector2 scroll;
     }
     
     public enum AutoScroll { True, False, Auto }

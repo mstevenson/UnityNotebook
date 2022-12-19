@@ -395,7 +395,7 @@ public class NotebookWindow : EditorWindow
     private static bool DrawCellToolbar(Notebook notebook, int cellIndex, Rect rect)
     {
         // Cell toolbar
-        var toolbarRect = new Rect(rect.x + rect.width - 95, rect.y+2, 90, 20);
+        var toolbarRect = new Rect(rect.x + rect.width - 94, rect.y+2, 90, 20);
         toolbarRect.width = 30;
         GUI.enabled = cellIndex > 0;
         if (GUI.Button(toolbarRect, "▲", EditorStyles.miniButtonLeft))
@@ -472,7 +472,10 @@ public class NotebookWindow : EditorWindow
         
         cell.rawText ??= string.Concat(cell.source);
         var syntaxTheme = EditorGUIUtility.isProSkin ? SyntaxTheme.Dark : SyntaxTheme.Light;
+        // a horizontal scroll view
+        cell.scroll = GUILayout.BeginScrollView(cell.scroll, false, false, GUILayout.ExpandHeight(false));
         CodeArea.Draw(ref cell.rawText, ref cell.highlightedText, syntaxTheme, _codeStyle);
+        GUILayout.EndScrollView();
         // split code area's text into separate lines to store in scriptable object
         if (GUI.changed)
         {
