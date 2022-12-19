@@ -11,7 +11,7 @@ using UnityEditor;
 // https://ipython.org/ipython-doc/3/notebook/nbformat.html
 
 [JsonConverter(typeof(NotebookConverter))]
-public class Notebook : ScriptableObject, ISerializationCallbackReceiver
+public class Notebook : ScriptableObject
 {
     public int format = 4;
     public int formatMinor = 2;
@@ -22,32 +22,11 @@ public class Notebook : ScriptableObject, ISerializationCallbackReceiver
     
     public bool IsRunning { get; set; }
 
-    public void OnBeforeSerialize()
+    // Saves the current ScriptableObject data back to the underlying json asset file
+    public void SaveJson()
     {
-        // foreach (var cell in cells)
-        // {
-        //     if (cell.textBlock != null && cell.textBlock.CharacterCount > 0)
-        //     {
-        //         cell.source = cell.textBlock.GetLines();
-        //     }
-        // }
-        
-        // TODO write to json file?
-        // Will this trigger a reimport loop?
-        
-    }
-
-    public void OnAfterDeserialize()
-    {
-        // foreach (var cell in cells)
-        // {
-        //     if (cell.textBlock == null)
-        //     {
-        //         cell.textBlock = new TextBlock();
-        //     }
-        //     cell.textBlock.SetText(cell.source);
-        //     Debug.Log("Characters: " + cell.textBlock.CharacterCount);
-        // }
+        var json = JsonConvert.SerializeObject(this, Formatting.Indented);
+        System.IO.File.WriteAllText(AssetDatabase.GetAssetPath(this), json);
     }
 
     public static Notebook CreateAsset(string path)
