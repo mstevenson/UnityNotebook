@@ -15,7 +15,7 @@ namespace Editor.Serialization
                 ["nbformat"] = value.format,
                 ["nbformat_minor"] = value.formatMinor,
                 ["metadata"] = value.metadata != null ? JObject.FromObject(value.metadata) : null,
-                ["cells"] = new JArray(value.cells.Select(JsonConvert.SerializeObject))
+                ["cells"] = JArray.FromObject(value.cells)
             };
             nb.WriteTo(writer);
         }

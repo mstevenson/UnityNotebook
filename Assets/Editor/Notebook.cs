@@ -27,6 +27,7 @@ public class Notebook : ScriptableObject
     {
         var json = JsonConvert.SerializeObject(this, Formatting.Indented);
         System.IO.File.WriteAllText(AssetDatabase.GetAssetPath(this), json);
+        AssetDatabase.Refresh();
     }
 
     public static Notebook CreateAsset(string path)

@@ -300,12 +300,13 @@ public class NotebookWindow : EditorWindow
                         OpenedNotebook.scriptState = null;
                     }
                 }
-            
+                
                 EditorGUILayout.Space();
-        
-                if (GUILayout.Button("Save", EditorStyles.toolbarButton))
+                
+                if (GUILayout.Button("Commit", EditorStyles.toolbarButton))
                 {
                     EditorUtility.SetDirty(OpenedNotebook);
+                    OpenedNotebook.SaveJson();
                     AssetDatabase.SaveAssets();
                 }
                 if (GUILayout.Button("Edit", EditorStyles.toolbarButton))

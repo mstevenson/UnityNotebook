@@ -18,12 +18,7 @@ public class CellConverter : JsonConverter<Notebook.Cell>
         };
         if (value.cellType == Code)
         {
-            var outputs = new JArray();
-            foreach (var output in value.outputs)
-            {
-                outputs.Add(JsonConvert.SerializeObject(output));
-            }
-            cell["outputs"] = outputs;
+            cell["outputs"] = JArray.FromObject(value.outputs);
         }
         cell.WriteTo(writer);
     }
