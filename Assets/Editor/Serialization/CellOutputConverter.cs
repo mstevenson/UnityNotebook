@@ -12,20 +12,20 @@ public class CellOutputConverter: JsonConverter<Notebook.CellOutput>
         output["output_type"] = value.ToString().ToLower();
         switch (value.outputType)
         {
-            case Notebook.OutputType.Stream:
+            case Stream:
                 output["name"] = value.name;
                 output["text"] = JArray.FromObject(value.text);
                 break;
-            case Notebook.OutputType.ExecuteResult:
+            case ExecuteResult:
                 output["execution_count"] = value.executionCount;
                 break;
-            case Notebook.OutputType.Error:
+            case Error:
                 output["ename"] = value.ename;
                 output["evalue"] = value.evalue;
                 output["traceback"] = JArray.FromObject(value.traceback);
                 break;
         }
-        if (value.outputType is Notebook.OutputType.DisplayData or Notebook.OutputType.ExecuteResult)
+        if (value.outputType is DisplayData or ExecuteResult)
         {
             var data = new JObject();
             foreach (var entry in value.data)
