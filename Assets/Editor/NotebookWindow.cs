@@ -473,9 +473,16 @@ public class NotebookWindow : EditorWindow
         
         cell.rawText ??= string.Concat(cell.source);
         CodeArea.Draw(ref cell.rawText, ref cell.highlightedText, _codeStyle);
+        // split code area's text into separate lines to store in scriptable object
         if (GUI.changed)
         {
-            cell.source = cell.rawText.Split(new[] { '\n' }, StringSplitOptions.None);
+            cell.source = cell.rawText.Split('\n');
+            // add stripped newline char back onto each line
+            for (var i = 0; i < cell.source.Length; i++)
+            {
+                cell.source[i] += '\n';
+            }
+            EditorUtility.SetDirty(notebook);
         }
         
         GUILayout.EndVertical();

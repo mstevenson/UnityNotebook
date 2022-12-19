@@ -83,12 +83,6 @@ public static class CodeArea
             {
                 if (GUIUtility.keyboardControl != id)
                     return;
-                if (current.keyCode == KeyCode.Tab || current.character == '\t')
-                {
-                    editor.ReplaceSelection("    ");
-                    current.Use();
-                    break;
-                }
                 if (editor.HandleKeyEvent(current))
                 {
                     current.Use();
@@ -96,7 +90,12 @@ public static class CodeArea
                     content.text = editor.text;
                     break;
                 }
-
+                if (current.keyCode == KeyCode.Tab || current.character == '\t')
+                {
+                    editor.ReplaceSelection("    ");
+                    current.Use();
+                    break;
+                }
                 var character = current.character;
                 var font = style.font != null ? style.font : GUI.skin.font;
                 if (font.HasCharacter(character) || character == '\n')
@@ -107,6 +106,8 @@ public static class CodeArea
                 }
                 
                 highlightedText = SyntaxHighlighting.SyntaxToHtml(content.text);
+
+                flag = true;
                 
                 break;
             }
