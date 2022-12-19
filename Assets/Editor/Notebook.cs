@@ -39,6 +39,16 @@ public class Notebook : ScriptableObject
         return AssetDatabase.LoadAssetAtPath<Notebook>(path);
     }
 
+    public void ClearOutputs()
+    {
+        foreach (var cell in cells)
+        {
+            cell.executionCount = 0;
+            cell.outputs.Clear();
+        }
+        EditorUtility.SetDirty(this);
+    }
+
     [Serializable]
     public class Metadata
     {

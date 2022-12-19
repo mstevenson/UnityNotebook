@@ -288,10 +288,7 @@ public class NotebookWindow : EditorWindow
                 if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
                 {
                     Undo.RecordObject(OpenedNotebook, "Clear All Output");
-                    foreach (var cell in OpenedNotebook.cells)
-                    {
-                        cell.outputs.Clear();
-                    }
+                    OpenedNotebook.ClearOutputs();
                 }
                 using (new EditorGUI.DisabledScope(OpenedNotebook != null && OpenedNotebook.scriptState == null))
                 {
