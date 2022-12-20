@@ -21,8 +21,7 @@ namespace UnityNotebook
             return wnd;
         }
 
-        private static string PackagePath => UnityEditor.PackageManager.PackageInfo
-            .FindForAssembly(Assembly.GetExecutingAssembly()).assetPath;
+        private static string PackagePath => UnityEditor.PackageManager.PackageInfo.FindForAssembly(Assembly.GetExecutingAssembly()).assetPath;
 
         // references are set in this script's inspector
         public GUISkin MarkdownSkinLight;
@@ -37,17 +36,7 @@ namespace UnityNotebook
 
         private static bool _openExternally;
 
-        private static bool IsRunning => NotebookWindowData.instance.runningCell >= 0;
-
-        private static Notebook OpenedNotebook
-        {
-            get => NotebookWindowData.instance.openedNotebook;
-            set
-            {
-                NotebookWindowData.instance.openedNotebook = value;
-                NotebookWindowData.instance.Save();
-            }
-        }
+        private static bool IsRunning => NotebookWindowData.instance.RunningCell >= 0;
 
         [OnOpenAsset]
         public static bool OnOpenAsset(int instanceID, int line)
@@ -71,19 +60,29 @@ namespace UnityNotebook
 
             var notebook = AssetDatabase.LoadAssetAtPath<Notebook>(path);
             var wnd = Init();
-            OpenedNotebook = notebook;
+            NotebookWindowData.instance.OpenedNotebook = notebook;
             return true;
         }
 
         private static void ChangeNotebook(Notebook notebook)
         {
+            SaveNotebookAsset();
             NotebookWindowData.instance.Clear();
-            OpenedNotebook = notebook;
+            NotebookWindowData.instance.OpenedNotebook = notebook;
+        }
+
+        private static void SaveNotebookAsset()
+        {
+            var nb = NotebookWindowData.instance.OpenedNotebook;
+            if (nb != null)
+            {
+                nb.SaveAsset();
+            }
         }
 
         private void OnEnable()
         {
-            ChangeNotebook(NotebookWindowData.instance.openedNotebook);
+            ChangeNotebook(NotebookWindowData.instance.OpenedNotebook);
             EditorApplication.update += DoRepaint;
         }
 
@@ -91,10 +90,20 @@ namespace UnityNotebook
         {
             Evaluator.Stop();
             EditorApplication.update -= DoRepaint;
+            SaveNotebookAsset();
         }
+
+        private int _lastKeyboardControl;
 
         private void OnGUI()
         {
+            // Save the asset when moving between fields
+            if (GUIUtility.keyboardControl != _lastKeyboardControl)
+            {
+                _lastKeyboardControl = GUIUtility.keyboardControl;
+                SaveNotebookAsset();
+            }
+            
             if (_textStyle == null)
             {
                 _textStyle = new GUIStyle(EditorStyles.textField)
@@ -171,13 +180,13 @@ namespace UnityNotebook
 
             DrawToolbar();
 
-            if (OpenedNotebook == null)
+            if (NotebookWindowData.instance.OpenedNotebook == null)
             {
                 DrawCreateNotebook();
             }
             else
             {
-                DrawNotebook(OpenedNotebook);
+                DrawNotebook(NotebookWindowData.instance.OpenedNotebook);
             }
         }
 
@@ -206,7 +215,7 @@ namespace UnityNotebook
                     AssetDatabase.Refresh();
                     EditorGUIUtility.PingObject(nb);
                     nb.cells.Add(new Notebook.Cell {cellType = Notebook.CellType.Code});
-                    OpenedNotebook = nb;
+                    NotebookWindowData.instance.OpenedNotebook = nb;
                 }
             }
 
@@ -262,20 +271,21 @@ namespace UnityNotebook
 
         private void DrawNotebookSelector()
         {
+            var nb = NotebookWindowData.instance.OpenedNotebook;
             EditorGUI.BeginChangeCheck();
-            var nb = EditorGUILayout.ObjectField(OpenedNotebook, typeof(Notebook), true) as Notebook;
+            var newNotebook = EditorGUILayout.ObjectField(nb, typeof(Notebook), true) as Notebook;
             if (EditorGUI.EndChangeCheck())
             {
-                ChangeNotebook(nb);
+                ChangeNotebook(newNotebook);
                 // _caretPos = 0;
-                if (OpenedNotebook == null)
+                if (nb == null)
                 {
                     return;
                 }
 
                 // get asset path
-                var path = AssetDatabase.GetAssetPath(OpenedNotebook);
-                foreach (var cell in OpenedNotebook.cells)
+                var path = AssetDatabase.GetAssetPath(nb);
+                foreach (var cell in nb.cells)
                 {
                     // TODO markdown
                     // if (cell.cellType == Notebook.CellType.Markdown)
@@ -290,9 +300,11 @@ namespace UnityNotebook
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            using (new EditorGUI.DisabledScope(OpenedNotebook == null))
+            var nb = NotebookWindowData.instance.OpenedNotebook;
+            
+            using (new EditorGUI.DisabledScope(nb == null))
             {
-                if (OpenedNotebook != null && IsRunning)
+                if (nb != null && IsRunning)
                 {
                     if (GUILayout.Button("Stop", EditorStyles.toolbarButton, GUILayout.Width(40)))
                     {
@@ -303,45 +315,39 @@ namespace UnityNotebook
                 {
                     if (GUILayout.Button("Run", EditorStyles.toolbarButton, GUILayout.Width(40)))
                     {
-                        Evaluator.ExecuteAll(OpenedNotebook);
+                        Evaluator.ExecuteAll(nb);
                     }
                 }
 
-                using (new EditorGUI.DisabledScope(OpenedNotebook == null || IsRunning))
+                using (new EditorGUI.DisabledScope(nb == null || IsRunning))
                 {
                     if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
                     {
-                        Undo.RecordObject(OpenedNotebook, "Clear All Output");
-                        OpenedNotebook.ClearOutputs();
+                        Undo.RecordObject(nb, "Clear All Output");
+                        nb.ClearOutputs();
+                        SaveNotebookAsset();
                     }
 
-                    using (new EditorGUI.DisabledScope(OpenedNotebook != null && OpenedNotebook.scriptState == null))
+                    using (new EditorGUI.DisabledScope(nb != null && nb.scriptState == null))
                     {
                         if (GUILayout.Button("Restart", EditorStyles.toolbarButton))
                         {
-                            OpenedNotebook.scriptState = null;
+                            nb.scriptState = null;
                         }
                     }
 
                     EditorGUILayout.Space();
 
-                    if (GUILayout.Button("Save", EditorStyles.toolbarButton))
-                    {
-                        EditorUtility.SetDirty(OpenedNotebook);
-                        OpenedNotebook.SaveJson();
-                        AssetDatabase.SaveAssets();
-                    }
-
                     if (GUILayout.Button("Edit", EditorStyles.toolbarButton))
                     {
                         _openExternally = true;
-                        AssetDatabase.OpenAsset(OpenedNotebook);
+                        AssetDatabase.OpenAsset(nb);
                         _openExternally = false;
                     }
                 }
             }
 
-            using (new EditorGUI.DisabledScope(OpenedNotebook != null && IsRunning))
+            using (new EditorGUI.DisabledScope(nb != null && IsRunning))
             {
                 GUILayout.FlexibleSpace();
                 DrawNotebookSelector();
@@ -351,7 +357,7 @@ namespace UnityNotebook
 
         private void DoRepaint()
         {
-            if (NotebookWindowData.instance.runningCell == -1)
+            if (NotebookWindowData.instance.RunningCell == -1)
             {
                 return;
             }
@@ -366,8 +372,7 @@ namespace UnityNotebook
                 return;
             }
 
-            NotebookWindowData.instance.scroll =
-                EditorGUILayout.BeginScrollView(NotebookWindowData.instance.scroll, false, false);
+            NotebookWindowData.instance.Scroll = EditorGUILayout.BeginScrollView(NotebookWindowData.instance.Scroll, false, false);
 
             EditorGUILayout.Space(2);
 
@@ -492,7 +497,7 @@ namespace UnityNotebook
         private void DrawCodeCell(Notebook notebook, int cell)
         {
             GUILayout.BeginHorizontal();
-            if (IsRunning && NotebookWindowData.instance.runningCell == cell)
+            if (IsRunning && NotebookWindowData.instance.RunningCell == cell)
             {
                 if (GUILayout.Button("■", GUILayout.Width(20), GUILayout.Height(20)))
                 {
@@ -501,7 +506,7 @@ namespace UnityNotebook
             }
             else
             {
-                using (new EditorGUI.DisabledScope(NotebookWindowData.instance.runningCell != -1))
+                using (new EditorGUI.DisabledScope(NotebookWindowData.instance.RunningCell != -1))
                 {
                     if (GUILayout.Button("▶", GUILayout.Width(20), GUILayout.Height(20)))
                     {

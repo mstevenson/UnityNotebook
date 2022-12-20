@@ -6,18 +6,46 @@ namespace UnityNotebook
     [FilePath("UserSettings/NotebookWindow.asset", FilePathAttribute.Location.ProjectFolder)]
     public class NotebookWindowData : ScriptableSingleton<NotebookWindowData>
     {
-        public Notebook openedNotebook;
-        public Vector2 scroll;
-        public int runningCell;
+        [SerializeField] private Notebook openedNotebook;
+        [SerializeField] private Vector2 scroll;
+        [SerializeField] private int runningCell;
 
-        public void Save() => base.Save(true);
-
+        public Notebook OpenedNotebook
+        {
+            get => openedNotebook;
+            set
+            {
+                openedNotebook = value;
+                Save(true);
+            }
+        }
+        
+        public Vector2 Scroll
+        {
+            get => scroll;
+            set
+            {
+                scroll = value;
+                Save(true);
+            }
+        }
+        
+        public int RunningCell
+        {
+            get => runningCell;
+            set
+            {
+                runningCell = value;
+                Save(true);
+            }
+        }
+        
         public void Clear()
         {
             openedNotebook = null;
             scroll = default;
             runningCell = -1;
-            EditorUtility.SetDirty(this);
+            Save(true);
         }
     }
 }

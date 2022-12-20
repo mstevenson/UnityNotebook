@@ -39,7 +39,7 @@ namespace UnityNotebook
 
         public static void Execute(Notebook notebook, int cell)
         {
-            NotebookWindowData.instance.runningCell = cell;
+            NotebookWindowData.instance.RunningCell = cell;
             notebook.cells[cell].executionCount += 1;
             ExecuteInternal(notebook, cell);
         }
@@ -71,7 +71,7 @@ namespace UnityNotebook
                 }
 
                 Execute(notebook, i);
-                while (NotebookWindowData.instance.runningCell != -1)
+                while (NotebookWindowData.instance.RunningCell != -1)
                 {
                     yield return null;
                 }
@@ -127,15 +127,21 @@ namespace UnityNotebook
             catch (Exception e)
             {
                 notebook.cells[cell].outputs.Add(NotebookUtils.Exception(e));
-                NotebookWindowData.instance.runningCell = -1;
+                OnExecutionEnded();
             }
             finally
             {
                 if (!isCoroutine)
                 {
-                    NotebookWindowData.instance.runningCell = -1;
+                    OnExecutionEnded();
                 }
             }
+        }
+
+        private static void OnExecutionEnded()
+        {
+            NotebookWindowData.instance.RunningCell = -1;
+            NotebookWindowData.instance.OpenedNotebook.SaveAsset();
         }
 
         public static void Stop()
