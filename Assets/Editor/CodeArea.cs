@@ -90,17 +90,66 @@ public static class CodeArea
                     content.text = editor.text;
                     break;
                 }
-                if (current.keyCode == KeyCode.Tab || current.character == '\t')
+                if (current.keyCode == KeyCode.Tab)// == '\t')
                 {
-                    editor.ReplaceSelection("    ");
+                    editor.MoveLineStart();
+                    // move until we reach a non-space character
+                    int spaces = 0;
+                    while (editor.cursorIndex < editor.text.Length && editor.text[editor.cursorIndex] == ' ')
+                    {
+                        spaces++;
+                        editor.MoveRight();
+                    }
+                    // Add/remove spaces
+                    for (int i = 0; i < 4 - (spaces % 4); i++)
+                    {
+                        if (current.shift && editor.cursorIndex > 0 && editor.text[editor.cursorIndex - 1] == ' ')
+                        {
+                            editor.Backspace();
+                        }
+                        else
+                        {
+                            editor.Insert(' ');
+                        }
+                    }
+                    content.text = editor.text;
                     current.Use();
+                    flag = true;
                     break;
                 }
                 var character = current.character;
                 var font = style.font != null ? style.font : GUI.skin.font;
                 if (font.HasCharacter(character) || character == '\n')
                 {
-                    editor.Insert(character);
+                    if (character == '\n')
+                    {
+                        // record current cursor Vector2 position
+                        int cursorIndex = editor.cursorIndex;
+                        // count spaces at start of line
+                        int spaces = 0;
+                        editor.MoveLineStart();
+                        while (editor.cursorIndex < cursorIndex && editor.text[editor.cursorIndex] == ' ')
+                        {
+                            spaces++;
+                            editor.MoveRight();
+                        }
+                        // move back to original position
+                        while (editor.cursorIndex != cursorIndex)
+                        {
+                            editor.MoveRight();
+                        }
+                        // insert new line
+                        editor.Insert('\n');
+                        // insert spaces
+                        for (int i = 0; i < spaces; i++)
+                        {
+                            editor.Insert(' ');
+                        }
+                    }
+                    else
+                    {
+                        editor.Insert(character);
+                    }
                     flag = true;
                     break;
                 }
