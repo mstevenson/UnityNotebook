@@ -13,7 +13,6 @@ public class NotebookCoroutine : MonoBehaviour
     [UsedImplicitly]
     public static void Run(IEnumerator routine)
     {
-        Debug.Log("running coroutine...");
         _editorCoroutine = EditorCoroutineUtility.StartCoroutineOwnerless(StartCoroutineWithReturnValues(routine));
     }
 
@@ -32,9 +31,12 @@ public class NotebookCoroutine : MonoBehaviour
     {
         yield return RunInternal(routine, output =>
         {
-            // TODO temp for debugging coroutine output, eventually set it to the running cell's output
-            Debug.Log("coroutine yield: " + output);
+            if (output != null && output is not YieldInstruction && output is not EditorWaitForSeconds)
+            {
+                RuntimeMethods.Show(output);
+            }
         });
+        NotebookWindowData.instance.RunningCell = -1;
     }
 
     private static IEnumerator RunInternal(IEnumerator target, Action<object> output)

@@ -32,28 +32,22 @@ public class Evaluator
         }
     }
 
-    public static void Execute(Notebook notebook, Notebook.Cell cell)
+    public static void Execute(Notebook notebook, int cell)
     {
-        notebook.IsRunning = true;
-        cell.executionCount += 1;
-        // TODO can't call Unity APIs from a thread other than the main thread
-        // Task.Run(() => ExecuteInternal(notebook, cell));
+        NotebookWindowData.instance.RunningCell = cell;
+        notebook.cells[cell].executionCount += 1;
         ExecuteInternal(notebook, cell);
     }
 
-    private static async void ExecuteInternal(Notebook notebook, Notebook.Cell cell)
+    private static async void ExecuteInternal(Notebook notebook, int cell)
     {
-        // cancel the current token from notebook.cancellationTokenSource if it exists
-        
         Init();
-        cell.outputs.Clear();
+        notebook.cells[cell].outputs.Clear();
+        var code = string.Concat(notebook.cells[cell].source);
+        var isCoroutine = code.Contains("yield ");
         try
         {
-            var code = string.Concat(cell.source);
-            
-            // turn into a coroutine if there's a yield statement
-            // TODO use roslyn to analyze this?
-            if (code.Contains("yield "))
+            if (isCoroutine)
             {
                 code = $"IEnumerator EvaluateCoroutine() {{ {code} }} NotebookCoroutine.Run(EvaluateCoroutine());";
             }
@@ -69,7 +63,7 @@ public class Evaluator
             if (notebook.scriptState.Exception != null)
             {
                 Debug.LogError(notebook.scriptState.Exception.Message);
-                cell.outputs.Add(NotebookUtils.Exception(notebook.scriptState.Exception));
+                notebook.cells[cell].outputs.Add(NotebookUtils.Exception(notebook.scriptState.Exception));
             }
             else
             {
@@ -78,20 +72,21 @@ public class Evaluator
                     case null:
                         break;
                     case string str:
-                        cell.outputs.Add(NotebookUtils.DisplayData(str));
+                        notebook.cells[cell].outputs.Add(NotebookUtils.DisplayData(str));
                         break;
                     case Texture2D tex:
-                        cell.outputs.Add(NotebookUtils.DisplayData(tex));
+                        notebook.cells[cell].outputs.Add(NotebookUtils.DisplayData(tex));
                         break;
                     default:
-                        cell.outputs.Add(NotebookUtils.DisplayData(notebook.scriptState.ReturnValue));
+                        notebook.cells[cell].outputs.Add(NotebookUtils.DisplayData(notebook.scriptState.ReturnValue));
                         break;
                 }
             }
         }
-        finally
+        catch (Exception)
         {
-            notebook.IsRunning = false;
+            NotebookWindowData.instance.RunningCell = -1;
+            throw;
         }
     }
 

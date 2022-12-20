@@ -34,12 +34,14 @@ public class NotebookWindow : EditorWindow
     
     private static bool _openExternally;
 
+    private static bool IsRunning => NotebookWindowData.instance.RunningCell >= 0;
+
     private static Notebook OpenedNotebook
     {
-        get => NotebookWindowData.instance.openedNotebook;
+        get => NotebookWindowData.instance.OpenedNotebook;
         set
         {
-            NotebookWindowData.instance.openedNotebook = value;
+            NotebookWindowData.instance.OpenedNotebook = value;
             NotebookWindowData.instance.Save();
         }
     }
@@ -69,17 +71,13 @@ public class NotebookWindow : EditorWindow
 
     public void ChangeNotebook(Notebook notebook)
     {
-        if (OpenedNotebook != null)
-        {
-            // TODO Save notebook
-            OpenedNotebook.IsRunning = false;
-        }
+        NotebookWindowData.instance.Clear();
         OpenedNotebook = notebook;
     }
 
     private void OnEnable()
     {
-        ChangeNotebook(NotebookWindowData.instance.openedNotebook);
+        ChangeNotebook(NotebookWindowData.instance.OpenedNotebook);
     }
 
     private void OnGUI()
@@ -269,7 +267,7 @@ public class NotebookWindow : EditorWindow
 
         using (new EditorGUI.DisabledScope(OpenedNotebook == null))
         {
-            if (OpenedNotebook != null && OpenedNotebook.IsRunning)
+            if (OpenedNotebook != null && IsRunning)
             {
                 if (GUILayout.Button("Stop", EditorStyles.toolbarButton, GUILayout.Width(40)))
                 {
@@ -281,16 +279,17 @@ public class NotebookWindow : EditorWindow
             {
                 if (GUILayout.Button("Run", EditorStyles.toolbarButton, GUILayout.Width(40)))
                 {
-                    foreach (var cell in OpenedNotebook.cells)
+                    for (var i = 0; i < OpenedNotebook.cells.Count; i++)
                     {
+                        var cell = OpenedNotebook.cells[i];
                         if (cell.cellType == Notebook.CellType.Code)
                         {
-                            Execute(OpenedNotebook, cell);
+                            Execute(OpenedNotebook, i);
                         }
                     }
                 }
             }
-            using (new EditorGUI.DisabledScope(OpenedNotebook == null || OpenedNotebook.IsRunning))
+            using (new EditorGUI.DisabledScope(OpenedNotebook == null || IsRunning))
             {
                 if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
                 {
@@ -322,7 +321,7 @@ public class NotebookWindow : EditorWindow
             }
         }
 
-        using (new EditorGUI.DisabledScope(OpenedNotebook != null && OpenedNotebook.IsRunning))
+        using (new EditorGUI.DisabledScope(OpenedNotebook != null && IsRunning))
         {
             GUILayout.FlexibleSpace();
             DrawNotebookSelector();
@@ -330,20 +329,18 @@ public class NotebookWindow : EditorWindow
         }
     }
 
-    private void Execute(Notebook notebook, Notebook.Cell cell)
+    private void Execute(Notebook notebook, int cell)
     {
         // Continuously repaint the editor while the notebook is running.
         EditorApplication.update += DoRepaint;
-        NotebookWindowData.instance.runningCell = cell;
         Evaluator.Execute(notebook, cell);
     }
     
     private void DoRepaint()
     {
         Repaint();
-        if (OpenedNotebook != null && !OpenedNotebook.IsRunning)
+        if (OpenedNotebook != null && !IsRunning)
         {
-            NotebookWindowData.instance.runningCell = null;
             EditorApplication.update -= DoRepaint;
         }
     }
@@ -355,7 +352,7 @@ public class NotebookWindow : EditorWindow
             return;
         }
         
-        NotebookWindowData.instance.scroll = EditorGUILayout.BeginScrollView(NotebookWindowData.instance.scroll, false, false);
+        NotebookWindowData.instance.Scroll = EditorGUILayout.BeginScrollView(NotebookWindowData.instance.Scroll, false, false);
 
         EditorGUILayout.Space(2);
         
@@ -375,7 +372,7 @@ public class NotebookWindow : EditorWindow
                     // cells were modified, break out of the draw loop
                     break;
                 }
-                DrawCell(notebook, notebook.cells[cellIndex]);
+                DrawCell(notebook, cellIndex);
             }
             cellIndex++;
         } while (cellIndex < cellCount + 1);
@@ -385,71 +382,79 @@ public class NotebookWindow : EditorWindow
 
     private static bool DrawAddCellButtons(Notebook notebook, int cellIndex, out Rect rect)
     {
-        // Add cell buttons
-        rect = GUILayoutUtility.GetRect(0, 16, GUILayout.ExpandWidth(true));
-        var buttonRect = new Rect(rect.x + rect.width / 2 - 60, rect.y - 2, 60, 16);
-        if (GUI.Button(buttonRect, "+ Code", EditorStyles.toolbarButton))
+        using (new EditorGUI.DisabledScope(IsRunning))
         {
-            Undo.RecordObject(notebook, "Add Code Cell");
-            notebook.cells.Insert(cellIndex, new Notebook.Cell { cellType = Notebook.CellType.Code });
-            return true;
+            // Add cell buttons
+            rect = GUILayoutUtility.GetRect(0, 16, GUILayout.ExpandWidth(true));
+            var buttonRect = new Rect(rect.x + rect.width / 2 - 60, rect.y - 2, 60, 16);
+            if (GUI.Button(buttonRect, "+ Code", EditorStyles.toolbarButton))
+            {
+                Undo.RecordObject(notebook, "Add Code Cell");
+                notebook.cells.Insert(cellIndex, new Notebook.Cell {cellType = Notebook.CellType.Code});
+                return true;
+            }
+
+            buttonRect.x += 60;
+            if (GUI.Button(buttonRect, "+ Text", EditorStyles.toolbarButton))
+            {
+                Undo.RecordObject(notebook, "Add Text Cell");
+                notebook.cells.Insert(cellIndex, new Notebook.Cell {cellType = Notebook.CellType.Markdown});
+                return true;
+            }
+
+            return false;
         }
-        buttonRect.x += 60;
-        if (GUI.Button(buttonRect, "+ Text", EditorStyles.toolbarButton))
-        {
-            Undo.RecordObject(notebook, "Add Text Cell");
-            notebook.cells.Insert(cellIndex, new Notebook.Cell { cellType = Notebook.CellType.Markdown });
-            return true;
-        }
-        return false;
     }
 
     private static bool DrawCellToolbar(Notebook notebook, int cellIndex, Rect rect)
     {
-        // Cell toolbar
-        var toolbarRect = new Rect(rect.x + rect.width - 94, rect.y+2, 90, 20);
-        toolbarRect.width = 30;
-        GUI.enabled = cellIndex > 0;
-        if (GUI.Button(toolbarRect, "▲", EditorStyles.miniButtonLeft))
+        using (new EditorGUI.DisabledScope(IsRunning))
         {
-            Undo.RecordObject(notebook, "Move Cell Up");
-            notebook.cells.Insert(cellIndex - 1, notebook.cells[cellIndex]);
-            notebook.cells.RemoveAt(cellIndex + 1);
-            return true;
+            // Cell toolbar
+            var toolbarRect = new Rect(rect.x + rect.width - 94, rect.y + 2, 90, 20);
+            toolbarRect.width = 30;
+            using (new EditorGUI.DisabledScope(cellIndex == 0))
+            {
+                if (GUI.Button(toolbarRect, "▲", EditorStyles.miniButtonLeft))
+                {
+                    Undo.RecordObject(notebook, "Move Cell Up");
+                    notebook.cells.Insert(cellIndex - 1, notebook.cells[cellIndex]);
+                    notebook.cells.RemoveAt(cellIndex + 1);
+                    return true;
+                }
+            }
+            toolbarRect.x += 30;
+            using (new EditorGUI.DisabledScope(cellIndex == notebook.cells.Count - 1))
+            {
+                if (GUI.Button(toolbarRect, "▼", EditorStyles.miniButtonMid))
+                {
+                    Undo.RecordObject(notebook, "Move Cell Down");
+                    notebook.cells.Insert(cellIndex + 2, notebook.cells[cellIndex]);
+                    notebook.cells.RemoveAt(cellIndex);
+                    return true;
+                }
+            }
+            toolbarRect.x += 30;
+            if (GUI.Button(toolbarRect, "✕", EditorStyles.miniButtonRight))
+            {
+                Undo.RecordObject(notebook, "Delete Cell");
+                notebook.cells.RemoveAt(cellIndex);
+                return true;
+            }
+
+            return false;
         }
-        GUI.enabled = true;
-        toolbarRect.x += 30;
-        if (cellIndex == notebook.cells.Count - 1)
-        {
-            GUI.enabled = false;
-        }
-        if (GUI.Button(toolbarRect, "▼", EditorStyles.miniButtonMid))
-        {
-            Undo.RecordObject(notebook, "Move Cell Down");
-            notebook.cells.Insert(cellIndex + 2, notebook.cells[cellIndex]);
-            notebook.cells.RemoveAt(cellIndex);
-            return true;
-        }
-        GUI.enabled = true;
-        toolbarRect.x += 30;
-        if (GUI.Button(toolbarRect, "✕", EditorStyles.miniButtonRight))
-        {
-            Undo.RecordObject(notebook, "Delete Cell");
-            notebook.cells.RemoveAt(cellIndex);
-            return true;
-        }
-        return false;
     }
     
-    private void DrawCell(Notebook notebook, Notebook.Cell cell)
+    private void DrawCell(Notebook notebook, int cell)
     {
-        switch (cell.cellType)
+        switch (notebook.cells[cell].cellType)
         {
             case Notebook.CellType.Code:
                 DrawCodeCell(notebook, cell);
                 break;
             case Notebook.CellType.Markdown:
-                DrawTextCell(cell);
+                DrawTextCell(notebook.cells[cell]);
                 break;
         }
     }
@@ -462,10 +467,10 @@ public class NotebookWindow : EditorWindow
         EditorGUILayout.TextArea(text, _textStyle);
     }
     
-    private void DrawCodeCell(Notebook notebook, Notebook.Cell cell)
+    private void DrawCodeCell(Notebook notebook, int cell)
     {
         GUILayout.BeginHorizontal();
-        if (notebook.IsRunning)
+        if (IsRunning)
         {
             if (GUILayout.Button("■", GUILayout.Width(20), GUILayout.Height(20)))
             {
@@ -481,24 +486,25 @@ public class NotebookWindow : EditorWindow
             }
         }
         GUILayout.BeginVertical();
-        
-        cell.rawText ??= string.Concat(cell.source);
+
+        var c = notebook.cells[cell];
+        c.rawText ??= string.Concat(c.source);
         var syntaxTheme = EditorGUIUtility.isProSkin ? SyntaxTheme.Dark : SyntaxTheme.Light;
         // a horizontal scroll view
-        cell.scroll = GUILayout.BeginScrollView(cell.scroll, false, false, GUILayout.ExpandHeight(false));
-        CodeArea.Draw(ref cell.rawText, ref cell.highlightedText, syntaxTheme, _codeStyle);
+        c.scroll = GUILayout.BeginScrollView(c.scroll, false, false, GUILayout.ExpandHeight(false));
+        CodeArea.Draw(ref c.rawText, ref c.highlightedText, syntaxTheme, _codeStyle);
         GUILayout.EndScrollView();
         // split code area's text into separate lines to store in scriptable object
         if (GUI.changed)
         {
-            cell.source = cell.rawText.Split('\n');
+            c.source = c.rawText.Split('\n');
             
             // add stripped newline char back onto each line
-            for (var i = 0; i < cell.source.Length; i++)
+            for (var i = 0; i < c.source.Length; i++)
             {
-                if (i < cell.source.Length - 1)
+                if (i < c.source.Length - 1)
                 {
-                    cell.source[i] += '\n';
+                    c.source[i] += '\n';
                 }
             }
             EditorUtility.SetDirty(notebook);
@@ -507,16 +513,16 @@ public class NotebookWindow : EditorWindow
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
 
-        if (cell.outputs.Count > 0)
+        if (c.outputs.Count > 0)
         {
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("✕", GUILayout.Width(20), GUILayout.Height(20)))
             {
                 Undo.RecordObject(notebook, "Clear Output");
-                cell.outputs.Clear();
+                c.outputs.Clear();
             }
             GUILayout.BeginVertical();
-            DrawOutput(cell);
+            DrawOutput(c);
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
         }

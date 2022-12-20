@@ -8,15 +8,24 @@ public static class RuntimeMethods
 
     public static void Show(object data)
     {
-        if (NotebookWindowData.instance.runningCell != null)
-        {
-            AddDataToOutput(NotebookWindowData.instance.runningCell, data);
-        }
+        // if (NotebookWindowData.instance.runningCell >= 0)
+        // {
+        var nb = NotebookWindowData.instance.OpenedNotebook;
+            var runningCell = NotebookWindowData.instance.RunningCell;
+            AddDataToOutput(nb.cells[runningCell], data);
+        // }
     }
     
     private static void AddDataToOutput(Notebook.Cell cell, object data)
     {
-        // TODO get the running cell
+        // TEMP for debugging
+        var entry = new Notebook.CellOutputDataEntry();
+        entry.stringData.Add(data.ToString());
+        var output = Notebook.CellOutput.DisplayResult(entry);
+        cell.outputs.Add(output);
+        Debug.Log(cell.outputs.Count);
+        
+        return;
         
         switch (data)
         {

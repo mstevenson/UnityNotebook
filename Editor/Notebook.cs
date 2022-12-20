@@ -19,8 +19,6 @@ public class Notebook : ScriptableObject
     public List<Cell> cells = new();
     
     [NonSerialized] public ScriptState scriptState;
-    
-    public bool IsRunning { get; set; }
 
     // Saves the current ScriptableObject data back to the underlying json asset file
     public void SaveJson()
@@ -149,6 +147,15 @@ public class Notebook : ScriptableObject
         public string ename;
         public string evalue;
         public List<string> traceback = new();
+
+        public static CellOutput DisplayResult(CellOutputDataEntry dataEntry)
+        {
+            return new CellOutput
+            {
+                outputType = OutputType.DisplayData,
+                data = new List<CellOutputDataEntry> { dataEntry }
+            };
+        }
     }
     
     [Serializable]
