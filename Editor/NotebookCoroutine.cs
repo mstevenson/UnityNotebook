@@ -30,6 +30,7 @@ public class NotebookCoroutine : MonoBehaviour
 
     private static IEnumerator StartCoroutineWithReturnValues(IEnumerator routine)
     {
+        yield return null; // let the UI update once before potentially blocking
         yield return RunInternal(routine, output =>
         {
             if (output != null && output is not YieldInstruction && output is not EditorWaitForSeconds)

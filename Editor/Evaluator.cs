@@ -43,6 +43,10 @@ public class Evaluator
 
     public static void ExecuteAll(Notebook notebook)
     {
+        foreach (var cell in notebook.cells)
+        {
+            cell.outputs.Clear();
+        }
         if (_sequenceCoroutine != null)
         {
             EditorCoroutineUtility.StopCoroutine(_sequenceCoroutine);
