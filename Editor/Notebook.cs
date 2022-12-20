@@ -39,6 +39,26 @@ public class Notebook : ScriptableObject
         return AssetDatabase.LoadAssetAtPath<Notebook>(path);
     }
 
+    [MenuItem("Assets/Create/Notebook", false, 80)]
+    public static void CreateAssetMenu()
+    {
+        // Get the path to the currently selected folder
+        var path = AssetDatabase.GetAssetPath(Selection.activeObject);
+        if (string.IsNullOrEmpty(path))
+        {
+            path = "Assets";
+        }
+        else if (!string.IsNullOrEmpty(System.IO.Path.GetExtension(path)))
+        {
+            path = path.Replace(System.IO.Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
+        }
+        
+        // Create asset
+        var assetPath = AssetDatabase.GenerateUniqueAssetPath(path + "/New Notebook.ipynb");
+        var asset = CreateAsset(assetPath);
+        Selection.activeObject = asset;
+    }
+
     public void ClearOutputs()
     {
         foreach (var cell in cells)
