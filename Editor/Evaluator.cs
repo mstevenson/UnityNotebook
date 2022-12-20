@@ -30,7 +30,7 @@ namespace UnityNotebook
 
                 var imports = new[]
                 {
-                    "RuntimeMethods", "UnityEngine", "UnityEditor", "System", "System.Collections",
+                    "UnityNotebook.RuntimeMethods", "UnityEngine", "UnityEditor", "System", "System.Collections",
                     "System.Collections.Generic"
                 };
                 _options = ScriptOptions.Default.WithReferences(Assemblies).WithImports(imports);
