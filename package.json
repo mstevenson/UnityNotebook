@@ -1,0 +1,31 @@
+{
+  "name": "com.mstevenson.unitynotebook",
+  "version": "1.0.0",
+  "displayName": "Unity Notebook",
+  "description": "Jupyter Notebooks for Unity",
+  "unity": "2021.3",
+  "unityRelease": "11f1",
+  "documentationUrl": "https://example.com/",
+  "changelogUrl": "https://example.com/changelog.html",
+  "licensesUrl": "https://example.com/licensing.html",
+  "dependencies": {
+    "com.unity.editorcoroutines": "1.0.0",
+    "com.unity.nuget.newtonsoft-json": "3.0.2"
+  },
+  "keywords": [
+    "Editor",
+    "Utility",
+    "Tool",
+    "Scripting",
+    "Workflow",
+    "Productivity",
+    "Jupyter",
+    "ML"
+  ],
+  "author": {
+    "name": "Michael Stevenson",
+    "email": "michael@mstevenson.net",
+    "url": "https://mstevenson.net"
+  },
+  "type": "tool"
+}

@@ -18,6 +18,8 @@ public class NotebookWindow : EditorWindow
         return wnd;
     }
     
+    private const string AssetsPath = "Packages/com.mstevenson.unitynotebook/Assets";
+    
     // references are set in this script's inspector
     public GUISkin MarkdownSkinLight;
     public GUISkin MarkdownSkinDark;
@@ -113,6 +115,11 @@ public class NotebookWindow : EditorWindow
         }
         if (_codeStyle == null)
         {
+            var fontAsset = AssetDatabase.LoadAssetAtPath<Font>($"{AssetsPath}/Menlo-Regular.ttf");
+            if (fontAsset == null)
+            {
+                Debug.LogError("Failed to load code editor font");
+            }
             _codeStyle = new GUIStyle(GUI.skin.textArea)
             {
                 padding = new RectOffset(12, 12, 12, 12),
@@ -120,7 +127,7 @@ public class NotebookWindow : EditorWindow
                 clipping = TextClipping.Clip,
                 stretchHeight = false,
                 stretchWidth = true,
-                font = AssetDatabase.LoadAssetAtPath<Font>("Assets/Editor/Menlo-Regular.ttf"),
+                font = fontAsset,
                 richText = true
             };
         }
