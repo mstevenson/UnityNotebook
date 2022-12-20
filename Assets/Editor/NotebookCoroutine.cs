@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Reflection;
 using JetBrains.Annotations;
 using Unity.EditorCoroutines.Editor;
 using UnityEngine;
@@ -41,6 +42,12 @@ public class NotebookCoroutine : MonoBehaviour
         while (target.MoveNext())
         {
             var result = target.Current;
+            if (result is WaitForSeconds)
+            {
+                // Convert to EditorWaitForSeconds, editor coroutines don't support runtime WaitForSeconds
+                var seconds = (float)result.GetType().GetField("m_Seconds", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(result);
+                result = new EditorWaitForSeconds(seconds);
+            }
             output(result);
             yield return result;
         }
