@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using Editor;
 using MG.MDV;
@@ -18,7 +19,7 @@ public class NotebookWindow : EditorWindow
         return wnd;
     }
     
-    private const string AssetsPath = "Packages/com.mstevenson.unitynotebook/Assets";
+    private static string PackagePath => UnityEditor.PackageManager.PackageInfo.FindForAssembly(Assembly.GetExecutingAssembly()).assetPath;
     
     // references are set in this script's inspector
     public GUISkin MarkdownSkinLight;
@@ -115,7 +116,7 @@ public class NotebookWindow : EditorWindow
         }
         if (_codeStyle == null)
         {
-            var fontAsset = AssetDatabase.LoadAssetAtPath<Font>($"{AssetsPath}/Menlo-Regular.ttf");
+            var fontAsset = AssetDatabase.LoadAssetAtPath<Font>($"{PackagePath}/Assets/Menlo-Regular.ttf");
             if (fontAsset == null)
             {
                 Debug.LogError("Failed to load code editor font");
