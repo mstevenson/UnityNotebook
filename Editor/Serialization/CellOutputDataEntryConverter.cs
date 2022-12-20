@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-namespace Editor.Serialization
+namespace UnityNotebook
 {
     public class CellOutputDataEntryConverter : JsonConverter<Notebook.CellOutputDataEntry>
     {

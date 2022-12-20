@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using UnityEngine;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxKind;
 
-namespace Editor
+namespace UnityNotebook
 {
     public struct SyntaxTheme
     {
@@ -14,7 +14,7 @@ namespace Editor
         public Color Strings;
         public Color Literals;
         public Color Comments;
-        
+
         public static readonly SyntaxTheme Dark = new()
         {
             BuiltIns = new Color(0.4f, 0.6f, 0.83f),
@@ -24,11 +24,11 @@ namespace Editor
             Literals = new Color(0.73f, 0.8f, 0.67f),
             Comments = new Color(0.45f, 0.6f, 0.36f)
         };
-        
+
         // TODO light theme
         public static SyntaxTheme Light => Dark;
     }
-    
+
     public class SyntaxHighlighting
     {
         public static string SyntaxToHtml(string code, SyntaxTheme theme)
@@ -36,14 +36,17 @@ namespace Editor
             var syntaxTree = CSharpSyntaxTree.ParseText(code);
             var root = syntaxTree.GetRoot();
             var sb = new StringBuilder();
-            
+
             void Set(SyntaxToken token, Color color)
             {
-                sb.Append($"{token.LeadingTrivia.ToFullString()}<color=#{ColorUtility.ToHtmlStringRGB(color)}>{token.ToString()}</color>{token.TrailingTrivia.ToFullString()}");
+                sb.Append(
+                    $"{token.LeadingTrivia.ToFullString()}<color=#{ColorUtility.ToHtmlStringRGB(color)}>{token.ToString()}</color>{token.TrailingTrivia.ToFullString()}");
             }
+
             void SetNormal(SyntaxToken token)
             {
-                sb.Append($"{token.LeadingTrivia.ToFullString()}{token.ToString()}{token.TrailingTrivia.ToFullString()}");
+                sb.Append(
+                    $"{token.LeadingTrivia.ToFullString()}{token.ToString()}{token.TrailingTrivia.ToFullString()}");
             }
 
             foreach (var token in root.DescendantTokens())
@@ -52,19 +55,19 @@ namespace Editor
                 switch (kind)
                 {
                     // built-in types
-                    case var _ when (int)kind >= 8304 && (int)kind <= 8320:
+                    case var _ when (int) kind >= 8304 && (int) kind <= 8320:
                         Set(token, theme.BuiltIns);
                         break;
                     // control flow
-                    case var _ when (int)kind >= 8321 && (int)kind <= 8342:
+                    case var _ when (int) kind >= 8321 && (int) kind <= 8342:
                         Set(token, theme.ControlFlow);
                         break;
                     // scope and accessibility modifiers
-                    case var _ when (int)kind >= 8343 && (int)kind <= 8384:
+                    case var _ when (int) kind >= 8343 && (int) kind <= 8384:
                     case VarKeyword:
                         Set(token, theme.BuiltIns);
                         break;
-                    case var _ when (int)kind >= 8405 && (int)kind <= 8440:
+                    case var _ when (int) kind >= 8405 && (int) kind <= 8440:
                         Set(token, theme.ControlFlow);
                         break;
                     case NumericLiteralToken:
@@ -87,7 +90,7 @@ namespace Editor
                         break;
                 }
             }
-            
+
             return sb.ToString();
         }
     }

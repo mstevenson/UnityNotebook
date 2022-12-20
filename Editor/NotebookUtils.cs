@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace Editor
+namespace UnityNotebook
 {
     public static class NotebookUtils
     {

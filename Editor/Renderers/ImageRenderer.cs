@@ -1,4 +1,4 @@
-namespace Editor.Renderers
+namespace UnityNotebook
 {
     public class ImageRenderer : NotebookRenderer
     {

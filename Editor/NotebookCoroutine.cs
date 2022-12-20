@@ -5,55 +5,58 @@ using JetBrains.Annotations;
 using Unity.EditorCoroutines.Editor;
 using UnityEngine;
 
-public class NotebookCoroutine : MonoBehaviour
+namespace UnityNotebook
 {
-    // private static NotebookCoroutine _instance;
-    private static EditorCoroutine _editorCoroutine;
-
-    [UsedImplicitly]
-    public static void Run(IEnumerator routine)
+    public class NotebookCoroutine : MonoBehaviour
     {
-        _editorCoroutine = EditorCoroutineUtility.StartCoroutineOwnerless(StartCoroutineWithReturnValues(routine));
-    }
-
-    [UsedImplicitly]
-    public static void StopAll()
-    {
-        if (_editorCoroutine == null)
+        // private static NotebookCoroutine _instance;
+        private static EditorCoroutine _editorCoroutine;
+    
+        [UsedImplicitly]
+        public static void Run(IEnumerator routine)
         {
-            return;
+            _editorCoroutine = EditorCoroutineUtility.StartCoroutineOwnerless(StartCoroutineWithReturnValues(routine));
         }
-        NotebookWindowData.instance.runningCell = -1;
-        EditorCoroutineUtility.StopCoroutine(_editorCoroutine);
-        _editorCoroutine = null;
-    }
-
-    private static IEnumerator StartCoroutineWithReturnValues(IEnumerator routine)
-    {
-        yield return null; // let the UI update once before potentially blocking
-        yield return RunInternal(routine, output =>
+    
+        [UsedImplicitly]
+        public static void StopAll()
         {
-            if (output != null && output is not YieldInstruction && output is not EditorWaitForSeconds)
+            if (_editorCoroutine == null)
             {
-                RuntimeMethods.Show(output);
+                return;
             }
-        });
-        NotebookWindowData.instance.runningCell = -1;
-    }
-
-    private static IEnumerator RunInternal(IEnumerator target, Action<object> output)
-    {
-        while (target.MoveNext())
+            NotebookWindowData.instance.runningCell = -1;
+            EditorCoroutineUtility.StopCoroutine(_editorCoroutine);
+            _editorCoroutine = null;
+        }
+    
+        private static IEnumerator StartCoroutineWithReturnValues(IEnumerator routine)
         {
-            var result = target.Current;
-            if (result is WaitForSeconds)
+            yield return null; // let the UI update once before potentially blocking
+            yield return RunInternal(routine, output =>
             {
-                // Convert to EditorWaitForSeconds, editor coroutines don't support runtime WaitForSeconds
-                var seconds = (float)result.GetType().GetField("m_Seconds", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(result);
-                result = new EditorWaitForSeconds(seconds);
+                if (output != null && output is not YieldInstruction && output is not EditorWaitForSeconds)
+                {
+                    RuntimeMethods.Show(output);
+                }
+            });
+            NotebookWindowData.instance.runningCell = -1;
+        }
+    
+        private static IEnumerator RunInternal(IEnumerator target, Action<object> output)
+        {
+            while (target.MoveNext())
+            {
+                var result = target.Current;
+                if (result is WaitForSeconds)
+                {
+                    // Convert to EditorWaitForSeconds, editor coroutines don't support runtime WaitForSeconds
+                    var seconds = (float)result.GetType().GetField("m_Seconds", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(result);
+                    result = new EditorWaitForSeconds(seconds);
+                }
+                output(result);
+                yield return result;
             }
-            output(result);
-            yield return result;
         }
     }
 }
