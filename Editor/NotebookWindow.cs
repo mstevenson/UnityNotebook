@@ -458,8 +458,10 @@ public class NotebookWindow : EditorWindow
     {
         // TODO draw markdown
         // cell.markdownViewer.Draw();
-        var text = cell.source == null ? string.Empty : string.Concat(cell.source);
-        EditorGUILayout.TextArea(text, _textStyle);
+        cell.rawText = cell.source == null ? string.Empty : string.Concat(cell.source);
+        cell.rawText = EditorGUILayout.TextArea(cell.rawText, _textStyle);
+        // split code area's text into separate lines to store in scriptable object
+        TryUpdateCellSource(cell);
     }
     
     private void DrawCodeCell(Notebook notebook, int cell)
@@ -492,20 +494,7 @@ public class NotebookWindow : EditorWindow
         CodeArea.Draw(ref c.rawText, ref c.highlightedText, syntaxTheme, _codeStyle);
         GUILayout.EndScrollView();
         // split code area's text into separate lines to store in scriptable object
-        if (GUI.changed)
-        {
-            c.source = c.rawText.Split('\n');
-            
-            // add stripped newline char back onto each line
-            for (var i = 0; i < c.source.Length; i++)
-            {
-                if (i < c.source.Length - 1)
-                {
-                    c.source[i] += '\n';
-                }
-            }
-            EditorUtility.SetDirty(notebook);
-        }
+        TryUpdateCellSource(c);
         
         GUILayout.EndVertical();
         GUILayout.EndHorizontal();
@@ -522,6 +511,25 @@ public class NotebookWindow : EditorWindow
             DrawOutput(c);
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
+        }
+    }
+
+    private static void TryUpdateCellSource(Notebook.Cell c)
+    {
+        // split code area's text into separate lines to store in scriptable object
+        if (GUI.changed)
+        {
+            c.source = c.rawText.Split('\n');
+            
+            // add stripped newline char back onto each line
+            for (var i = 0; i < c.source.Length; i++)
+            {
+                if (i < c.source.Length - 1)
+                {
+                    c.source[i] += '\n';
+                }
+            }
+            GUI.changed = false;
         }
     }
 
