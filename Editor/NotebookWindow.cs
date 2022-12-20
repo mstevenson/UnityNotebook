@@ -34,14 +34,14 @@ public class NotebookWindow : EditorWindow
     
     private static bool _openExternally;
 
-    private static bool IsRunning => NotebookWindowData.instance.RunningCell >= 0;
+    private static bool IsRunning => NotebookWindowData.instance.runningCell >= 0;
 
     private static Notebook OpenedNotebook
     {
-        get => NotebookWindowData.instance.OpenedNotebook;
+        get => NotebookWindowData.instance.openedNotebook;
         set
         {
-            NotebookWindowData.instance.OpenedNotebook = value;
+            NotebookWindowData.instance.openedNotebook = value;
             NotebookWindowData.instance.Save();
         }
     }
@@ -77,7 +77,7 @@ public class NotebookWindow : EditorWindow
 
     private void OnEnable()
     {
-        ChangeNotebook(NotebookWindowData.instance.OpenedNotebook);
+        ChangeNotebook(NotebookWindowData.instance.openedNotebook);
     }
 
     private void OnGUI()
@@ -271,7 +271,6 @@ public class NotebookWindow : EditorWindow
             {
                 if (GUILayout.Button("Stop", EditorStyles.toolbarButton, GUILayout.Width(40)))
                 {
-                    Debug.Log("not implemented");
                     Evaluator.Stop(OpenedNotebook);
                 }
             }
@@ -352,7 +351,7 @@ public class NotebookWindow : EditorWindow
             return;
         }
         
-        NotebookWindowData.instance.Scroll = EditorGUILayout.BeginScrollView(NotebookWindowData.instance.Scroll, false, false);
+        NotebookWindowData.instance.scroll = EditorGUILayout.BeginScrollView(NotebookWindowData.instance.scroll, false, false);
 
         EditorGUILayout.Space(2);
         
@@ -474,7 +473,6 @@ public class NotebookWindow : EditorWindow
         {
             if (GUILayout.Button("■", GUILayout.Width(20), GUILayout.Height(20)))
             {
-                Debug.Log("not implemented");
                 Evaluator.Stop(notebook);
             }
         }

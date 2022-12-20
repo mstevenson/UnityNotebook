@@ -34,7 +34,7 @@ public class Evaluator
 
     public static void Execute(Notebook notebook, int cell)
     {
-        NotebookWindowData.instance.RunningCell = cell;
+        NotebookWindowData.instance.runningCell = cell;
         notebook.cells[cell].executionCount += 1;
         ExecuteInternal(notebook, cell);
     }
@@ -51,7 +51,7 @@ public class Evaluator
             {
                 code = $"IEnumerator EvaluateCoroutine() {{ {code} }} NotebookCoroutine.Run(EvaluateCoroutine());";
             }
-            
+
             if (notebook.scriptState == null)
             {
                 notebook.scriptState = await CSharpScript.RunAsync(code, _options);
@@ -60,6 +60,7 @@ public class Evaluator
             {
                 notebook.scriptState = await notebook.scriptState.ContinueWithAsync(code, _options);
             }
+
             if (notebook.scriptState.Exception != null)
             {
                 Debug.LogError(notebook.scriptState.Exception.Message);
@@ -85,8 +86,15 @@ public class Evaluator
         }
         catch (Exception)
         {
-            NotebookWindowData.instance.RunningCell = -1;
+            NotebookWindowData.instance.runningCell = -1;
             throw;
+        }
+        finally
+        {
+            if (!isCoroutine)
+            {
+                NotebookWindowData.instance.runningCell = -1;
+            }
         }
     }
 

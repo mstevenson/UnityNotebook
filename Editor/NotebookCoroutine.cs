@@ -23,6 +23,7 @@ public class NotebookCoroutine : MonoBehaviour
         {
             return;
         }
+        NotebookWindowData.instance.runningCell = -1;
         EditorCoroutineUtility.StopCoroutine(_editorCoroutine);
         _editorCoroutine = null;
     }
@@ -36,7 +37,7 @@ public class NotebookCoroutine : MonoBehaviour
                 RuntimeMethods.Show(output);
             }
         });
-        NotebookWindowData.instance.RunningCell = -1;
+        NotebookWindowData.instance.runningCell = -1;
     }
 
     private static IEnumerator RunInternal(IEnumerator target, Action<object> output)
