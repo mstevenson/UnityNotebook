@@ -266,7 +266,7 @@ public class NotebookWindow : EditorWindow
                 if (GUILayout.Button("Stop", EditorStyles.toolbarButton, GUILayout.Width(40)))
                 {
                     Debug.Log("not implemented");
-                    // Evaluator.Stop(OpenedNotebook);
+                    Evaluator.Stop(OpenedNotebook);
                 }
             }
             else
@@ -462,7 +462,7 @@ public class NotebookWindow : EditorWindow
             if (GUILayout.Button("■", GUILayout.Width(20), GUILayout.Height(20)))
             {
                 Debug.Log("not implemented");
-                // Evaluator.Stop(notebook);
+                Evaluator.Stop(notebook);
             }
         }
         else

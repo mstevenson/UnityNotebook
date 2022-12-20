@@ -3,10 +3,7 @@ using Microsoft.CodeAnalysis.Scripting;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using Editor;
-using UnityEditor;
 using UnityEngine;
 
 // https://github.com/dotnet/roslyn/blob/315c2e149ba7889b0937d872274c33fcbfe9af5f/docs/wiki/Scripting-API-Samples.md
@@ -52,13 +49,22 @@ public class Evaluator
         cell.outputs.Clear();
         try
         {
+            var code = string.Concat(cell.source);
+            
+            // turn into a coroutine if there's a yield statement
+            // TODO use roslyn to analyze this?
+            if (code.Contains("yield "))
+            {
+                code = $"IEnumerator EvaluateCoroutine() {{ {code} }} NotebookCoroutine.Run(EvaluateCoroutine());";
+            }
+            
             if (notebook.scriptState == null)
             {
-                notebook.scriptState = await CSharpScript.RunAsync(string.Concat(cell.source), _options);
+                notebook.scriptState = await CSharpScript.RunAsync(code, _options);
             }
             else
             {
-                notebook.scriptState = await notebook.scriptState.ContinueWithAsync(string.Concat(cell.source), _options);
+                notebook.scriptState = await notebook.scriptState.ContinueWithAsync(code, _options);
             }
             if (notebook.scriptState.Exception != null)
             {
@@ -87,5 +93,10 @@ public class Evaluator
         {
             notebook.IsRunning = false;
         }
+    }
+
+    public static void Stop(Notebook notebook)
+    {
+        NotebookCoroutine.StopAll();
     }
 }

@@ -1,9 +1,12 @@
-using Editor;
+using System.Collections.Generic;
+using Unity.EditorCoroutines.Editor;
 using UnityEngine;
 
 public static class RuntimeMethods
 {
-    public static void Draw(object data)
+    public static object Delay(float seconds) => new EditorWaitForSeconds(seconds);
+
+    public static void Show(object data)
     {
         if (NotebookWindowData.instance.runningCell != null)
         {
@@ -18,6 +21,21 @@ public static class RuntimeMethods
         switch (data)
         {
             case string s:
+                var txtOutput = new Notebook.CellOutput()
+                {
+                    outputType = Notebook.OutputType.DisplayData,
+                    data = new List<Notebook.CellOutputDataEntry>
+                    {
+                        new()
+                        {
+                            mimeType = "text/plain",
+                            stringData = new List<string>()
+                        }
+                    },
+                    metadata = new List<Notebook.CellOutputMetadataEntry>
+                    {
+                    }
+                };
                 break;
             case Vector3 v:
                 break;
@@ -32,6 +50,22 @@ public static class RuntimeMethods
             case Color c:
                 break;
             case Texture2D t:
+                var imgOutput = new Notebook.CellOutput()
+                {
+                    outputType = Notebook.OutputType.DisplayData,
+                    data = new List<Notebook.CellOutputDataEntry>
+                    {
+                        new()
+                        {
+                            mimeType = "image/png",
+                            imageData = new Texture2D(1,1)
+                        }
+                    },
+                    metadata = new List<Notebook.CellOutputMetadataEntry>
+                    {
+                        // width, height
+                    }
+                };
                 break;
             case Material m:
                 break;
