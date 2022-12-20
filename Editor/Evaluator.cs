@@ -120,7 +120,6 @@ public class Evaluator
         {
             notebook.cells[cell].outputs.Add(NotebookUtils.Exception(e));
             NotebookWindowData.instance.runningCell = -1;
-            throw;
         }
         finally
         {
