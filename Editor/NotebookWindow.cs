@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -69,7 +70,7 @@ public class NotebookWindow : EditorWindow
         return true;
     }
 
-    public void ChangeNotebook(Notebook notebook)
+    private static void ChangeNotebook(Notebook notebook)
     {
         NotebookWindowData.instance.Clear();
         OpenedNotebook = notebook;
@@ -78,6 +79,13 @@ public class NotebookWindow : EditorWindow
     private void OnEnable()
     {
         ChangeNotebook(NotebookWindowData.instance.openedNotebook);
+        EditorApplication.update += DoRepaint;
+    }
+
+    private void OnDisable()
+    {
+        Evaluator.Stop();
+        EditorApplication.update -= DoRepaint;
     }
 
     private void OnGUI()
@@ -90,7 +98,7 @@ public class NotebookWindow : EditorWindow
                 wordWrap = true,
                 stretchHeight = false,
                 stretchWidth = true,
-                padding = new RectOffset(12, 12, 12, 12)
+                padding = new RectOffset(4, 4, 4, 4),
             };
         }
         if (_textStyleNoBackground == null)
@@ -104,6 +112,7 @@ public class NotebookWindow : EditorWindow
                 focused = _textStyle.focused,
                 hover = _textStyle.hover,
                 padding = _textStyle.padding,
+                margin = _textStyle.margin,
                 wordWrap = _textStyle.wordWrap,
                 clipping = _textStyle.clipping,
                 stretchHeight = _textStyle.stretchHeight,
@@ -121,7 +130,7 @@ public class NotebookWindow : EditorWindow
             }
             _codeStyle = new GUIStyle(GUI.skin.textArea)
             {
-                padding = new RectOffset(12, 12, 12, 12),
+                padding = new RectOffset(8, 8, 8, 8),
                 wordWrap = false,
                 clipping = TextClipping.Clip,
                 stretchHeight = false,
@@ -141,6 +150,7 @@ public class NotebookWindow : EditorWindow
                 focused = _codeStyle.focused,
                 hover = _codeStyle.hover,
                 padding = _codeStyle.padding,
+                margin = _codeStyle.margin,
                 wordWrap = _codeStyle.wordWrap,
                 clipping = _codeStyle.clipping,
                 stretchHeight = _codeStyle.stretchHeight,
@@ -271,21 +281,14 @@ public class NotebookWindow : EditorWindow
             {
                 if (GUILayout.Button("Stop", EditorStyles.toolbarButton, GUILayout.Width(40)))
                 {
-                    Evaluator.Stop(OpenedNotebook);
+                    Evaluator.Stop();
                 }
             }
             else
             {
                 if (GUILayout.Button("Run", EditorStyles.toolbarButton, GUILayout.Width(40)))
                 {
-                    for (var i = 0; i < OpenedNotebook.cells.Count; i++)
-                    {
-                        var cell = OpenedNotebook.cells[i];
-                        if (cell.cellType == Notebook.CellType.Code)
-                        {
-                            Execute(OpenedNotebook, i);
-                        }
-                    }
+                    Evaluator.ExecuteAll(OpenedNotebook);
                 }
             }
             using (new EditorGUI.DisabledScope(OpenedNotebook == null || IsRunning))
@@ -328,20 +331,13 @@ public class NotebookWindow : EditorWindow
         }
     }
 
-    private void Execute(Notebook notebook, int cell)
-    {
-        // Continuously repaint the editor while the notebook is running.
-        EditorApplication.update += DoRepaint;
-        Evaluator.Execute(notebook, cell);
-    }
-    
     private void DoRepaint()
     {
-        Repaint();
-        if (OpenedNotebook != null && !IsRunning)
+        if (NotebookWindowData.instance.runningCell == -1)
         {
-            EditorApplication.update -= DoRepaint;
+            return;
         }
+        Repaint();
     }
 
     private void DrawNotebook(Notebook notebook)
@@ -469,18 +465,21 @@ public class NotebookWindow : EditorWindow
     private void DrawCodeCell(Notebook notebook, int cell)
     {
         GUILayout.BeginHorizontal();
-        if (IsRunning)
+        if (IsRunning && NotebookWindowData.instance.runningCell == cell)
         {
             if (GUILayout.Button("■", GUILayout.Width(20), GUILayout.Height(20)))
             {
-                Evaluator.Stop(notebook);
+                Evaluator.Stop();
             }
         }
         else
         {
-            if (GUILayout.Button("▶", GUILayout.Width(20), GUILayout.Height(20)))
+            using (new EditorGUI.DisabledScope(NotebookWindowData.instance.runningCell != -1))
             {
-                Execute(notebook, cell);
+                if (GUILayout.Button("▶", GUILayout.Width(20), GUILayout.Height(20)))
+                {
+                    Evaluator.Execute(notebook, cell);
+                }
             }
         }
         GUILayout.BeginVertical();
@@ -547,11 +546,13 @@ public class NotebookWindow : EditorWindow
                     var c = GUI.color;
                     GUI.color = Color.red;
                     GUILayout.Label(output.ename);
-                    // GUILayout.Label(output.evalue);
+                    GUILayout.Label(output.evalue);
                     GUI.color = c;
                     // TODO convert ANSI escape sequences to HTML tags
-                    var str = string.Concat(output.traceback);
-                    EditorGUILayout.TextArea(str, _codeStyleNoBackground);
+                    var str = string.Join("\n", output.traceback);
+                    output.scroll = GUILayout.BeginScrollView(output.scroll);
+                    EditorGUILayout.TextArea(str, _codeStyleNoBackground, GUILayout.ExpandHeight(false));
+                    GUILayout.EndScrollView();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

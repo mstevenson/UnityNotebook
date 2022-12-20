@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Editor;
 using Unity.EditorCoroutines.Editor;
 using UnityEngine;
 
@@ -21,9 +22,8 @@ public static class RuntimeMethods
         // TEMP for debugging
         var entry = new Notebook.CellOutputDataEntry();
         entry.stringData.Add(data.ToString());
-        var output = Notebook.CellOutput.DisplayResult(entry);
+        var output = NotebookUtils.DisplayData(entry);
         cell.outputs.Add(output);
-        Debug.Log(cell.outputs.Count);
         
         return;
         

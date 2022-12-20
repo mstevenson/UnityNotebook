@@ -1,9 +1,11 @@
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using Editor;
+using Unity.EditorCoroutines.Editor;
 using UnityEngine;
 
 // https://github.com/dotnet/roslyn/blob/315c2e149ba7889b0937d872274c33fcbfe9af5f/docs/wiki/Scripting-API-Samples.md
@@ -37,6 +39,32 @@ public class Evaluator
         NotebookWindowData.instance.runningCell = cell;
         notebook.cells[cell].executionCount += 1;
         ExecuteInternal(notebook, cell);
+    }
+
+    public static void ExecuteAll(Notebook notebook)
+    {
+        if (_sequenceCoroutine != null)
+        {
+            EditorCoroutineUtility.StopCoroutine(_sequenceCoroutine);
+        }
+        _sequenceCoroutine = EditorCoroutineUtility.StartCoroutineOwnerless(ExecuteSequence(notebook));
+    }
+    
+    private static EditorCoroutine _sequenceCoroutine;
+    private static IEnumerator ExecuteSequence(Notebook notebook)
+    {
+        for (var i = 0; i < notebook.cells.Count; i++)
+        {
+            if (notebook.cells[i].cellType != Notebook.CellType.Code)
+            {
+                continue;
+            }
+            Execute(notebook, i);
+            while (NotebookWindowData.instance.runningCell != -1)
+            {
+                yield return null;
+            }
+        }
     }
 
     private static async void ExecuteInternal(Notebook notebook, int cell)
@@ -84,8 +112,9 @@ public class Evaluator
                 }
             }
         }
-        catch (Exception)
+        catch (Exception e)
         {
+            notebook.cells[cell].outputs.Add(NotebookUtils.Exception(e));
             NotebookWindowData.instance.runningCell = -1;
             throw;
         }
@@ -98,7 +127,7 @@ public class Evaluator
         }
     }
 
-    public static void Stop(Notebook notebook)
+    public static void Stop()
     {
         NotebookCoroutine.StopAll();
     }

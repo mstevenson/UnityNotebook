@@ -148,14 +148,7 @@ public class Notebook : ScriptableObject
         public string evalue;
         public List<string> traceback = new();
 
-        public static CellOutput DisplayResult(CellOutputDataEntry dataEntry)
-        {
-            return new CellOutput
-            {
-                outputType = OutputType.DisplayData,
-                data = new List<CellOutputDataEntry> { dataEntry }
-            };
-        }
+        [NonSerialized] public Vector2 scroll;
     }
     
     [Serializable]
