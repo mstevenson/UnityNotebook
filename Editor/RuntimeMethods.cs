@@ -21,10 +21,10 @@ namespace UnityNotebook
         private static void AddDataToOutput(Notebook.Cell cell, object data)
         {
             // TEMP for debugging
-            var entry = new Notebook.CellOutputDataEntry();
-            entry.stringData.Add(data.ToString());
-            var output = NotebookUtils.DisplayData(entry);
-            cell.outputs.Add(output);
+            // var entry = new Notebook.CellOutputDataEntry();
+            // entry.stringData.Add(data.ToString());
+            // var output = NotebookUtils.DisplayData(entry);
+            // cell.outputs.Add(output);
 
             // switch (data)
             // {

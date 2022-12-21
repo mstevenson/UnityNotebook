@@ -510,7 +510,7 @@ namespace UnityNotebook
                 {
                     if (GUILayout.Button("▶", GUILayout.Width(20), GUILayout.Height(20)))
                     {
-                        Evaluator.Execute(notebook, cell);
+                        Evaluator.ExecuteCell(notebook, cell);
                     }
                 }
             }

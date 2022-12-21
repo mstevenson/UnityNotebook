@@ -37,7 +37,7 @@ namespace UnityNotebook
             {
                 if (output != null && output is not YieldInstruction && output is not EditorWaitForSeconds)
                 {
-                    RuntimeMethods.Show(output);
+                    Evaluator.CaptureOutput(output);
                 }
             });
             NotebookWindowData.instance.RunningCell = -1;
