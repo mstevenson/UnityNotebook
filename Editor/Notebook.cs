@@ -170,8 +170,7 @@ namespace UnityNotebook
             public List<string> text = new();
 
             // display data output or execute result output
-            public List<CellOutputDataEntry>
-                data = new(); // mime-type -> data, often text/plain, image/png, application/json
+            public List<CellOutputDataEntry> data = new(); // mime-type -> data, often text/plain, image/png, application/json
 
             public List<CellOutputMetadataEntry> metadata = new(); // mime-type -> metadata
 

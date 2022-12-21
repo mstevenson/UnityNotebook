@@ -5,7 +5,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using Unity.EditorCoroutines.Editor;
-using UnityEngine;
 
 namespace UnityNotebook
 {
@@ -103,36 +102,33 @@ namespace UnityNotebook
             catch (Exception e)
             {
                 notebook.cells[cell].outputs.Add(NotebookUtils.Exception(e));
+                OnExecutionEnded();
             }
             finally
             {
                 if (!isCoroutine)
                 {
-                    NotebookWindowData.instance.RunningCell = -1;
-                    NotebookWindowData.instance.OpenedNotebook.SaveAsset();
+                    OnExecutionEnded();
                 }
             }
+        }
+
+        private static void OnExecutionEnded()
+        {
+            NotebookWindowData.instance.RunningCell = -1;
+            NotebookWindowData.instance.OpenedNotebook.SaveAsset();
         }
         
         public static void CaptureOutput(object obj)
         {
+            if (obj == null)
+            {
+                return;
+            }
             var notebook = NotebookWindowData.instance.OpenedNotebook;
             var cell = NotebookWindowData.instance.RunningCell;
-            
-            switch (obj)
-            {
-                case null:
-                    break;
-                case string str:
-                    notebook.cells[cell].outputs.Add(NotebookUtils.DisplayData(str));
-                    break;
-                case Texture2D tex:
-                    notebook.cells[cell].outputs.Add(NotebookUtils.DisplayData(tex));
-                    break;
-                default:
-                    notebook.cells[cell].outputs.Add(NotebookUtils.DisplayData(obj));
-                    break;
-            }
+            var output = Renderers.GetCellOutputForObject(obj);
+            notebook.cells[cell].outputs.Add(output);
         }
 
         public static void Stop()

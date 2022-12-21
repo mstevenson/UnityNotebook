@@ -30,43 +30,44 @@ namespace UnityNotebook
             return output;
         }
         
-        public static Notebook.CellOutput DisplayData(string text)
-        {
-            var output = new Notebook.CellOutput
-            {
-                outputType = Notebook.OutputType.DisplayData,
-                data = new List<Notebook.CellOutputDataEntry>
-                {
-                    new() { mimeType = "text/plain", stringData = { text } }
-                }
-            };
-            return output;
-        }
+        // public static Notebook.CellOutput DisplayData(string text)
+        // {
+        //     var output = new Notebook.CellOutput
+        //     {
+        //         outputType = Notebook.OutputType.DisplayData,
+        //         data = new List<Notebook.CellOutputDataEntry>
+        //         {
+        //             new() { mimeType = "text/plain", stringData = { text } }
+        //         }
+        //     };
+        //     return output;
+        // }
         
-        public static Notebook.CellOutput DisplayData(Texture2D texture)
-        {
-            var output = new Notebook.CellOutput
-            {
-                outputType = Notebook.OutputType.DisplayData,
-                data = new List<Notebook.CellOutputDataEntry>
-                {
-                    new() { mimeType = "image/png", imageData = texture }
-                }
-            };
-            return output;
-        }
+        // public static Notebook.CellOutput DisplayData(Texture2D texture)
+        // {
+        //     var output = new Notebook.CellOutput
+        //     {
+        //         outputType = Notebook.OutputType.DisplayData,
+        //         data = new List<Notebook.CellOutputDataEntry>
+        //         {
+        //             new() { mimeType = "image/png", imageData = texture }
+        //         }
+        //     };
+        //     return output;
+        // }
 
-        public static Notebook.CellOutput DisplayData<T>(T value)
-        {
-            var output = new Notebook.CellOutput
-            {
-                outputType = Notebook.OutputType.DisplayData,
-                data = new List<Notebook.CellOutputDataEntry>
-                {
-                    new() { mimeType = "text/plain", stringData = { value.ToString() } }
-                }
-            };
-            return output;
-        }
+        // // TODO create a generic OutputRenderer type for this, a fallback
+        // public static Notebook.CellOutput DisplayData<T>(T value)
+        // {
+        //     var output = new Notebook.CellOutput
+        //     {
+        //         outputType = Notebook.OutputType.DisplayData,
+        //         data = new List<Notebook.CellOutputDataEntry>
+        //         {
+        //             new() { mimeType = "text/plain", stringData = { value.ToString() } }
+        //         }
+        //     };
+        //     return output;
+        // }
     }
 }

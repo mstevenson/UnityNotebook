@@ -575,13 +575,18 @@ namespace UnityNotebook
                     case Notebook.OutputType.Stream:
                         EditorGUILayout.TextArea(string.Concat(output.text), _textStyleNoBackground);
                         break;
-                    case Notebook.OutputType.DisplayData:
                     case Notebook.OutputType.ExecuteResult:
                         foreach (var data in output.data)
                         {
                             EditorGUILayout.TextArea(string.Concat(data.stringData), _textStyleNoBackground);
                         }
-
+                        break;
+                    case Notebook.OutputType.DisplayData:
+                        foreach (var data in output.data)
+                        {
+                            var renderer = Renderers.GetRendererForMimeType(data.mimeType);
+                            renderer.Render(data);
+                        }
                         break;
                     // TODO parse terminal control codes, set colors
                     case Notebook.OutputType.Error:
