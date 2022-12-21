@@ -11,7 +11,8 @@ namespace UnityNotebook
         public override void WriteJson(JsonWriter writer, Notebook.CellOutput value, JsonSerializer serializer)
         {
             var output = new JObject();
-            output["output_type"] = value.ToString().ToLower();
+            // set the string value for the enum as specified in JsonProperty attribute
+            output["output_type"] = JToken.FromObject(value.outputType);
             switch (value.outputType)
             {
                 case Stream:
@@ -62,14 +63,7 @@ namespace UnityNotebook
 
             var output = hasExistingValue ? existingValue : new Notebook.CellOutput();
 
-            output.outputType = obj["output_type"]?.Value<string>() switch
-            {
-                "execute_result" => ExecuteResult,
-                "display_data" => DisplayData,
-                "stream" => Stream,
-                "error" => Error,
-                _ => throw new ArgumentOutOfRangeException()
-            };
+            output.outputType = obj["output_type"]?.ToObject<Notebook.OutputType>() ?? DisplayData;
             switch (output.outputType)
             {
                 case Stream:

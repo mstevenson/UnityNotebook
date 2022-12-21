@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using MG.MDV;
 using Microsoft.CodeAnalysis.Scripting;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using UnityEngine;
 using UnityEditor;
 
@@ -91,10 +93,14 @@ namespace UnityNotebook
             public string name;
         }
 
+        [JsonConverter(typeof(StringEnumConverter))]
         public enum CellType
         {
+            [EnumMember(Value = "markdown")]
             Markdown,
+            [EnumMember(Value = "code")]
             Code,
+            [EnumMember(Value = "raw")]
             Raw
         }
 
@@ -140,11 +146,16 @@ namespace UnityNotebook
             public List<string> tags;
         }
 
+        [JsonConverter(typeof(StringEnumConverter))]
         public enum OutputType
         {
+            [EnumMember(Value = "stream")]
             Stream,
+            [EnumMember(Value = "display_data")]
             DisplayData,
+            [EnumMember(Value = "execute_result")]
             ExecuteResult,
+            [EnumMember(Value = "error")]
             Error
         }
 

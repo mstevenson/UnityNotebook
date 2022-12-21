@@ -12,14 +12,14 @@ namespace UnityNotebook
         {
             var cell = new JObject
             {
-                ["cell_type"] = value.cellType.ToString().ToLower(),
-                ["metadata"] = JObject.FromObject(value.metadata),
+                ["cell_type"] = JToken.FromObject(value.cellType),
+                ["metadata"] = value.metadata != null ? JObject.FromObject(value.metadata) : new JObject(),
                 ["source"] = JArray.FromObject(value.source)
             };
             if (value.cellType == Code)
             {
                 cell["execution_count"] = value.executionCount;
-                cell["outputs"] = JArray.FromObject(value.outputs);
+                cell["outputs"] = value.outputs != null ? JArray.FromObject(value.outputs) : new JArray();
             }
 
             cell.WriteTo(writer);
@@ -36,13 +36,7 @@ namespace UnityNotebook
 
             var cell = hasExistingValue ? existingValue : new Notebook.Cell();
 
-            cell.cellType = obj["cell_type"]?.Value<string>() switch
-            {
-                "code" => Code,
-                "markdown" => Markdown,
-                "raw" => Raw,
-                _ => Code
-            };
+            cell.cellType = obj["cell_type"]?.ToObject<Notebook.CellType>() ?? Code;
             cell.metadata = obj["metadata"]?.ToObject<Notebook.CellMetadata>() ?? new Notebook.CellMetadata();
             cell.source = obj["source"]?.ToObject<string[]>() ?? Array.Empty<string>();
             if (cell.cellType == Code)
