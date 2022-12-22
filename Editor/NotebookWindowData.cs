@@ -8,8 +8,8 @@ namespace UnityNotebook
     {
         [SerializeField] private Notebook openedNotebook;
         [SerializeField] private Vector2 scroll;
+        [SerializeField] private int selectedCell;
         [SerializeField] private int runningCell;
-        [SerializeField] private int previewImageSize = 200;
 
         public static Notebook OpenedNotebook
         {
@@ -31,6 +31,16 @@ namespace UnityNotebook
             }
         }
         
+        public static int SelectedCell
+        {
+            get => instance.selectedCell;
+            set
+            {
+                instance.selectedCell = value;
+                instance.Save(true);
+            }
+        }
+        
         public static int RunningCell
         {
             get => instance.runningCell;
@@ -41,20 +51,11 @@ namespace UnityNotebook
             }
         }
         
-        public static int PreviewImageSize
-        {
-            get => instance.previewImageSize;
-            set
-            {
-                instance.previewImageSize = value;
-                instance.Save(true);
-            }
-        }
-        
         public void Clear()
         {
             openedNotebook = null;
             scroll = default;
+            selectedCell = -1;
             runningCell = -1;
             Save(true);
         }

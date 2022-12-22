@@ -27,13 +27,6 @@ namespace UnityNotebook
         public GUISkin MarkdownSkinLight;
         public GUISkin MarkdownSkinDark;
 
-        private static GUIStyle _textStyle;
-        private static GUIStyle _textStyleNoBackground;
-        private static GUIStyle _codeStyle;
-        private static GUIStyle _codeStyleNoBackground;
-
-        // private static int _caretPos;
-
         private static bool _openExternally;
 
         private static bool IsRunning => NotebookWindowData.RunningCell >= 0;
@@ -66,6 +59,10 @@ namespace UnityNotebook
 
         private static void ChangeNotebook(Notebook notebook)
         {
+            if (notebook == NotebookWindowData.OpenedNotebook)
+            {
+                return;
+            }
             SaveNotebookAsset();
             NotebookWindowData.instance.Clear();
             NotebookWindowData.OpenedNotebook = notebook;
@@ -95,15 +92,15 @@ namespace UnityNotebook
 
         private int _lastKeyboardControl;
 
-        private void OnGUI()
+        private static GUIStyle _textStyle;
+        private static GUIStyle _textStyleNoBackground;
+        private static GUIStyle _codeStyle;
+        private static GUIStyle _codeStyleNoBackground;
+        private static GUIStyle _cellBox;
+        private static GUIStyle _cellBoxSelected;
+        
+        private static void BuildStyles()
         {
-            // Save the asset when moving between fields
-            if (GUIUtility.keyboardControl != _lastKeyboardControl)
-            {
-                _lastKeyboardControl = GUIUtility.keyboardControl;
-                SaveNotebookAsset();
-            }
-            
             if (_textStyle == null)
             {
                 _textStyle = new GUIStyle(EditorStyles.textField)
@@ -177,6 +174,48 @@ namespace UnityNotebook
                     richText = true
                 };
             }
+            
+            if (_cellBox == null)
+            {
+                _cellBox = new GUIStyle("box");
+            }
+
+            if (_cellBoxSelected == null)
+            {
+                Texture2D BuildTexture(Color color)
+                {
+                    const int width = 64;
+                    const int height = 64;
+                    var pixels = new Color[width * height];
+                    for (var i = 0; i < pixels.Length; i++)
+                    {
+                        pixels[i] = color;
+                    }
+                    var result = new Texture2D(width, height);
+                    result.SetPixels(pixels);
+                    result.Apply();
+                    return result;
+                }
+                _cellBoxSelected = new GUIStyle(_cellBox)
+                {
+                    normal = new GUIStyleState()
+                    {
+                        background = BuildTexture(new Color(0.23f, 0.29f, 0.37f)),
+                    }
+                };
+            }
+        }
+
+        private void OnGUI()
+        {
+            // Save the asset when moving between fields
+            if (GUIUtility.keyboardControl != _lastKeyboardControl)
+            {
+                _lastKeyboardControl = GUIUtility.keyboardControl;
+                SaveNotebookAsset();
+            }
+            
+            BuildStyles();
 
             DrawToolbar();
 
@@ -474,6 +513,7 @@ namespace UnityNotebook
 
         private void DrawCell(Notebook notebook, int cell)
         {
+            GUILayout.BeginVertical(NotebookWindowData.SelectedCell == cell ? _cellBoxSelected : _cellBox);
             switch (notebook.cells[cell].cellType)
             {
                 case Notebook.CellType.Code:
@@ -482,6 +522,38 @@ namespace UnityNotebook
                 case Notebook.CellType.Markdown:
                     DrawTextCell(notebook.cells[cell]);
                     break;
+            }
+            GUILayout.EndVertical();
+
+            // detect a click inside of the box
+            var cellRect = GUILayoutUtility.GetLastRect();
+            if (Event.current.type == EventType.MouseDown && cellRect.Contains(Event.current.mousePosition))
+            {
+                NotebookWindowData.SelectedCell = cell;
+                GUI.FocusControl(null);
+                Repaint();
+            }
+
+            // arrow key navigation
+            if (cell == NotebookWindowData.SelectedCell && Event.current.type == EventType.KeyDown)
+            {
+                bool flag = false;
+                switch (Event.current.keyCode)
+                {
+                    case KeyCode.DownArrow when cell < notebook.cells.Count - 1:
+                        NotebookWindowData.SelectedCell += 1;
+                        flag = true;
+                        break;
+                    case KeyCode.UpArrow when cell > 0:
+                        NotebookWindowData.SelectedCell -= 1;
+                        flag = true;
+                        break;
+                }
+                if (flag)
+                {
+                    Event.current.Use();
+                    Repaint();
+                }
             }
         }
 
@@ -516,6 +588,23 @@ namespace UnityNotebook
                     }
                 }
             }
+            
+            if (cell == NotebookWindowData.SelectedCell)
+            {
+                if (Event.current.type == EventType.KeyDown)
+                {
+                    if (Event.current.shift && Event.current.keyCode == KeyCode.Return)
+                    {
+                        Evaluator.ExecuteCell(notebook, cell);
+                        Event.current.Use();
+                    }
+                    else if (Event.current.keyCode == KeyCode.Escape)
+                    {
+                        GUI.FocusControl(null);
+                        Event.current.Use();
+                    }
+                }
+            }
 
             GUILayout.BeginVertical();
 
@@ -524,7 +613,14 @@ namespace UnityNotebook
             var syntaxTheme = EditorGUIUtility.isProSkin ? SyntaxTheme.Dark : SyntaxTheme.Light;
             // a horizontal scroll view
             c.scroll = GUILayout.BeginScrollView(c.scroll, false, false, GUILayout.ExpandHeight(false));
-            CodeArea.Draw(ref c.rawText, ref c.highlightedText, syntaxTheme, _codeStyle, () => Evaluator.ExecuteCell(notebook, cell));
+            GUI.SetNextControlName("CodeArea");
+            CodeArea.Draw(ref c.rawText, ref c.highlightedText, syntaxTheme, _codeStyle);
+            // TODO we should check for KeyCode Enter, but a character event with '\n' occurs directly after this which we need to interrupt
+            if (cell == NotebookWindowData.SelectedCell && GUI.GetNameOfFocusedControl() != "CodeArea" && Event.current.type == EventType.KeyDown && Event.current.character == '\n')
+            {
+                GUI.FocusControl("CodeArea");
+                Event.current.Use();
+            }
             GUILayout.EndScrollView();
             // split code area's text into separate lines to store in scriptable object
             TryUpdateCellSource(c);
