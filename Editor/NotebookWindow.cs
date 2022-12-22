@@ -419,32 +419,35 @@ namespace UnityNotebook
                 var isEditMode = NotebookWindowData.IsEditMode;
                 bool flag = false;
                 
+                // TODO this should watch for KeyCode.Return instead, but that produces a second key event that contains
+                // a newline character which is inserted into the CodeArea when it receives focus.
+                if (Event.current.character == '\n')
+                {
+                    // execute cell
+                    if (Event.current.shift)
+                    {
+                        Evaluator.ExecuteCell(notebook, selectedCell);
+                        flag = true;
+                    }
+                    // execute and add cell
+                    else if (Event.current.alt)
+                    {
+                        GUI.FocusControl(null);
+                        Evaluator.ExecuteCell(notebook, selectedCell);
+                        var newCell = new Notebook.Cell { cellType = notebook.cells[selectedCell].cellType };
+                        notebook.cells.Insert(selectedCell + 1, newCell);
+                        NotebookWindowData.SelectedCell = selectedCell + 1;
+                        flag = true;
+                    }
+                    // enter edit mode
+                    else
+                    {
+                        NotebookWindowData.IsEditMode = true;
+                    }
+                }
+                
                 switch (Event.current.keyCode)
                 {
-                    case KeyCode.Return:
-                        // execute cell
-                        if (Event.current.shift)
-                        {
-                            Evaluator.ExecuteCell(notebook, selectedCell);
-                            flag = true;
-                        }
-                        // execute and add cell
-                        else if (Event.current.alt)
-                        {
-                            GUI.FocusControl(null);
-                            Evaluator.ExecuteCell(notebook, selectedCell);
-                            var newCell = new Notebook.Cell { cellType = notebook.cells[selectedCell].cellType };
-                            notebook.cells.Insert(selectedCell + 1, newCell);
-                            NotebookWindowData.SelectedCell = selectedCell + 1;
-                            flag = true;
-                        }
-                        // enter edit mode
-                        else
-                        {
-                            NotebookWindowData.IsEditMode = true;
-                            flag = true;
-                        }
-                        break;
                     // enter command mode
                     case KeyCode.Escape:
                         GUI.FocusControl(null);
