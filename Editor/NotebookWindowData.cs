@@ -10,12 +10,14 @@ namespace UnityNotebook
         [SerializeField] private Vector2 scroll;
         [SerializeField] private int selectedCell;
         [SerializeField] private int runningCell;
+        [SerializeField] private bool isEditMode;
 
         public static Notebook OpenedNotebook
         {
             get => instance.openedNotebook;
             set
             {
+                if (instance.openedNotebook == value) return;
                 instance.openedNotebook = value;
                 instance.Save(true);
             }
@@ -26,6 +28,7 @@ namespace UnityNotebook
             get => instance.scroll;
             set
             {
+                if (instance.scroll == value) return;
                 instance.scroll = value;
                 instance.Save(true);
             }
@@ -36,6 +39,7 @@ namespace UnityNotebook
             get => instance.selectedCell;
             set
             {
+                if (instance.selectedCell == value) return;
                 instance.selectedCell = value;
                 instance.Save(true);
             }
@@ -46,11 +50,23 @@ namespace UnityNotebook
             get => instance.runningCell;
             set
             {
+                if (instance.runningCell == value) return;
                 instance.runningCell = value;
                 instance.Save(true);
             }
         }
         
+        public static bool IsEditMode
+        {
+            get => instance.isEditMode;
+            set
+            {
+                if (instance.isEditMode == value) return;
+                instance.isEditMode = value;
+                instance.Save(true);
+            }
+        }
+
         public void Clear()
         {
             openedNotebook = null;

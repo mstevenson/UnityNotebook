@@ -411,6 +411,99 @@ namespace UnityNotebook
             {
                 return;
             }
+            
+            // Keyboard shortcuts
+            if (Event.current.type == EventType.KeyDown)
+            {
+                var selectedCell = NotebookWindowData.SelectedCell;
+                var isEditMode = NotebookWindowData.IsEditMode;
+                bool flag = false;
+                
+                switch (Event.current.keyCode)
+                {
+                    case KeyCode.Return:
+                        // execute cell
+                        if (Event.current.shift)
+                        {
+                            Evaluator.ExecuteCell(notebook, selectedCell);
+                            flag = true;
+                        }
+                        // execute and add cell
+                        else if (Event.current.alt)
+                        {
+                            GUI.FocusControl(null);
+                            Evaluator.ExecuteCell(notebook, selectedCell);
+                            var newCell = new Notebook.Cell { cellType = notebook.cells[selectedCell].cellType };
+                            notebook.cells.Insert(selectedCell + 1, newCell);
+                            NotebookWindowData.SelectedCell = selectedCell + 1;
+                            flag = true;
+                        }
+                        // enter edit mode
+                        else
+                        {
+                            NotebookWindowData.IsEditMode = true;
+                            flag = true;
+                        }
+                        break;
+                    // enter command mode
+                    case KeyCode.Escape:
+                        GUI.FocusControl(null);
+                        NotebookWindowData.IsEditMode = false;
+                        flag = true;
+                        break;
+                    // select next cell
+                    case KeyCode.DownArrow when !isEditMode && selectedCell < notebook.cells.Count - 1:
+                        NotebookWindowData.SelectedCell += 1;
+                        flag = true;
+                        break;
+                    // select previous cell
+                    case KeyCode.UpArrow when !isEditMode && selectedCell > 0:
+                        NotebookWindowData.SelectedCell -= 1;
+                        flag = true;
+                        break;
+                    // delete current empty cell
+                    case KeyCode.Backspace when isEditMode:
+                        if (notebook.cells[selectedCell].source.Length == 0 || notebook.cells[selectedCell].source[0].Length == 0)
+                        {
+                            Undo.RecordObject(notebook, "Delete Cell");
+                            notebook.cells.RemoveAt(selectedCell);
+                            NotebookWindowData.SelectedCell = Mathf.Max(0, selectedCell - 1);
+                            flag = true;
+                        }
+                        break;
+                    // add a cell below
+                    case KeyCode.B when !isEditMode:
+                        Undo.RecordObject(notebook, "Add Cell Below");
+                        var c = new Notebook.Cell { cellType = Notebook.CellType.Code };
+                        notebook.cells.Insert(selectedCell + 1, c);
+                        NotebookWindowData.SelectedCell = selectedCell + 1;
+                        flag = true;
+                        break;
+                    // add cell above
+                    case KeyCode.A when !isEditMode:
+                        Undo.RecordObject(notebook, "Add Cell Above");
+                        var c2 = new Notebook.Cell { cellType = Notebook.CellType.Code };
+                        notebook.cells.Insert(selectedCell, c2);
+                        flag = true;
+                        break;
+                    // case KeyCode.M when !isEditMode:
+                    //     Debug.Log("markdown");
+                    //     Undo.RecordObject(notebook, "Change Cell Type");
+                    //     notebook.cells[selectedCell].cellType = Notebook.CellType.Markdown;
+                    //     flag = true;
+                    //     break;
+                    // case KeyCode.Y when !isEditMode:
+                    //     Undo.RecordObject(notebook, "Change Cell Type");
+                    //     notebook.cells[selectedCell].cellType = Notebook.CellType.Code;
+                    //     flag = true;
+                    //     break;
+                }
+                if (flag)
+                {
+                    Event.current.Use();
+                    Repaint();
+                }
+            }
 
             NotebookWindowData.Scroll = EditorGUILayout.BeginScrollView(NotebookWindowData.Scroll, false, false);
 
@@ -538,28 +631,6 @@ namespace UnityNotebook
                 GUI.FocusControl(null);
                 Repaint();
             }
-
-            // arrow key navigation
-            if (cell == NotebookWindowData.SelectedCell && Event.current.type == EventType.KeyDown)
-            {
-                bool flag = false;
-                switch (Event.current.keyCode)
-                {
-                    case KeyCode.DownArrow when cell < notebook.cells.Count - 1:
-                        NotebookWindowData.SelectedCell += 1;
-                        flag = true;
-                        break;
-                    case KeyCode.UpArrow when cell > 0:
-                        NotebookWindowData.SelectedCell -= 1;
-                        flag = true;
-                        break;
-                }
-                if (flag)
-                {
-                    Event.current.Use();
-                    Repaint();
-                }
-            }
         }
 
         private static void DrawTextCell(Notebook.Cell cell)
@@ -598,47 +669,6 @@ namespace UnityNotebook
                     }
                 }
             }
-            
-            if (cell == NotebookWindowData.SelectedCell)
-            {
-                if (Event.current.type == EventType.KeyDown)
-                {
-                    // if current cell source is empty, delete it
-                    if (Event.current.keyCode == KeyCode.Backspace && (notebook.cells[cell].source.Length == 0 || notebook.cells[cell].source[0].Length == 0))
-                    {
-                        Undo.RecordObject(notebook, "Delete Cell");
-                        notebook.cells.RemoveAt(cell);
-                        NotebookWindowData.SelectedCell = Mathf.Max(0, cell - 1);
-                        Event.current.Use();
-                        Repaint();
-                    }
-                    else if (Event.current.keyCode == KeyCode.Return)
-                    {
-                        // execute current cell
-                        if (Event.current.shift)
-                        {
-                            Evaluator.ExecuteCell(notebook, cell);
-                            Event.current.Use();
-                        }
-                        // execute and add new cell
-                        else if (Event.current.alt)
-                        {
-                            GUI.FocusControl(null);
-                            Evaluator.ExecuteCell(notebook, cell);
-                            var newCell = new Notebook.Cell { cellType = notebook.cells[cell].cellType };
-                            notebook.cells.Insert(cell + 1, newCell);
-                            NotebookWindowData.SelectedCell = cell + 1;
-                            Event.current.Use();
-                            Repaint();
-                        }
-                    }
-                    else if (Event.current.keyCode == KeyCode.Escape)
-                    {
-                        GUI.FocusControl(null);
-                        Event.current.Use();
-                    }
-                }
-            }
 
             GUILayout.BeginVertical();
 
@@ -647,22 +677,20 @@ namespace UnityNotebook
             var syntaxTheme = EditorGUIUtility.isProSkin ? SyntaxTheme.Dark : SyntaxTheme.Light;
             // a horizontal scroll view
             c.scroll = GUILayout.BeginScrollView(c.scroll, false, false, GUILayout.ExpandHeight(false));
-            GUI.SetNextControlName("CodeArea");
+            const string controlName = "CodeArea";
+            GUI.SetNextControlName(controlName);
             CodeArea.Draw(ref c.rawText, ref c.highlightedText, syntaxTheme, _codeStyle);
-            // press enter to switch from command mode to edit mode
-            if (cell == NotebookWindowData.SelectedCell &&
-                GUI.GetNameOfFocusedControl() != "CodeArea" &&
-                Event.current.type == EventType.KeyDown &&
-                !(Event.current.shift || Event.current.alt) &&
-                Event.current.character == '\n')
+
+            if (cell == NotebookWindowData.SelectedCell && NotebookWindowData.IsEditMode)
             {
-                GUI.FocusControl("CodeArea");
-                Event.current.Use();
+                GUI.FocusControl(controlName);
             }
-            if (GUI.GetNameOfFocusedControl() == "CodeArea")
+            else if (GUI.GetNameOfFocusedControl() == controlName)
             {
+                NotebookWindowData.IsEditMode = true;
                 NotebookWindowData.SelectedCell = cell;
             }
+
             GUILayout.EndScrollView();
             // split code area's text into separate lines to store in scriptable object
             TryUpdateCellSource(c);
