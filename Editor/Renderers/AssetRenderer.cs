@@ -14,14 +14,14 @@ namespace UnityNotebook
 
         public override void Render(Notebook.CellOutputDataEntry content)
         {
-            var asset = content.asset as UnityEngine.Object;
+            var asset = content.obj;
             var preview = AssetPreview.GetAssetPreview(asset);
             // var size = NotebookWindowData.PreviewImageSize;
             var rect = GUILayoutUtility.GetRect(preview.width, preview.height, GUILayout.ExpandWidth(false));
             EditorGUI.DrawPreviewTexture(rect, preview);
             
             var assetName = (string.IsNullOrEmpty(asset.name) ? "Unnamed" : asset.name) + $" ({asset.GetType().Name})";
-            var label = $"{assetName} • " + content.asset switch
+            var label = $"{assetName} • " + asset switch
             {
                 Texture tex => $"{tex.width}x{tex.height} • {tex.graphicsFormat}",
                 Material mat => $"{mat.shader.name}",
@@ -34,13 +34,15 @@ namespace UnityNotebook
 
         public override Notebook.CellOutput ObjectToCellOutput(object obj)
         {
-            var mimeType = obj switch
+            var o = obj as UnityEngine.Object;
+            
+            var mimeType = o switch
             {
                 Texture2D _ => $"{UnityMimePrefix}texture",
                 Material _ => $"{UnityMimePrefix}material",
                 Mesh _ => $"{UnityMimePrefix}mesh",
                 GameObject _ => $"{UnityMimePrefix}gameobject",
-                _ => throw new ArgumentException($"Object type {obj.GetType()} is not supported by this renderer")
+                _ => throw new ArgumentException($"Object type {o.GetType()} is not supported by this renderer")
             };
             
             return new Notebook.CellOutput
@@ -51,7 +53,7 @@ namespace UnityNotebook
                     new()
                     {
                         mimeType = mimeType,
-                        asset = obj
+                        obj = o
                     }
                 }
             };

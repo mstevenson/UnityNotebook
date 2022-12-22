@@ -193,7 +193,14 @@ namespace UnityNotebook
             public List<string> stringData = new();
             public Texture2D imageData;
             
-            public object asset;
+            // serialized into scriptable object, not in json
+            [JsonIgnore, SerializeReference]
+            public UnityEngine.Object obj;
+            [JsonIgnore, SerializeReference]
+            public object value;
+            // hack to work around SerializeReference not working with animation curves
+            [JsonIgnore, SerializeReference]
+            public AnimationCurve curve;
         }
 
         [Serializable]

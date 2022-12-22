@@ -14,7 +14,7 @@ namespace UnityNotebook
 
         public override void Render(Notebook.CellOutputDataEntry content)
         {
-            EditorGUILayout.CurveField(content.asset as AnimationCurve, GUILayout.Width(250), GUILayout.Height(120));
+            EditorGUILayout.CurveField(content.curve, GUILayout.Width(250), GUILayout.Height(120));
         }
 
         public override Notebook.CellOutput ObjectToCellOutput(object obj)
@@ -27,7 +27,7 @@ namespace UnityNotebook
                     new()
                     {
                         mimeType = MimeTypes[0],
-                        asset = obj
+                        curve = (AnimationCurve)obj
                     }
                 }
             };

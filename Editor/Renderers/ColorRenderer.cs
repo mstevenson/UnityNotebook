@@ -14,7 +14,7 @@ namespace UnityNotebook
 
         public override void Render(Notebook.CellOutputDataEntry content)
         {
-            EditorGUILayout.ColorField((Color)content.asset, GUILayout.Width(100), GUILayout.Height(100));
+            EditorGUILayout.ColorField((Color)content.value, GUILayout.Width(100), GUILayout.Height(100));
         }
 
         public override Notebook.CellOutput ObjectToCellOutput(object obj)
@@ -27,7 +27,7 @@ namespace UnityNotebook
                     new()
                     {
                         mimeType = MimeTypes[0],
-                        asset = obj
+                        value = obj
                     }
                 }
             };
