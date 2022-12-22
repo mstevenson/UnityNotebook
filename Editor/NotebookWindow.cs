@@ -513,6 +513,11 @@ namespace UnityNotebook
 
         private void DrawCell(Notebook notebook, int cell)
         {
+            if (cell >= notebook.cells.Count)
+            {
+                return;
+            }
+            
             GUILayout.BeginVertical(NotebookWindowData.SelectedCell == cell ? _cellBoxSelected : _cellBox);
             switch (notebook.cells[cell].cellType)
             {
@@ -569,6 +574,11 @@ namespace UnityNotebook
 
         private void DrawCodeCell(Notebook notebook, int cell)
         {
+            if (cell >= notebook.cells.Count)
+            {
+                return;
+            }
+            
             GUILayout.BeginHorizontal();
             if (IsRunning && NotebookWindowData.RunningCell == cell)
             {
@@ -593,10 +603,34 @@ namespace UnityNotebook
             {
                 if (Event.current.type == EventType.KeyDown)
                 {
-                    if (Event.current.shift && Event.current.keyCode == KeyCode.Return)
+                    // if current cell source is empty, delete it
+                    if (Event.current.keyCode == KeyCode.Backspace && (notebook.cells[cell].source.Length == 0 || notebook.cells[cell].source[0].Length == 0))
                     {
-                        Evaluator.ExecuteCell(notebook, cell);
+                        Undo.RecordObject(notebook, "Delete Cell");
+                        notebook.cells.RemoveAt(cell);
+                        NotebookWindowData.SelectedCell = Mathf.Max(0, cell - 1);
                         Event.current.Use();
+                        Repaint();
+                    }
+                    else if (Event.current.keyCode == KeyCode.Return)
+                    {
+                        // execute current cell
+                        if (Event.current.shift)
+                        {
+                            Evaluator.ExecuteCell(notebook, cell);
+                            Event.current.Use();
+                        }
+                        // execute and add new cell
+                        else if (Event.current.alt)
+                        {
+                            GUI.FocusControl(null);
+                            Evaluator.ExecuteCell(notebook, cell);
+                            var newCell = new Notebook.Cell { cellType = notebook.cells[cell].cellType };
+                            notebook.cells.Insert(cell + 1, newCell);
+                            NotebookWindowData.SelectedCell = cell + 1;
+                            Event.current.Use();
+                            Repaint();
+                        }
                     }
                     else if (Event.current.keyCode == KeyCode.Escape)
                     {
@@ -615,11 +649,19 @@ namespace UnityNotebook
             c.scroll = GUILayout.BeginScrollView(c.scroll, false, false, GUILayout.ExpandHeight(false));
             GUI.SetNextControlName("CodeArea");
             CodeArea.Draw(ref c.rawText, ref c.highlightedText, syntaxTheme, _codeStyle);
-            // TODO we should check for KeyCode Enter, but a character event with '\n' occurs directly after this which we need to interrupt
-            if (cell == NotebookWindowData.SelectedCell && GUI.GetNameOfFocusedControl() != "CodeArea" && Event.current.type == EventType.KeyDown && Event.current.character == '\n')
+            // press enter to switch from command mode to edit mode
+            if (cell == NotebookWindowData.SelectedCell &&
+                GUI.GetNameOfFocusedControl() != "CodeArea" &&
+                Event.current.type == EventType.KeyDown &&
+                !(Event.current.shift || Event.current.alt) &&
+                Event.current.character == '\n')
             {
                 GUI.FocusControl("CodeArea");
                 Event.current.Use();
+            }
+            if (GUI.GetNameOfFocusedControl() == "CodeArea")
+            {
+                NotebookWindowData.SelectedCell = cell;
             }
             GUILayout.EndScrollView();
             // split code area's text into separate lines to store in scriptable object

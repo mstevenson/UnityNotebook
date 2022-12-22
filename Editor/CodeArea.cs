@@ -97,7 +97,7 @@ namespace UnityNotebook
                         break;
                     }
 
-                    if (current.character == '\n' && current.shift)
+                    if (current.character == '\n' && (current.shift || current.alt))
                     {
                         // do nothing, this is used elsewhere to execute the cell
                         current.Use();
