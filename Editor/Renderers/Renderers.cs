@@ -49,7 +49,8 @@ namespace UnityNotebook
             foreach (var renderer in _renderers)
             {
                 // get the most derived type
-                if (renderer.SupportedTypes.Contains(obj.GetType()))
+                var type = obj.GetType();
+                if (renderer.SupportedTypes.Contains(type))
                 {
                     return renderer.ObjectToCellOutput(obj);
                 }

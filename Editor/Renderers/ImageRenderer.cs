@@ -14,9 +14,12 @@ namespace UnityNotebook
 
         public override void Render(Notebook.CellOutputDataEntry content)
         {
-            if (content.imageData != null)
+            var img = content.imageData;
+            if (img != null)
             {
-                GUILayout.Label(content.imageData);
+                GUILayout.BeginVertical();
+                GUILayout.Box(img, GUILayout.Width(img.width), GUILayout.Height(img.height));
+                GUILayout.EndVertical();
             }
         }
 
