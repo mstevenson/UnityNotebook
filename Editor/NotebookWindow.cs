@@ -315,6 +315,7 @@ namespace UnityNotebook
                 {
                     if (GUILayout.Button("Run", EditorStyles.toolbarButton, GUILayout.Width(40)))
                     {
+                        GUI.FocusControl(null);
                         Evaluator.ExecuteAll(nb);
                     }
                 }
@@ -510,6 +511,7 @@ namespace UnityNotebook
                 {
                     if (GUILayout.Button("▶", GUILayout.Width(20), GUILayout.Height(20)))
                     {
+                        GUI.FocusControl(null);
                         Evaluator.ExecuteCell(notebook, cell);
                     }
                 }
