@@ -1,10 +1,11 @@
+using System;
 using UnityEngine;
 
 namespace UnityNotebook
 {
     public static class CodeArea
     {
-        public static void Draw(ref string rawText, ref string highlightedText, SyntaxTheme theme, GUIStyle style, params GUILayoutOption[] options)
+        public static void Draw(ref string rawText, ref string highlightedText, SyntaxTheme theme, GUIStyle style, Action onExecute, params GUILayoutOption[] options)
         {
             var controlId = GUIUtility.GetControlID(FocusType.Keyboard);
             var content = new GUIContent(rawText);
@@ -17,7 +18,7 @@ namespace UnityNotebook
             editor.multiline = true;
             editor.style = style;
             editor.DetectFocusChange();
-            HandleTextFieldEvent(rect, controlId, content, ref highlightedText, theme, style, editor);
+            HandleTextFieldEvent(rect, controlId, content, ref highlightedText, theme, style, editor, onExecute);
             editor.UpdateScrollOffsetIfNeeded(Event.current);
 
             rawText = content.text;
@@ -27,7 +28,8 @@ namespace UnityNotebook
             highlightedText = SyntaxHighlighting.SyntaxToHtml(rawText, theme);
         }
 
-        private static void HandleTextFieldEvent(Rect position, int id, GUIContent content, ref string highlightedText, SyntaxTheme theme, GUIStyle style, TextEditor editor)
+        private static void HandleTextFieldEvent(Rect position, int id, GUIContent content, ref string highlightedText,
+            SyntaxTheme theme, GUIStyle style, TextEditor editor, Action onExecute)
         {
             var current = Event.current;
             var flag = false;
@@ -95,6 +97,15 @@ namespace UnityNotebook
                         break;
                     }
 
+                    if (current.character == '\n' && current.shift)
+                    {
+                        if (onExecute != null)
+                        {
+                            onExecute();
+                            current.Use();
+                            break;
+                        }
+                    }
                     if (current.keyCode == KeyCode.Tab) // == '\t')
                     {
                         editor.MoveLineStart();

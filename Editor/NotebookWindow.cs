@@ -524,7 +524,7 @@ namespace UnityNotebook
             var syntaxTheme = EditorGUIUtility.isProSkin ? SyntaxTheme.Dark : SyntaxTheme.Light;
             // a horizontal scroll view
             c.scroll = GUILayout.BeginScrollView(c.scroll, false, false, GUILayout.ExpandHeight(false));
-            CodeArea.Draw(ref c.rawText, ref c.highlightedText, syntaxTheme, _codeStyle);
+            CodeArea.Draw(ref c.rawText, ref c.highlightedText, syntaxTheme, _codeStyle, () => Evaluator.ExecuteCell(notebook, cell));
             GUILayout.EndScrollView();
             // split code area's text into separate lines to store in scriptable object
             TryUpdateCellSource(c);
