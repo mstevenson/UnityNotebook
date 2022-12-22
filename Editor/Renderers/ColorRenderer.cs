@@ -14,7 +14,10 @@ namespace UnityNotebook
 
         public override void Render(Notebook.CellOutputDataEntry content)
         {
-            EditorGUILayout.ColorField((Color)content.value, GUILayout.Width(100), GUILayout.Height(100));
+            var c = (Color)content.value;
+            var hdr = c.maxColorComponent > 1.0f;
+            EditorGUILayout.ColorField(GUIContent.none, c, false, true, hdr, GUILayout.Width(100), GUILayout.Height(100));
+            GUILayout.Label($"RGBA {c.r:0.00}, {c.g:0.00}, {c.b:0.00}, {c.a:0.00} • Hex {ColorUtility.ToHtmlStringRGBA(c)}");
         }
 
         public override Notebook.CellOutput ObjectToCellOutput(object obj)
