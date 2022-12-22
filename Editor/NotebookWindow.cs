@@ -404,9 +404,20 @@ namespace UnityNotebook
 
             Repaint();
         }
+        
+        static bool consumeReturnKey;
 
         private void DrawNotebook(Notebook notebook)
         {
+            if (consumeReturnKey && Event.current.type == EventType.KeyUp)
+            {
+                consumeReturnKey = false;
+            }
+            if (Event.current.isKey && consumeReturnKey && Event.current.character == '\n')
+            {
+                Event.current.Use();
+            }
+
             if (notebook == null)
             {
                 return;
@@ -419,35 +430,36 @@ namespace UnityNotebook
                 var isEditMode = NotebookWindowData.IsEditMode;
                 bool flag = false;
                 
-                // TODO this should watch for KeyCode.Return instead, but that produces a second key event that contains
-                // a newline character which is inserted into the CodeArea when it receives focus.
-                if (Event.current.character == '\n')
-                {
-                    // execute cell
-                    if (Event.current.shift)
-                    {
-                        Evaluator.ExecuteCell(notebook, selectedCell);
-                        flag = true;
-                    }
-                    // execute and add cell
-                    else if (Event.current.alt)
-                    {
-                        GUI.FocusControl(null);
-                        Evaluator.ExecuteCell(notebook, selectedCell);
-                        var newCell = new Notebook.Cell { cellType = notebook.cells[selectedCell].cellType };
-                        notebook.cells.Insert(selectedCell + 1, newCell);
-                        NotebookWindowData.SelectedCell = selectedCell + 1;
-                        flag = true;
-                    }
-                    // enter edit mode
-                    else
-                    {
-                        NotebookWindowData.IsEditMode = true;
-                    }
-                }
-                
                 switch (Event.current.keyCode)
                 {
+                    // TODO this is followed by a key event with the character '\n' which is inserted into the
+                    // newly focused text field. We need to Use this event to prevent that.
+                    case KeyCode.Return:
+                        // execute cell
+                        if (Event.current.shift)
+                        {
+                            Evaluator.ExecuteCell(notebook, selectedCell);
+                            flag = true;
+                            // consumeReturnKey = true;
+                        }
+                        // execute and add cell
+                        else if (Event.current.alt)
+                        {
+                            GUI.FocusControl(null);
+                            Evaluator.ExecuteCell(notebook, selectedCell);
+                            var newCell = new Notebook.Cell { cellType = notebook.cells[selectedCell].cellType };
+                            notebook.cells.Insert(selectedCell + 1, newCell);
+                            NotebookWindowData.SelectedCell = selectedCell + 1;
+                            flag = true;
+                            // consumeReturnKey = true;
+                        }
+                        // enter edit mode
+                        else if (!NotebookWindowData.IsEditMode)
+                        {
+                            NotebookWindowData.IsEditMode = true;
+                            consumeReturnKey = true;
+                        }
+                        break;
                     // enter command mode
                     case KeyCode.Escape:
                         GUI.FocusControl(null);
@@ -621,7 +633,7 @@ namespace UnityNotebook
                     DrawCodeCell(notebook, cell);
                     break;
                 case Notebook.CellType.Markdown:
-                    DrawTextCell(notebook.cells[cell]);
+                    DrawTextCell(notebook, cell);
                     break;
             }
             GUILayout.EndVertical();
@@ -636,17 +648,26 @@ namespace UnityNotebook
             }
         }
 
-        private static void DrawTextCell(Notebook.Cell cell)
+        private static void DrawTextCell(Notebook notebook, int cell)
         {
             // TODO draw markdown
-            // cell.markdownViewer.Draw();
-            cell.rawText = cell.source == null ? string.Empty : string.Concat(cell.source);
-            cell.rawText = EditorGUILayout.TextArea(cell.rawText, _textStyle);
-            // split code area's text into separate lines to store in scriptable object
-            TryUpdateCellSource(cell);
+            // if (!NotebookWindowData.IsEditMode)
+            // {
+            //     cell.markdownViewer.Draw();
+            //     return;
+            // }
+            
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(25);
+            notebook.cells[cell].rawText = notebook.cells[cell].source == null ? string.Empty : string.Concat(notebook.cells[cell].source);
+            GUI.SetNextControlName(CellInputControlName);
+            notebook.cells[cell].rawText = EditorGUILayout.TextArea(notebook.cells[cell].rawText, _textStyle);
+            UpdateFocusAndMode(cell);
+            TryUpdateCellSource(notebook.cells[cell]);
+            GUILayout.EndHorizontal();
         }
 
-        private void DrawCodeCell(Notebook notebook, int cell)
+        private static void DrawCodeCell(Notebook notebook, int cell)
         {
             if (cell >= notebook.cells.Count)
             {
@@ -680,19 +701,10 @@ namespace UnityNotebook
             var syntaxTheme = EditorGUIUtility.isProSkin ? SyntaxTheme.Dark : SyntaxTheme.Light;
             // a horizontal scroll view
             c.scroll = GUILayout.BeginScrollView(c.scroll, false, false, GUILayout.ExpandHeight(false));
-            const string controlName = "CodeArea";
-            GUI.SetNextControlName(controlName);
+            GUI.SetNextControlName(CellInputControlName);
             CodeArea.Draw(ref c.rawText, ref c.highlightedText, syntaxTheme, _codeStyle);
 
-            if (cell == NotebookWindowData.SelectedCell && NotebookWindowData.IsEditMode)
-            {
-                GUI.FocusControl(controlName);
-            }
-            else if (GUI.GetNameOfFocusedControl() == controlName)
-            {
-                NotebookWindowData.IsEditMode = true;
-                NotebookWindowData.SelectedCell = cell;
-            }
+            UpdateFocusAndMode(cell);
 
             GUILayout.EndScrollView();
             // split code area's text into separate lines to store in scriptable object
@@ -714,6 +726,20 @@ namespace UnityNotebook
                 DrawOutput(c);
                 GUILayout.EndVertical();
                 GUILayout.EndHorizontal();
+            }
+        }
+
+        private const string CellInputControlName = "CellInputField";
+        private static void UpdateFocusAndMode(int cell)
+        {
+            if (cell == NotebookWindowData.SelectedCell && NotebookWindowData.IsEditMode)
+            {
+                GUI.FocusControl(CellInputControlName);
+            }
+            else if (GUI.GetNameOfFocusedControl() == CellInputControlName)
+            {
+                NotebookWindowData.IsEditMode = true;
+                NotebookWindowData.SelectedCell = cell;
             }
         }
 
