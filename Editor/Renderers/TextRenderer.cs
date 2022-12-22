@@ -6,7 +6,7 @@ using UnityEngine;
 namespace UnityNotebook
 {
     [UsedImplicitly]
-    public class TextRenderer : OutputRenderer
+    public class TextRenderer : OutputRendererBase
     {
         public override string[] MimeTypes { get; } = { "text/plain", "text/markdown", "application/json" };
         public override Type[] SupportedTypes { get; } = { typeof(string) }; // also is a fallback to support any type by calling ToString()

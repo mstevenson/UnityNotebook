@@ -1,6 +1,6 @@
 namespace UnityNotebook
 {
-    public abstract class OutputRenderer
+    public abstract class OutputRendererBase
     {
         protected const string UnityMimePrefix = "application/vnd.unity.";
 

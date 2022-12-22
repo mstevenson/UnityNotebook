@@ -36,7 +36,7 @@ namespace UnityNotebook
 
         private static bool _openExternally;
 
-        private static bool IsRunning => NotebookWindowData.instance.RunningCell >= 0;
+        private static bool IsRunning => NotebookWindowData.RunningCell >= 0;
 
         [OnOpenAsset]
         public static bool OnOpenAsset(int instanceID, int line)
@@ -60,7 +60,7 @@ namespace UnityNotebook
 
             var notebook = AssetDatabase.LoadAssetAtPath<Notebook>(path);
             var wnd = Init();
-            NotebookWindowData.instance.OpenedNotebook = notebook;
+            NotebookWindowData.OpenedNotebook = notebook;
             return true;
         }
 
@@ -68,12 +68,12 @@ namespace UnityNotebook
         {
             SaveNotebookAsset();
             NotebookWindowData.instance.Clear();
-            NotebookWindowData.instance.OpenedNotebook = notebook;
+            NotebookWindowData.OpenedNotebook = notebook;
         }
 
         private static void SaveNotebookAsset()
         {
-            var nb = NotebookWindowData.instance.OpenedNotebook;
+            var nb = NotebookWindowData.OpenedNotebook;
             if (nb != null)
             {
                 nb.SaveAsset();
@@ -82,7 +82,7 @@ namespace UnityNotebook
 
         private void OnEnable()
         {
-            ChangeNotebook(NotebookWindowData.instance.OpenedNotebook);
+            ChangeNotebook(NotebookWindowData.OpenedNotebook);
             EditorApplication.update += DoRepaint;
         }
 
@@ -180,13 +180,13 @@ namespace UnityNotebook
 
             DrawToolbar();
 
-            if (NotebookWindowData.instance.OpenedNotebook == null)
+            if (NotebookWindowData.OpenedNotebook == null)
             {
                 DrawCreateNotebook();
             }
             else
             {
-                DrawNotebook(NotebookWindowData.instance.OpenedNotebook);
+                DrawNotebook(NotebookWindowData.OpenedNotebook);
             }
         }
 
@@ -215,7 +215,7 @@ namespace UnityNotebook
                     AssetDatabase.Refresh();
                     EditorGUIUtility.PingObject(nb);
                     nb.cells.Add(new Notebook.Cell {cellType = Notebook.CellType.Code});
-                    NotebookWindowData.instance.OpenedNotebook = nb;
+                    NotebookWindowData.OpenedNotebook = nb;
                 }
             }
 
@@ -271,7 +271,7 @@ namespace UnityNotebook
 
         private void DrawNotebookSelector()
         {
-            var nb = NotebookWindowData.instance.OpenedNotebook;
+            var nb = NotebookWindowData.OpenedNotebook;
             EditorGUI.BeginChangeCheck();
             var newNotebook = EditorGUILayout.ObjectField(nb, typeof(Notebook), true) as Notebook;
             if (EditorGUI.EndChangeCheck())
@@ -300,7 +300,7 @@ namespace UnityNotebook
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            var nb = NotebookWindowData.instance.OpenedNotebook;
+            var nb = NotebookWindowData.OpenedNotebook;
             
             using (new EditorGUI.DisabledScope(nb == null))
             {
@@ -358,7 +358,7 @@ namespace UnityNotebook
 
         private void DoRepaint()
         {
-            if (NotebookWindowData.instance.RunningCell == -1)
+            if (NotebookWindowData.RunningCell == -1)
             {
                 return;
             }
@@ -373,7 +373,7 @@ namespace UnityNotebook
                 return;
             }
 
-            NotebookWindowData.instance.Scroll = EditorGUILayout.BeginScrollView(NotebookWindowData.instance.Scroll, false, false);
+            NotebookWindowData.Scroll = EditorGUILayout.BeginScrollView(NotebookWindowData.Scroll, false, false);
 
             EditorGUILayout.Space(2);
 
@@ -498,7 +498,7 @@ namespace UnityNotebook
         private void DrawCodeCell(Notebook notebook, int cell)
         {
             GUILayout.BeginHorizontal();
-            if (IsRunning && NotebookWindowData.instance.RunningCell == cell)
+            if (IsRunning && NotebookWindowData.RunningCell == cell)
             {
                 if (GUILayout.Button("■", GUILayout.Width(20), GUILayout.Height(20)))
                 {
@@ -507,7 +507,7 @@ namespace UnityNotebook
             }
             else
             {
-                using (new EditorGUI.DisabledScope(NotebookWindowData.instance.RunningCell != -1))
+                using (new EditorGUI.DisabledScope(NotebookWindowData.RunningCell != -1))
                 {
                     if (GUILayout.Button("▶", GUILayout.Width(20), GUILayout.Height(20)))
                     {

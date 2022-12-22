@@ -40,7 +40,7 @@ namespace UnityNotebook
 
         public static void ExecuteCell(Notebook notebook, int cell)
         {
-            NotebookWindowData.instance.RunningCell = cell;
+            NotebookWindowData.RunningCell = cell;
             notebook.cells[cell].executionCount += 1;
             ExecuteInternal(notebook, cell);
         }
@@ -67,7 +67,7 @@ namespace UnityNotebook
                     continue;
                 }
                 ExecuteCell(notebook, i);
-                while (NotebookWindowData.instance.RunningCell != -1)
+                while (NotebookWindowData.RunningCell != -1)
                 {
                     yield return null;
                 }
@@ -115,8 +115,8 @@ namespace UnityNotebook
 
         private static void OnExecutionEnded()
         {
-            NotebookWindowData.instance.RunningCell = -1;
-            NotebookWindowData.instance.OpenedNotebook.SaveAsset();
+            NotebookWindowData.RunningCell = -1;
+            NotebookWindowData.OpenedNotebook.SaveAsset();
         }
         
         public static void CaptureOutput(object obj)
@@ -125,8 +125,8 @@ namespace UnityNotebook
             {
                 return;
             }
-            var notebook = NotebookWindowData.instance.OpenedNotebook;
-            var cell = NotebookWindowData.instance.RunningCell;
+            var notebook = NotebookWindowData.OpenedNotebook;
+            var cell = NotebookWindowData.RunningCell;
             var output = Renderers.GetCellOutputForObject(obj);
             notebook.cells[cell].outputs.Add(output);
         }

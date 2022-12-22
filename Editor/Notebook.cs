@@ -192,6 +192,8 @@ namespace UnityNotebook
             public string mimeType;
             public List<string> stringData = new();
             public Texture2D imageData;
+            
+            public object asset;
         }
 
         [Serializable]

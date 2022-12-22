@@ -9,34 +9,45 @@ namespace UnityNotebook
         [SerializeField] private Notebook openedNotebook;
         [SerializeField] private Vector2 scroll;
         [SerializeField] private int runningCell;
+        [SerializeField] private int previewImageSize = 200;
 
-        public Notebook OpenedNotebook
+        public static Notebook OpenedNotebook
         {
-            get => openedNotebook;
+            get => instance.openedNotebook;
             set
             {
-                openedNotebook = value;
-                Save(true);
+                instance.openedNotebook = value;
+                instance.Save(true);
             }
         }
         
-        public Vector2 Scroll
+        public static Vector2 Scroll
         {
-            get => scroll;
+            get => instance.scroll;
             set
             {
-                scroll = value;
-                Save(true);
+                instance.scroll = value;
+                instance.Save(true);
             }
         }
         
-        public int RunningCell
+        public static int RunningCell
         {
-            get => runningCell;
+            get => instance.runningCell;
             set
             {
-                runningCell = value;
-                Save(true);
+                instance.runningCell = value;
+                instance.Save(true);
+            }
+        }
+        
+        public static int PreviewImageSize
+        {
+            get => instance.previewImageSize;
+            set
+            {
+                instance.previewImageSize = value;
+                instance.Save(true);
             }
         }
         

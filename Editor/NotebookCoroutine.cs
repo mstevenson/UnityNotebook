@@ -25,7 +25,7 @@ namespace UnityNotebook
             {
                 return;
             }
-            NotebookWindowData.instance.RunningCell = -1;
+            NotebookWindowData.RunningCell = -1;
             EditorCoroutineUtility.StopCoroutine(_editorCoroutine);
             _editorCoroutine = null;
         }
@@ -40,7 +40,7 @@ namespace UnityNotebook
                     Evaluator.CaptureOutput(output);
                 }
             });
-            NotebookWindowData.instance.RunningCell = -1;
+            NotebookWindowData.RunningCell = -1;
         }
     
         private static IEnumerator RunInternal(IEnumerator target, Action<object> output)
