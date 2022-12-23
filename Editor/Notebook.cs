@@ -23,14 +23,17 @@ namespace UnityNotebook
         [NonSerialized] public ScriptState scriptState;
 
         // Saves the current ScriptableObject data back to the underlying json asset file
-        public void SaveAsset()
+        public void SaveScriptableObject()
         {
-            // EditorUtility.SetDirty(this);
-            // AssetDatabase.SaveAssets();
-            //
-            // var json = JsonConvert.SerializeObject(this, Formatting.Indented);
-            // System.IO.File.WriteAllText(AssetDatabase.GetAssetPath(this), json);
-            // AssetDatabase.Refresh();
+            EditorUtility.SetDirty(this);
+            AssetDatabase.SaveAssets();
+        }
+
+        public void SaveJson()
+        {
+            SaveScriptableObject();
+            var json = JsonConvert.SerializeObject(this, Formatting.Indented);
+            System.IO.File.WriteAllText(AssetDatabase.GetAssetPath(this), json);
         }
 
         public static Notebook CreateAsset(string path)

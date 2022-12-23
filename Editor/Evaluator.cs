@@ -116,7 +116,7 @@ namespace UnityNotebook
         private static void OnExecutionEnded()
         {
             NotebookWindowData.RunningCell = -1;
-            NotebookWindowData.OpenedNotebook.SaveAsset();
+            NotebookWindowData.OpenedNotebook.SaveScriptableObject();
         }
         
         public static void CaptureOutput(object obj)

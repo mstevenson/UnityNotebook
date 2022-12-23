@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using MG.MDV;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -63,17 +64,26 @@ namespace UnityNotebook
             {
                 return;
             }
-            SaveNotebookAsset();
+            SaveJson();
             NotebookWindowData.instance.Clear();
             NotebookWindowData.OpenedNotebook = notebook;
         }
 
-        private static void SaveNotebookAsset()
+        private static void SaveScriptableObject()
         {
             var nb = NotebookWindowData.OpenedNotebook;
             if (nb != null)
             {
-                nb.SaveAsset();
+                nb.SaveScriptableObject();
+            }
+        }
+        
+        private static void SaveJson()
+        {
+            var nb = NotebookWindowData.OpenedNotebook;
+            if (nb != null)
+            {
+                nb.SaveJson();
             }
         }
 
@@ -87,7 +97,7 @@ namespace UnityNotebook
         {
             Evaluator.Stop();
             EditorApplication.update -= DoRepaint;
-            SaveNotebookAsset();
+            SaveJson();
         }
 
         private int _lastKeyboardControl;
@@ -212,7 +222,7 @@ namespace UnityNotebook
             if (GUIUtility.keyboardControl != _lastKeyboardControl)
             {
                 _lastKeyboardControl = GUIUtility.keyboardControl;
-                SaveNotebookAsset();
+                SaveScriptableObject();
             }
             
             BuildStyles();
@@ -365,7 +375,7 @@ namespace UnityNotebook
                     {
                         Undo.RecordObject(nb, "Clear All Output");
                         nb.ClearOutputs();
-                        SaveNotebookAsset();
+                        SaveScriptableObject();
                     }
 
                     using (new EditorGUI.DisabledScope(nb != null && nb.scriptState == null))
@@ -378,6 +388,10 @@ namespace UnityNotebook
 
                     EditorGUILayout.Space();
 
+                    if (GUILayout.Button("Save", EditorStyles.toolbarButton))
+                    {
+                        SaveJson();
+                    }
                     if (GUILayout.Button("Edit", EditorStyles.toolbarButton))
                     {
                         _openExternally = true;
@@ -460,18 +474,26 @@ namespace UnityNotebook
                             consumeReturnKey = true;
                         }
                         break;
+                    // enter edit mode
+                    case KeyCode.Q when !isEditMode:
+                    case KeyCode.Escape when !isEditMode:
+                        NotebookWindowData.IsEditMode = true;
+                        break;
                     // enter command mode
                     case KeyCode.Escape:
+                    case KeyCode.M when isEditMode:
                         GUI.FocusControl(null);
                         NotebookWindowData.IsEditMode = false;
                         flag = true;
                         break;
                     // select next cell
+                    case KeyCode.J when !isEditMode && selectedCell > 0:
                     case KeyCode.DownArrow when !isEditMode && selectedCell < notebook.cells.Count - 1:
                         NotebookWindowData.SelectedCell += 1;
                         flag = true;
                         break;
                     // select previous cell
+                    case KeyCode.K when !isEditMode && selectedCell > 0:
                     case KeyCode.UpArrow when !isEditMode && selectedCell > 0:
                         NotebookWindowData.SelectedCell -= 1;
                         flag = true;
@@ -501,6 +523,28 @@ namespace UnityNotebook
                         notebook.cells.Insert(selectedCell, c2);
                         flag = true;
                         break;
+                    // set header
+                    case KeyCode.Alpha1 when !isEditMode:
+                        SetTextCellHeaderLevel(1);
+                        flag = true;
+                        break;
+                    case KeyCode.Alpha2 when !isEditMode:
+                        SetTextCellHeaderLevel(2);
+                        flag = true;
+                        break;
+                    case KeyCode.Alpha3 when !isEditMode:
+                        SetTextCellHeaderLevel(3);
+                        flag = true;
+                        break;
+                    case KeyCode.Alpha4 when !isEditMode:
+                        SetTextCellHeaderLevel(4);
+                        flag = true;
+                        break;
+                    case KeyCode.Alpha5 when !isEditMode:
+                        SetTextCellHeaderLevel(5);
+                        flag = true;
+                        break;
+
                     // case KeyCode.M when !isEditMode:
                     //     Debug.Log("markdown");
                     //     Undo.RecordObject(notebook, "Change Cell Type");
@@ -549,6 +593,23 @@ namespace UnityNotebook
             } while (cellIndex < cellCount + 1);
 
             EditorGUILayout.EndScrollView();
+        }
+
+        private static void SetTextCellHeaderLevel(int level)
+        {
+            var notebook = NotebookWindowData.OpenedNotebook;
+            var cell = NotebookWindowData.SelectedCell;
+            if (notebook.cells[cell].cellType != Notebook.CellType.Markdown)
+            {
+                return;
+            }
+            var lines = notebook.cells[cell].source;
+            if (lines.Length == 0)
+            {
+                return;
+            }
+            var newFirstLine = Regex.Replace(lines[0], @"^#{1,5}\s*", "");
+            lines[0] = $"{new string('#', level)} {newFirstLine}";
         }
 
         private static bool DrawAddCellButtons(Notebook notebook, int cellIndex, out Rect rect)
