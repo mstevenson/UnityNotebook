@@ -30,7 +30,7 @@ namespace UnityNotebook
 
         private static bool _openExternally;
 
-        private static bool IsRunning => NotebookWindowData.RunningCell >= 0;
+        private static bool IsRunning => NBState.RunningCell >= 0;
 
         [OnOpenAsset]
         public static bool OnOpenAsset(int instanceID, int line)
@@ -54,24 +54,24 @@ namespace UnityNotebook
 
             var notebook = AssetDatabase.LoadAssetAtPath<Notebook>(path);
             var wnd = Init();
-            NotebookWindowData.OpenedNotebook = notebook;
+            NBState.OpenedNotebook = notebook;
             return true;
         }
 
         private static void ChangeNotebook(Notebook notebook)
         {
-            if (notebook == NotebookWindowData.OpenedNotebook)
+            if (notebook == NBState.OpenedNotebook)
             {
                 return;
             }
             SaveJson();
-            NotebookWindowData.instance.Clear();
-            NotebookWindowData.OpenedNotebook = notebook;
+            NBState.instance.Clear();
+            NBState.OpenedNotebook = notebook;
         }
 
         private static void SaveScriptableObject()
         {
-            var nb = NotebookWindowData.OpenedNotebook;
+            var nb = NBState.OpenedNotebook;
             if (nb != null)
             {
                 nb.SaveScriptableObject();
@@ -80,7 +80,7 @@ namespace UnityNotebook
         
         private static void SaveJson()
         {
-            var nb = NotebookWindowData.OpenedNotebook;
+            var nb = NBState.OpenedNotebook;
             if (nb != null)
             {
                 nb.SaveJson();
@@ -89,7 +89,7 @@ namespace UnityNotebook
 
         private void OnEnable()
         {
-            ChangeNotebook(NotebookWindowData.OpenedNotebook);
+            ChangeNotebook(NBState.OpenedNotebook);
             EditorApplication.update += DoRepaint;
         }
 
@@ -229,13 +229,13 @@ namespace UnityNotebook
 
             DrawToolbar();
 
-            if (NotebookWindowData.OpenedNotebook == null)
+            if (NBState.OpenedNotebook == null)
             {
                 DrawCreateNotebook();
             }
             else
             {
-                DrawNotebook(NotebookWindowData.OpenedNotebook);
+                DrawNotebook(NBState.OpenedNotebook);
             }
         }
 
@@ -264,7 +264,7 @@ namespace UnityNotebook
                     AssetDatabase.Refresh();
                     EditorGUIUtility.PingObject(nb);
                     nb.cells.Add(new Notebook.Cell {cellType = Notebook.CellType.Code});
-                    NotebookWindowData.OpenedNotebook = nb;
+                    NBState.OpenedNotebook = nb;
                 }
             }
 
@@ -320,7 +320,7 @@ namespace UnityNotebook
 
         private void DrawNotebookSelector()
         {
-            var nb = NotebookWindowData.OpenedNotebook;
+            var nb = NBState.OpenedNotebook;
             EditorGUI.BeginChangeCheck();
             var newNotebook = EditorGUILayout.ObjectField(nb, typeof(Notebook), true) as Notebook;
             if (EditorGUI.EndChangeCheck())
@@ -349,7 +349,7 @@ namespace UnityNotebook
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            var nb = NotebookWindowData.OpenedNotebook;
+            var nb = NBState.OpenedNotebook;
             
             using (new EditorGUI.DisabledScope(nb == null))
             {
@@ -365,7 +365,8 @@ namespace UnityNotebook
                     if (GUILayout.Button("Run", EditorStyles.toolbarButton, GUILayout.Width(40)))
                     {
                         GUI.FocusControl(null);
-                        Evaluator.ExecuteAll(nb);
+                        // TODO repaint callback doesn't work reliably, the final cell output often isn't drawn
+                        Evaluator.ExecuteAll(nb, Repaint);
                     }
                 }
 
@@ -378,11 +379,11 @@ namespace UnityNotebook
                         SaveScriptableObject();
                     }
 
-                    using (new EditorGUI.DisabledScope(nb != null && nb.scriptState == null))
+                    using (new EditorGUI.DisabledScope(nb != null && NBState.instance.scriptState == null))
                     {
                         if (GUILayout.Button("Restart", EditorStyles.toolbarButton))
                         {
-                            nb.scriptState = null;
+                            NBState.instance.scriptState = null;
                         }
                     }
 
@@ -411,7 +412,7 @@ namespace UnityNotebook
 
         private void DoRepaint()
         {
-            if (NotebookWindowData.RunningCell == -1)
+            if (NBState.RunningCell == -1)
             {
                 return;
             }
@@ -440,8 +441,8 @@ namespace UnityNotebook
             // Keyboard shortcuts
             if (Event.current.type == EventType.KeyDown)
             {
-                var selectedCell = NotebookWindowData.SelectedCell;
-                var isEditMode = NotebookWindowData.IsEditMode;
+                var selectedCell = NBState.SelectedCell;
+                var isEditMode = NBState.IsEditMode;
                 bool flag = false;
                 
                 switch (Event.current.keyCode)
@@ -463,39 +464,40 @@ namespace UnityNotebook
                             Evaluator.ExecuteCell(notebook, selectedCell);
                             var newCell = new Notebook.Cell { cellType = notebook.cells[selectedCell].cellType };
                             notebook.cells.Insert(selectedCell + 1, newCell);
-                            NotebookWindowData.SelectedCell = selectedCell + 1;
+                            NBState.SelectedCell = selectedCell + 1;
                             flag = true;
                             // consumeReturnKey = true;
                         }
                         // enter edit mode
-                        else if (!NotebookWindowData.IsEditMode)
+                        else if (!NBState.IsEditMode)
                         {
-                            NotebookWindowData.IsEditMode = true;
+                            NBState.IsEditMode = true;
                             consumeReturnKey = true;
                         }
                         break;
                     // enter edit mode
                     case KeyCode.Q when !isEditMode:
                     case KeyCode.Escape when !isEditMode:
-                        NotebookWindowData.IsEditMode = true;
+                        NBState.IsEditMode = true;
                         break;
                     // enter command mode
                     case KeyCode.Escape:
-                    case KeyCode.M when isEditMode:
+                    case KeyCode.M when Event.current.control && isEditMode:
+                        GameObject.CreatePrimitive(PrimitiveType.Cube);
                         GUI.FocusControl(null);
-                        NotebookWindowData.IsEditMode = false;
+                        NBState.IsEditMode = false;
                         flag = true;
                         break;
                     // select next cell
                     case KeyCode.J when !isEditMode && selectedCell > 0:
                     case KeyCode.DownArrow when !isEditMode && selectedCell < notebook.cells.Count - 1:
-                        NotebookWindowData.SelectedCell += 1;
+                        NBState.SelectedCell += 1;
                         flag = true;
                         break;
                     // select previous cell
                     case KeyCode.K when !isEditMode && selectedCell > 0:
                     case KeyCode.UpArrow when !isEditMode && selectedCell > 0:
-                        NotebookWindowData.SelectedCell -= 1;
+                        NBState.SelectedCell -= 1;
                         flag = true;
                         break;
                     // delete current empty cell
@@ -504,7 +506,7 @@ namespace UnityNotebook
                         {
                             Undo.RecordObject(notebook, "Delete Cell");
                             notebook.cells.RemoveAt(selectedCell);
-                            NotebookWindowData.SelectedCell = Mathf.Max(0, selectedCell - 1);
+                            NBState.SelectedCell = Mathf.Max(0, selectedCell - 1);
                             flag = true;
                         }
                         break;
@@ -513,7 +515,7 @@ namespace UnityNotebook
                         Undo.RecordObject(notebook, "Add Cell Below");
                         var c = new Notebook.Cell { cellType = Notebook.CellType.Code };
                         notebook.cells.Insert(selectedCell + 1, c);
-                        NotebookWindowData.SelectedCell = selectedCell + 1;
+                        NBState.SelectedCell = selectedCell + 1;
                         flag = true;
                         break;
                     // add cell above
@@ -564,7 +566,7 @@ namespace UnityNotebook
                 }
             }
 
-            NotebookWindowData.Scroll = EditorGUILayout.BeginScrollView(NotebookWindowData.Scroll, false, false);
+            NBState.Scroll = EditorGUILayout.BeginScrollView(NBState.Scroll, false, false);
 
             EditorGUILayout.Space(2);
 
@@ -597,8 +599,8 @@ namespace UnityNotebook
 
         private static void SetTextCellHeaderLevel(int level)
         {
-            var notebook = NotebookWindowData.OpenedNotebook;
-            var cell = NotebookWindowData.SelectedCell;
+            var notebook = NBState.OpenedNotebook;
+            var cell = NBState.SelectedCell;
             if (notebook.cells[cell].cellType != Notebook.CellType.Markdown)
             {
                 return;
@@ -687,7 +689,7 @@ namespace UnityNotebook
                 return;
             }
             
-            GUILayout.BeginVertical(NotebookWindowData.SelectedCell == cell ? _cellBoxSelected : _cellBox);
+            GUILayout.BeginVertical(NBState.SelectedCell == cell ? _cellBoxSelected : _cellBox);
             switch (notebook.cells[cell].cellType)
             {
                 case Notebook.CellType.Code:
@@ -703,7 +705,7 @@ namespace UnityNotebook
             var cellRect = GUILayoutUtility.GetLastRect();
             if (Event.current.type == EventType.MouseDown && cellRect.Contains(Event.current.mousePosition))
             {
-                NotebookWindowData.SelectedCell = cell;
+                NBState.SelectedCell = cell;
                 GUI.FocusControl(null);
                 Repaint();
             }
@@ -736,7 +738,7 @@ namespace UnityNotebook
             }
             
             GUILayout.BeginHorizontal();
-            if (IsRunning && NotebookWindowData.RunningCell == cell)
+            if (IsRunning && NBState.RunningCell == cell)
             {
                 if (GUILayout.Button("■", GUILayout.Width(20), GUILayout.Height(20)))
                 {
@@ -745,7 +747,7 @@ namespace UnityNotebook
             }
             else
             {
-                using (new EditorGUI.DisabledScope(NotebookWindowData.RunningCell != -1))
+                using (new EditorGUI.DisabledScope(NBState.RunningCell != -1))
                 {
                     if (GUILayout.Button("▶", GUILayout.Width(20), GUILayout.Height(20)))
                     {
@@ -793,14 +795,14 @@ namespace UnityNotebook
         private const string CellInputControlName = "CellInputField";
         private static void UpdateFocusAndMode(int cell)
         {
-            if (cell == NotebookWindowData.SelectedCell && NotebookWindowData.IsEditMode)
+            if (cell == NBState.SelectedCell && NBState.IsEditMode)
             {
                 GUI.FocusControl(CellInputControlName);
             }
             else if (GUI.GetNameOfFocusedControl() == CellInputControlName)
             {
-                NotebookWindowData.IsEditMode = true;
-                NotebookWindowData.SelectedCell = cell;
+                NBState.IsEditMode = true;
+                NBState.SelectedCell = cell;
             }
         }
 

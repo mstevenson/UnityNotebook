@@ -1,16 +1,20 @@
+using System;
+using Microsoft.CodeAnalysis.Scripting;
 using UnityEditor;
 using UnityEngine;
 
 namespace UnityNotebook
 {
     [FilePath("UserSettings/NotebookWindow.asset", FilePathAttribute.Location.ProjectFolder)]
-    public class NotebookWindowData : ScriptableSingleton<NotebookWindowData>
+    public class NBState : ScriptableSingleton<NBState>
     {
         [SerializeField] private Notebook openedNotebook;
         [SerializeField] private Vector2 scroll;
         [SerializeField] private int selectedCell;
         [SerializeField] private int runningCell;
         [SerializeField] private bool isEditMode;
+        
+        [NonSerialized] public ScriptState scriptState;
 
         public static Notebook OpenedNotebook
         {

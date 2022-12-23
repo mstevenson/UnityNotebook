@@ -12,8 +12,8 @@ namespace UnityNotebook
         {
             // if (NotebookWindowData.instance.runningCell >= 0)
             // {
-            var nb = NotebookWindowData.OpenedNotebook;
-            var runningCell = NotebookWindowData.RunningCell;
+            var nb = NBState.OpenedNotebook;
+            var runningCell = NBState.RunningCell;
             AddDataToOutput(nb.cells[runningCell], data);
             // }
         }

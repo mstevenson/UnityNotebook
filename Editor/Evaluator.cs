@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using Unity.EditorCoroutines.Editor;
+using UnityEngine;
 
 namespace UnityNotebook
 {
@@ -40,12 +41,12 @@ namespace UnityNotebook
 
         public static void ExecuteCell(Notebook notebook, int cell)
         {
-            NotebookWindowData.RunningCell = cell;
+            NBState.RunningCell = cell;
             notebook.cells[cell].executionCount += 1;
             ExecuteInternal(notebook, cell);
         }
 
-        public static void ExecuteAll(Notebook notebook)
+        public static void ExecuteAll(Notebook notebook, Action completionCallback)
         {
             foreach (var cell in notebook.cells)
             {
@@ -56,6 +57,7 @@ namespace UnityNotebook
                 EditorCoroutineUtility.StopCoroutine(_sequenceCoroutine);
             }
             _sequenceCoroutine = EditorCoroutineUtility.StartCoroutineOwnerless(ExecuteSequence(notebook));
+            completionCallback?.Invoke();
         }
 
         private static IEnumerator ExecuteSequence(Notebook notebook)
@@ -67,10 +69,13 @@ namespace UnityNotebook
                     continue;
                 }
                 ExecuteCell(notebook, i);
-                while (NotebookWindowData.RunningCell != -1)
+                // Wait for cell to finish executing
+                while (NBState.RunningCell != -1)
                 {
                     yield return null;
                 }
+                // Pause a frame to allow the UI to update
+                yield return null;
             }
         }
 
@@ -87,17 +92,17 @@ namespace UnityNotebook
                 {
                     code = $"IEnumerator EvaluateCoroutine() {{ {code} }} UnityNotebook.NotebookCoroutine.Run(EvaluateCoroutine());";
                 }
-                if (notebook.scriptState == null)
+                if (NBState.instance.scriptState == null)
                 {
-                    notebook.scriptState = await CSharpScript.RunAsync(code, _options);
+                    NBState.instance.scriptState = await CSharpScript.RunAsync(code, _options);
                 }
                 else
                 {
-                    notebook.scriptState = await notebook.scriptState.ContinueWithAsync(code, _options);
+                    NBState.instance.scriptState = await NBState.instance.scriptState.ContinueWithAsync(code, _options);
                 }
 
                 // Capture return values. Coroutine yielded values call CaptureOutput directly.
-                CaptureOutput(notebook.scriptState.ReturnValue);
+                CaptureOutput(NBState.instance.scriptState.ReturnValue);
             }
             catch (Exception e)
             {
@@ -115,8 +120,8 @@ namespace UnityNotebook
 
         private static void OnExecutionEnded()
         {
-            NotebookWindowData.RunningCell = -1;
-            NotebookWindowData.OpenedNotebook.SaveScriptableObject();
+            NBState.RunningCell = -1;
+            NBState.OpenedNotebook.SaveScriptableObject();
         }
         
         public static void CaptureOutput(object obj)
@@ -125,8 +130,8 @@ namespace UnityNotebook
             {
                 return;
             }
-            var notebook = NotebookWindowData.OpenedNotebook;
-            var cell = NotebookWindowData.RunningCell;
+            var notebook = NBState.OpenedNotebook;
+            var cell = NBState.RunningCell;
             var output = Renderers.GetCellOutputForObject(obj);
             notebook.cells[cell].outputs.Add(output);
         }

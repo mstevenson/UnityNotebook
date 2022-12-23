@@ -20,8 +20,6 @@ namespace UnityNotebook
         public Metadata metadata = new();
         public List<Cell> cells = new();
 
-        [NonSerialized] public ScriptState scriptState;
-
         // Saves the current ScriptableObject data back to the underlying json asset file
         public void SaveScriptableObject()
         {
@@ -204,6 +202,20 @@ namespace UnityNotebook
             // hack to work around SerializeReference not working with animation curves
             [JsonIgnore, SerializeReference]
             public AnimationCurve curve;
+            [SerializeField] private int id;
+
+            [JsonIgnore]
+            public int Id
+            {
+                get
+                {
+                    if (id == 0)
+                    {
+                        id = Guid.NewGuid().GetHashCode();
+                    }
+                    return id;
+                }
+            }
         }
 
         [Serializable]
