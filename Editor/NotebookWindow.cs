@@ -479,11 +479,11 @@ namespace UnityNotebook
                     case KeyCode.Q when !isEditMode:
                     case KeyCode.Escape when !isEditMode:
                         NBState.IsEditMode = true;
+                        flag = true;
                         break;
                     // enter command mode
                     case KeyCode.Escape:
                     case KeyCode.M when Event.current.control && isEditMode:
-                        GameObject.CreatePrimitive(PrimitiveType.Cube);
                         GUI.FocusControl(null);
                         NBState.IsEditMode = false;
                         flag = true;
