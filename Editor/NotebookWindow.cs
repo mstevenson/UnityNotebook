@@ -2,25 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine;
+using static UnityNotebook.Styles;
 
 namespace UnityNotebook
 {
     public class NotebookWindow : EditorWindow
     {
         [MenuItem("Window/Notebook")]
-        public static NotebookWindow Init()
+        public static void Init()
         {
             var wnd = GetWindow<NotebookWindow>();
             wnd.titleContent = new GUIContent("Notebook");
-            return wnd;
         }
-
-        private static string PackagePath => UnityEditor.PackageManager.PackageInfo.FindForAssembly(Assembly.GetExecutingAssembly()).assetPath;
         
         private static bool _openExternally;
 
@@ -47,7 +44,7 @@ namespace UnityNotebook
             }
 
             var notebook = AssetDatabase.LoadAssetAtPath<Notebook>(path);
-            var wnd = Init();
+            Init();
             NBState.OpenedNotebook = notebook;
             return true;
         }
@@ -83,6 +80,7 @@ namespace UnityNotebook
 
         private void OnEnable()
         {
+            Styles.Init();
             ChangeNotebook(NBState.OpenedNotebook);
             EditorApplication.update += DoRepaint;
             Undo.undoRedoPerformed += DoRepaint;
@@ -101,135 +99,7 @@ namespace UnityNotebook
         }
 
         private int _lastKeyboardControl;
-
-        private static GUIStyle _textStyle;
-        private static GUIStyle _textStyleNoBackground;
-        private static GUIStyle _codeStyle;
-        private static GUIStyle _codeStyleNoBackground;
-        private static GUIStyle _cellBox;
-        private static GUIStyle _cellBoxSelected;
-        private static GUIStyle _codeCellBox;
-        private static GUIStyle _codeCellBoxSelected;
         
-        private static void BuildStyles()
-        {
-            if (_textStyle == null)
-            {
-                _textStyle = new GUIStyle(EditorStyles.textField)
-                {
-                    richText = true,
-                    wordWrap = true,
-                    stretchHeight = false,
-                    stretchWidth = true,
-                    padding = new RectOffset(4, 4, 4, 4),
-                };
-            }
-
-            if (_textStyleNoBackground == null)
-            {
-                _textStyleNoBackground = new GUIStyle()
-                {
-                    fontStyle = _textStyle.fontStyle,
-                    fontSize = _textStyle.fontSize,
-                    normal = _textStyle.normal,
-                    active = _textStyle.active,
-                    focused = _textStyle.focused,
-                    hover = _textStyle.hover,
-                    padding = _textStyle.padding,
-                    margin = _textStyle.margin,
-                    wordWrap = _textStyle.wordWrap,
-                    clipping = _textStyle.clipping,
-                    stretchHeight = _textStyle.stretchHeight,
-                    stretchWidth = _textStyle.stretchWidth,
-                    font = _textStyle.font,
-                    richText = true
-                };
-            }
-
-            if (_codeStyle == null)
-            {
-                var fontAsset = AssetDatabase.LoadAssetAtPath<Font>($"{PackagePath}/Assets/Menlo-Regular.ttf");
-                if (fontAsset == null)
-                {
-                    Debug.LogError("Failed to load code editor font");
-                }
-
-                _codeStyle = new GUIStyle(GUI.skin.textArea)
-                {
-                    padding = new RectOffset(8, 8, 8, 8),
-                    wordWrap = false,
-                    clipping = TextClipping.Clip,
-                    stretchHeight = false,
-                    stretchWidth = true,
-                    font = fontAsset,
-                    richText = true
-                };
-            }
-
-            if (_codeStyleNoBackground == null)
-            {
-                _codeStyleNoBackground = new GUIStyle()
-                {
-                    fontStyle = _codeStyle.fontStyle,
-                    fontSize = _codeStyle.fontSize,
-                    normal = _codeStyle.normal,
-                    active = _codeStyle.active,
-                    focused = _codeStyle.focused,
-                    hover = _codeStyle.hover,
-                    padding = _codeStyle.padding,
-                    margin = _codeStyle.margin,
-                    wordWrap = _codeStyle.wordWrap,
-                    clipping = _codeStyle.clipping,
-                    stretchHeight = _codeStyle.stretchHeight,
-                    stretchWidth = _codeStyle.stretchWidth,
-                    font = _codeStyle.font,
-                    richText = true
-                };
-            }
-            
-            if (_cellBox == null)
-            {
-                _cellBox = new GUIStyle("box");
-                _cellBox.padding = new RectOffset(8, 8, 8, 8);
-            }
-
-            if (_cellBoxSelected == null)
-            {
-                Texture2D BuildTexture(Color color)
-                {
-                    const int width = 64;
-                    const int height = 64;
-                    var pixels = new Color[width * height];
-                    for (var i = 0; i < pixels.Length; i++)
-                    {
-                        pixels[i] = color;
-                    }
-                    var result = new Texture2D(width, height);
-                    result.SetPixels(pixels);
-                    result.Apply();
-                    return result;
-                }
-                _cellBoxSelected = new GUIStyle(_cellBox)
-                {
-                    normal = new GUIStyleState()
-                    {
-                        background = BuildTexture(new Color(0.23f, 0.29f, 0.37f)),
-                    }
-                };
-            }
-            
-            if (_codeCellBox == null)
-            {
-                _codeCellBox = new GUIStyle(_cellBox);
-                _codeCellBox.padding = new RectOffset(8, 8, 8, 1);
-            }
-            if (_codeCellBoxSelected == null)
-            {
-                _codeCellBoxSelected = new GUIStyle(_cellBoxSelected);
-                _codeCellBoxSelected.padding = new RectOffset(8, 8, 8, 1);
-            }
-        }
-
         private void OnGUI()
         {
             // Save the asset when moving between fields
@@ -238,8 +108,6 @@ namespace UnityNotebook
                 _lastKeyboardControl = GUIUtility.keyboardControl;
                 SaveScriptableObject();
             }
-            
-            BuildStyles();
 
             DrawToolbar();
 
@@ -723,12 +591,12 @@ namespace UnityNotebook
             switch (notebook.cells[cell].cellType)
             {
                 case Notebook.CellType.Code:
-                    GUILayout.BeginVertical(NBState.SelectedCell == cell ? _codeCellBoxSelected : _codeCellBox);
+                    GUILayout.BeginVertical(NBState.SelectedCell == cell ? CodeCellBoxSelectedStyle : CodeCellBoxStyle);
                     DrawCodeCell(notebook, cell);
                     GUILayout.EndVertical();
                     break;
                 case Notebook.CellType.Markdown:
-                    GUILayout.BeginVertical(NBState.SelectedCell == cell ? _cellBoxSelected : _cellBox);
+                    GUILayout.BeginVertical(NBState.SelectedCell == cell ? CellBoxSelectedStyle : CellBoxStyle);
                     DrawTextCell(notebook, cell);
                     GUILayout.EndVertical();
                     break;
@@ -756,7 +624,7 @@ namespace UnityNotebook
             GUILayout.Space(25);
             notebook.cells[cell].rawText = notebook.cells[cell].source == null ? string.Empty : string.Concat(notebook.cells[cell].source);
             GUI.SetNextControlName(CellInputControlName);
-            notebook.cells[cell].rawText = EditorGUILayout.TextArea(notebook.cells[cell].rawText, _textStyle);
+            notebook.cells[cell].rawText = EditorGUILayout.TextArea(notebook.cells[cell].rawText, TextStyle);
             UpdateFocusAndMode(cell);
             TryUpdateCellSource(notebook.cells[cell]);
             GUILayout.EndHorizontal();
@@ -798,7 +666,7 @@ namespace UnityNotebook
             var height = (c.source.Length == 0 ? 1 : c.source.Length) * 14 + 28;
             c.scroll = GUILayout.BeginScrollView(c.scroll, false, false, GUILayout.Height(height));
             GUI.SetNextControlName(CellInputControlName);
-            CodeArea.Draw(ref c.rawText, ref c.highlightedText, syntaxTheme, _codeStyle);
+            CodeArea.Draw(ref c.rawText, ref c.highlightedText, syntaxTheme, CodeStyle);
 
             UpdateFocusAndMode(cell);
 
@@ -866,12 +734,12 @@ namespace UnityNotebook
                 switch (output.outputType)
                 {
                     case Notebook.OutputType.Stream:
-                        EditorGUILayout.TextArea(string.Concat(output.text), _textStyleNoBackground);
+                        EditorGUILayout.TextArea(string.Concat(output.text), TextNoBackgroundStyle);
                         break;
                     case Notebook.OutputType.ExecuteResult:
                         foreach (var data in output.data)
                         {
-                            EditorGUILayout.TextArea(string.Concat(data.stringData), _textStyleNoBackground);
+                            EditorGUILayout.TextArea(string.Concat(data.stringData), TextNoBackgroundStyle);
                         }
                         break;
                     case Notebook.OutputType.DisplayData:
@@ -891,7 +759,7 @@ namespace UnityNotebook
                         // TODO convert ANSI escape sequences to HTML tags
                         var str = string.Join("\n", output.traceback);
                         output.scroll = GUILayout.BeginScrollView(output.scroll);
-                        EditorGUILayout.TextArea(str, _codeStyleNoBackground, GUILayout.ExpandHeight(false));
+                        EditorGUILayout.TextArea(str, CodeNoBackgroundStyle, GUILayout.ExpandHeight(false));
                         GUILayout.EndScrollView();
                         break;
                     default:
