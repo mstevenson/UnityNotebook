@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEditor;
@@ -520,6 +521,25 @@ namespace UnityNotebook
                         var c2 = new Notebook.Cell { cellType = Notebook.CellType.Code };
                         notebook.cells.Insert(selectedCell, c2);
                         flag = true;
+                        break;
+                    // merge cell below
+                    case KeyCode.M when Event.current.shift && !isEditMode:
+                        if (selectedCell < notebook.cells.Count - 1)
+                        {
+                            Undo.RecordObject(notebook, "Merge Cell Below");
+                            // add newline to last line of current cell
+                            var count = notebook.cells[selectedCell].source.Length - 1;
+                            var lastLine = notebook.cells[selectedCell].source[count];
+                            if (lastLine.Length > 0 && lastLine[^1] != '\n')
+                            {
+                                notebook.cells[selectedCell].source[count] += "\n";
+                            }
+                            // merge the cells
+                            notebook.cells[selectedCell].source = notebook.cells[selectedCell].source.Concat(notebook.cells[selectedCell + 1].source).ToArray();
+                            notebook.cells[selectedCell].rawText = string.Join("", notebook.cells[selectedCell].source);
+                            notebook.cells.RemoveAt(selectedCell + 1);
+                            flag = true;
+                        }
                         break;
                     // set header
                     case KeyCode.Alpha1 when !isEditMode:
