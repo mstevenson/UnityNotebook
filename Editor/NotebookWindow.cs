@@ -480,7 +480,7 @@ namespace UnityNotebook
                         flag = true;
                         break;
                     // select next cell
-                    case KeyCode.J when !isEditMode && selectedCell > 0:
+                    case KeyCode.J when !isEditMode && selectedCell < notebook.cells.Count - 1:
                     case KeyCode.DownArrow when !isEditMode && selectedCell < notebook.cells.Count - 1:
                         NBState.SelectedCell += 1;
                         flag = true;
