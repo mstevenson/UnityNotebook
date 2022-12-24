@@ -541,6 +541,16 @@ namespace UnityNotebook
                             flag = true;
                         }
                         break;
+                    // split cell
+                    case KeyCode.Minus when Event.current.control && Event.current.shift && isEditMode:
+                        // Undo.RecordObject(notebook, "Split Cell");
+                        var cell = notebook.cells[selectedCell];
+                        var editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+                        var cursorIndex = editor.selectIndex;
+                        // TODO copy the raw text after the cursorIndex to a new cell and delete the previous characters from the current cell
+                        // then update the source array to match the rawText
+                        Debug.Log("split not implemented");
+                        break;
                     // set header
                     case KeyCode.Alpha1 when !isEditMode:
                         SetTextCellHeaderLevel(1);
