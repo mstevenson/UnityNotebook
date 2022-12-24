@@ -759,7 +759,7 @@ namespace UnityNotebook
             c.rawText ??= string.Concat(c.source);
             var syntaxTheme = EditorGUIUtility.isProSkin ? SyntaxHighlighting.Theme.Dark : SyntaxHighlighting.Theme.Light;
             // a horizontal scroll view
-            var height = (c.source.Length == 0 ? 1 : c.source.Length) * 16 + 23;
+            var height = (c.source.Length == 0 ? 1 : c.source.Length) * 14 + 28;
             c.scroll = GUILayout.BeginScrollView(c.scroll, false, false, GUILayout.Height(height));
             GUI.SetNextControlName(CellInputControlName);
             CodeArea.Draw(ref c.rawText, ref c.highlightedText, syntaxTheme, _codeStyle);
