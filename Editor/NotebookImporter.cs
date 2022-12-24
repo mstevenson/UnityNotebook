@@ -3,6 +3,7 @@ using UnityEditor.AssetImporters;
 
 namespace UnityNotebook
 {
+    // Parses Jupyter Notebook asset files and imports them into Unity's AssetDatabase
     [ScriptedImporter(1, "ipynb")]
     public class NotebookImporter : ScriptedImporter
     {

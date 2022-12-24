@@ -9,6 +9,7 @@ using UnityEngine;
 
 namespace UnityNotebook
 {
+    // Unity Coroutine wrapper for capturing yielded values and displaying them as cell outputs in the Notebook window
     public class NotebookCoroutine : MonoBehaviour
     {
         // private static NotebookCoroutine _instance;
@@ -39,7 +40,7 @@ namespace UnityNotebook
             {
                 if (output != null && output is not YieldInstruction && output is not EditorWaitForSeconds)
                 {
-                    Evaluator.CaptureOutput(output);
+                    RuntimeMethods.Show(output);
                 }
             });
             NBState.RunningCell = -1;

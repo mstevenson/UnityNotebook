@@ -6,10 +6,10 @@ using Newtonsoft.Json.Converters;
 using UnityEngine;
 using UnityEditor;
 
-// https://ipython.org/ipython-doc/3/notebook/nbformat.html
-
 namespace UnityNotebook
 {
+    // Implementation of the Jupyter Notebook file format
+    // https://ipython.org/ipython-doc/3/notebook/nbformat.html
     [JsonConverter(typeof(NotebookConverter))]
     public class Notebook : ScriptableObject
     {

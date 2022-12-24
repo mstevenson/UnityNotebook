@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace UnityNotebook
 {
+    // Singleton state object for the Notebook window
     [FilePath("UserSettings/NotebookWindow.asset", FilePathAttribute.Location.ProjectFolder)]
     public class NBState : ScriptableSingleton<NBState>
     {

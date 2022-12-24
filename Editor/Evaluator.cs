@@ -9,6 +9,9 @@ using UnityEngine;
 
 namespace UnityNotebook
 {
+    /// <summary>
+    /// Execute arbitrary C# code in the Unity editor
+    /// </summary>
     public static class Evaluator
     {
         private static readonly List<Assembly> Assemblies = new();
@@ -43,10 +46,10 @@ namespace UnityNotebook
         {
             NBState.RunningCell = cell;
             notebook.cells[cell].executionCount += 1;
-            ExecuteInternal(notebook, cell);
+            ExecuteCellAsync(notebook, cell);
         }
-
-        public static void ExecuteAll(Notebook notebook, Action completionCallback)
+        
+        public static void ExecuteAllCells(Notebook notebook, Action completionCallback)
         {
             foreach (var cell in notebook.cells)
             {
@@ -56,11 +59,11 @@ namespace UnityNotebook
             {
                 EditorCoroutineUtility.StopCoroutine(_sequenceCoroutine);
             }
-            _sequenceCoroutine = EditorCoroutineUtility.StartCoroutineOwnerless(ExecuteSequence(notebook));
+            _sequenceCoroutine = EditorCoroutineUtility.StartCoroutineOwnerless(ExecuteSequenceCoroutine(notebook));
             completionCallback?.Invoke();
         }
 
-        private static IEnumerator ExecuteSequence(Notebook notebook)
+        private static IEnumerator ExecuteSequenceCoroutine(Notebook notebook)
         {
             for (var i = 0; i < notebook.cells.Count; i++)
             {
@@ -79,7 +82,7 @@ namespace UnityNotebook
             }
         }
 
-        private static async void ExecuteInternal(Notebook notebook, int cell)
+        private static async void ExecuteCellAsync(Notebook notebook, int cell)
         {
             Init();
             notebook.cells[cell].outputs.Clear();
@@ -102,11 +105,18 @@ namespace UnityNotebook
                 }
 
                 // Capture return values. Coroutine yielded values call CaptureOutput directly.
-                CaptureOutput(NBState.instance.scriptState.ReturnValue);
+                RuntimeMethods.Show(NBState.instance.scriptState.ReturnValue);
             }
             catch (Exception e)
             {
-                notebook.cells[cell].outputs.Add(NotebookUtils.Exception(e));
+                var output = new Notebook.CellOutput
+                {
+                    outputType = Notebook.OutputType.Error,
+                    ename = e.GetType().Name,
+                    evalue = e.Message,
+                    traceback = new List<string>(e.StackTrace.Split('\n'))
+                };
+                notebook.cells[cell].outputs.Add(output);
                 OnExecutionEnded();
             }
             finally
@@ -124,18 +134,6 @@ namespace UnityNotebook
             NBState.OpenedNotebook.SaveScriptableObject();
         }
         
-        public static void CaptureOutput(object obj)
-        {
-            if (obj == null)
-            {
-                return;
-            }
-            var notebook = NBState.OpenedNotebook;
-            var cell = NBState.RunningCell;
-            var output = Renderers.GetCellOutputForObject(obj);
-            notebook.cells[cell].outputs.Add(output);
-        }
-
         public static void Stop()
         {
             NotebookCoroutine.StopAll();

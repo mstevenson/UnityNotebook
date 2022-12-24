@@ -3,9 +3,10 @@ using UnityEngine;
 
 namespace UnityNotebook
 {
+    // IMGUI widget for displaying editable code.
     public static class CodeArea
     {
-        public static void Draw(ref string rawText, ref string highlightedText, SyntaxTheme theme, GUIStyle style, params GUILayoutOption[] options)
+        public static void Draw(ref string rawText, ref string highlightedText, SyntaxHighlighting.Theme theme, GUIStyle style, params GUILayoutOption[] options)
         {
             var controlId = GUIUtility.GetControlID(FocusType.Keyboard);
             var content = new GUIContent(rawText);
@@ -29,7 +30,7 @@ namespace UnityNotebook
         }
 
         private static void HandleTextFieldEvent(Rect position, int id, GUIContent content, ref string highlightedText,
-            SyntaxTheme theme, GUIStyle style, TextEditor editor)
+            SyntaxHighlighting.Theme theme, GUIStyle style, TextEditor editor)
         {
             var current = Event.current;
             var flag = false;

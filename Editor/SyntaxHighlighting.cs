@@ -6,32 +6,33 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxKind;
 
 namespace UnityNotebook
 {
-    public struct SyntaxTheme
+    // Adds syntax highlighting via Unity Rich Text tags to a given code block.
+    public static class SyntaxHighlighting
     {
-        public Color BuiltIns;
-        public Color ControlFlow;
-        public Color Identifiers;
-        public Color Strings;
-        public Color Literals;
-        public Color Comments;
-
-        public static readonly SyntaxTheme Dark = new()
+        public struct Theme
         {
-            BuiltIns = new Color(0.4f, 0.6f, 0.83f),
-            ControlFlow = new Color(0.73f, 0.54f, 0.75f),
-            Identifiers = new Color(0.66f, 0.85f, 0.99f),
-            Strings = new Color(0.77f, 0.58f, 0.49f),
-            Literals = new Color(0.73f, 0.8f, 0.67f),
-            Comments = new Color(0.45f, 0.6f, 0.36f)
-        };
+            public Color BuiltIns;
+            public Color ControlFlow;
+            public Color Identifiers;
+            public Color Strings;
+            public Color Literals;
+            public Color Comments;
 
-        // TODO light theme
-        public static SyntaxTheme Light => Dark;
-    }
+            public static readonly Theme Dark = new()
+            {
+                BuiltIns = new Color(0.4f, 0.6f, 0.83f),
+                ControlFlow = new Color(0.73f, 0.54f, 0.75f),
+                Identifiers = new Color(0.66f, 0.85f, 0.99f),
+                Strings = new Color(0.77f, 0.58f, 0.49f),
+                Literals = new Color(0.73f, 0.8f, 0.67f),
+                Comments = new Color(0.45f, 0.6f, 0.36f)
+            };
 
-    public class SyntaxHighlighting
-    {
-        public static string SyntaxToHtml(string code, SyntaxTheme theme)
+            // TODO light theme
+            public static Theme Light => Dark;
+        }
+        
+        public static string SyntaxToHtml(string code, Theme theme)
         {
             var syntaxTree = CSharpSyntaxTree.ParseText(code);
             var root = syntaxTree.GetRoot();

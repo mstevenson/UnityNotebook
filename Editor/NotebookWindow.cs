@@ -357,7 +357,7 @@ namespace UnityNotebook
                     {
                         GUI.FocusControl(null);
                         // TODO repaint callback doesn't work reliably, the final cell output often isn't drawn
-                        Evaluator.ExecuteAll(nb, Repaint);
+                        Evaluator.ExecuteAllCells(nb, Repaint);
                     }
                 }
 
@@ -438,8 +438,6 @@ namespace UnityNotebook
                 
                 switch (Event.current.keyCode)
                 {
-                    // TODO this is followed by a key event with the character '\n' which is inserted into the
-                    // newly focused text field. We need to Use this event to prevent that.
                     case KeyCode.Return:
                         // run cell
                         if (Event.current.control)
@@ -759,7 +757,7 @@ namespace UnityNotebook
 
             var c = notebook.cells[cell];
             c.rawText ??= string.Concat(c.source);
-            var syntaxTheme = EditorGUIUtility.isProSkin ? SyntaxTheme.Dark : SyntaxTheme.Light;
+            var syntaxTheme = EditorGUIUtility.isProSkin ? SyntaxHighlighting.Theme.Dark : SyntaxHighlighting.Theme.Light;
             // a horizontal scroll view
             var height = (c.source.Length == 0 ? 1 : c.source.Length) * 16 + 23;
             c.scroll = GUILayout.BeginScrollView(c.scroll, false, false, GUILayout.Height(height));

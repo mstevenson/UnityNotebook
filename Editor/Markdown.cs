@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace UnityNotebook
 {
+    // Converts a markdown string to a styled Unity Rich Text string.
     public static class Markdown
     {
         private static readonly GUIStyle Style = new(EditorStyles.label)
