@@ -85,12 +85,18 @@ namespace UnityNotebook
         {
             ChangeNotebook(NBState.OpenedNotebook);
             EditorApplication.update += DoRepaint;
+            Undo.undoRedoPerformed += DoRepaint;
         }
 
         private void OnDisable()
         {
             Evaluator.Stop();
             EditorApplication.update -= DoRepaint;
+            Undo.undoRedoPerformed -= DoRepaint;
+        }
+
+        private void OnDestroy()
+        {
             SaveJson();
         }
 
