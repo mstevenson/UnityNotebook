@@ -543,11 +543,11 @@ namespace UnityNotebook
                         notebook.cells[selectedCell].cellType = Notebook.CellType.Markdown;
                         flag = true;
                         break;
-                    // case KeyCode.Y when !isEditMode:
-                    //     Undo.RecordObject(notebook, "Change Cell Type");
-                    //     notebook.cells[selectedCell].cellType = Notebook.CellType.Code;
-                    //     flag = true;
-                    //     break;
+                    case KeyCode.Y when !isEditMode:
+                        Undo.RecordObject(notebook, "Change Cell Type");
+                        notebook.cells[selectedCell].cellType = Notebook.CellType.Code;
+                        flag = true;
+                        break;
                 }
                 if (flag)
                 {
