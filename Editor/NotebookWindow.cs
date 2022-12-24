@@ -441,10 +441,19 @@ namespace UnityNotebook
                     // TODO this is followed by a key event with the character '\n' which is inserted into the
                     // newly focused text field. We need to Use this event to prevent that.
                     case KeyCode.Return:
-                        // execute cell
+                        // run cell
+                        if (Event.current.control)
+                        {
+                            Evaluator.ExecuteCell(notebook, selectedCell);
+                        }
+                        // execute cell, select next
                         if (Event.current.shift)
                         {
                             Evaluator.ExecuteCell(notebook, selectedCell);
+                            if (selectedCell < notebook.cells.Count - 1)
+                            {
+                                NBState.SelectedCell = selectedCell + 1;
+                            }
                             flag = true;
                             // consumeReturnKey = true;
                         }
@@ -492,14 +501,12 @@ namespace UnityNotebook
                         flag = true;
                         break;
                     // delete current empty cell
-                    case KeyCode.Backspace when isEditMode:
-                        if (notebook.cells[selectedCell].source.Length == 0 || notebook.cells[selectedCell].source[0].Length == 0)
-                        {
-                            Undo.RecordObject(notebook, "Delete Cell");
-                            notebook.cells.RemoveAt(selectedCell);
-                            NBState.SelectedCell = Mathf.Max(0, selectedCell - 1);
-                            flag = true;
-                        }
+                    case KeyCode.Backspace when isEditMode && (notebook.cells[selectedCell].source.Length == 0 || notebook.cells[selectedCell].source[0].Length == 0):
+                    case KeyCode.Delete when !isEditMode:
+                        Undo.RecordObject(notebook, "Delete Cell");
+                        notebook.cells.RemoveAt(selectedCell);
+                        NBState.SelectedCell = Mathf.Max(0, selectedCell - 1);
+                        flag = true;
                         break;
                     // add a cell below
                     case KeyCode.B when !isEditMode:
