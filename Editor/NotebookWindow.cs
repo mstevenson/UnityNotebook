@@ -690,8 +690,7 @@ namespace UnityNotebook
 
         private static void DrawTextCell(Notebook notebook, int cell)
         {
-            // TODO draw markdown
-            if (!NBState.IsEditMode)
+            if (!NBState.IsEditMode || NBState.SelectedCell != cell)
             {
                 Markdown.Draw(notebook.cells[cell].source);
                 return;
