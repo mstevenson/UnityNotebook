@@ -16,9 +16,16 @@ namespace UnityNotebook
         public static GUIStyle CodeCellBoxSelectedStyle;
         
         private static string _packagePath;
+        private static bool _initialized;
         
         public static void Init()
         {
+            if (_initialized)
+            {
+                return;
+            }
+            _initialized = true;
+            
             if (string.IsNullOrEmpty(_packagePath))
             {
                 _packagePath = UnityEditor.PackageManager.PackageInfo.FindForAssembly(Assembly.GetExecutingAssembly()).assetPath;

@@ -80,7 +80,6 @@ namespace UnityNotebook
 
         private void OnEnable()
         {
-            Styles.Init();
             ChangeNotebook(NBState.OpenedNotebook);
             EditorApplication.update += DoRepaint;
             Undo.undoRedoPerformed += DoRepaint;
@@ -102,6 +101,8 @@ namespace UnityNotebook
         
         private void OnGUI()
         {
+            Styles.Init();
+            
             // Save the asset when moving between fields
             if (GUIUtility.keyboardControl != _lastKeyboardControl)
             {
