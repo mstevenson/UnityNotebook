@@ -1,11 +1,8 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
-using MG.MDV;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine;
@@ -23,11 +20,7 @@ namespace UnityNotebook
         }
 
         private static string PackagePath => UnityEditor.PackageManager.PackageInfo.FindForAssembly(Assembly.GetExecutingAssembly()).assetPath;
-
-        // references are set in this script's inspector
-        public GUISkin MarkdownSkinLight;
-        public GUISkin MarkdownSkinDark;
-
+        
         private static bool _openExternally;
 
         private static bool IsRunning => NBState.RunningCell >= 0;
@@ -326,22 +319,6 @@ namespace UnityNotebook
             if (EditorGUI.EndChangeCheck())
             {
                 ChangeNotebook(newNotebook);
-                // _caretPos = 0;
-                if (nb == null)
-                {
-                    return;
-                }
-
-                // get asset path
-                var path = AssetDatabase.GetAssetPath(nb);
-                foreach (var cell in nb.cells)
-                {
-                    // TODO markdown
-                    // if (cell.cellType == Notebook.CellType.Markdown)
-                    // {
-                    //     cell.markdownViewer = new MarkdownViewer(EditorGUIUtility.isProSkin ? MarkdownSkinDark : MarkdownSkinLight, path, cell.textBlock);
-                    // }
-                }
             }
         }
 
@@ -714,11 +691,11 @@ namespace UnityNotebook
         private static void DrawTextCell(Notebook notebook, int cell)
         {
             // TODO draw markdown
-            // if (!NotebookWindowData.IsEditMode)
-            // {
-            //     cell.markdownViewer.Draw();
-            //     return;
-            // }
+            if (!NBState.IsEditMode)
+            {
+                Markdown.Draw(notebook.cells[cell].source);
+                return;
+            }
             
             GUILayout.BeginHorizontal();
             GUILayout.Space(25);

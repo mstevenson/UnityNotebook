@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using MG.MDV;
-using Microsoft.CodeAnalysis.Scripting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using UnityEngine;
@@ -119,7 +117,6 @@ namespace UnityNotebook
             public List<CellOutput> outputs = new();
 
             // UI
-            [NonSerialized] public MarkdownViewer markdownViewer;
             [NonSerialized] public string rawText;
             [NonSerialized] public string highlightedText = "";
             [NonSerialized] public Vector2 scroll;
