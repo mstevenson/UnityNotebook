@@ -101,6 +101,8 @@ namespace UnityNotebook
         private static GUIStyle _codeStyleNoBackground;
         private static GUIStyle _cellBox;
         private static GUIStyle _cellBoxSelected;
+        private static GUIStyle _codeCellBox;
+        private static GUIStyle _codeCellBoxSelected;
         
         private static void BuildStyles()
         {
@@ -181,6 +183,7 @@ namespace UnityNotebook
             if (_cellBox == null)
             {
                 _cellBox = new GUIStyle("box");
+                _cellBox.padding = new RectOffset(8, 8, 8, 8);
             }
 
             if (_cellBoxSelected == null)
@@ -206,6 +209,17 @@ namespace UnityNotebook
                         background = BuildTexture(new Color(0.23f, 0.29f, 0.37f)),
                     }
                 };
+            }
+            
+            if (_codeCellBox == null)
+            {
+                _codeCellBox = new GUIStyle(_cellBox);
+                _codeCellBox.padding = new RectOffset(8, 8, 8, 1);
+            }
+            if (_codeCellBoxSelected == null)
+            {
+                _codeCellBoxSelected = new GUIStyle(_cellBoxSelected);
+                _codeCellBoxSelected.padding = new RectOffset(8, 8, 8, 1);
             }
         }
 
@@ -524,12 +538,11 @@ namespace UnityNotebook
                         flag = true;
                         break;
 
-                    // case KeyCode.M when !isEditMode:
-                    //     Debug.Log("markdown");
-                    //     Undo.RecordObject(notebook, "Change Cell Type");
-                    //     notebook.cells[selectedCell].cellType = Notebook.CellType.Markdown;
-                    //     flag = true;
-                    //     break;
+                    case KeyCode.M when !isEditMode:
+                        Undo.RecordObject(notebook, "Change Cell Type");
+                        notebook.cells[selectedCell].cellType = Notebook.CellType.Markdown;
+                        flag = true;
+                        break;
                     // case KeyCode.Y when !isEditMode:
                     //     Undo.RecordObject(notebook, "Change Cell Type");
                     //     notebook.cells[selectedCell].cellType = Notebook.CellType.Code;
@@ -666,17 +679,19 @@ namespace UnityNotebook
                 return;
             }
             
-            GUILayout.BeginVertical(NBState.SelectedCell == cell ? _cellBoxSelected : _cellBox);
             switch (notebook.cells[cell].cellType)
             {
                 case Notebook.CellType.Code:
+                    GUILayout.BeginVertical(NBState.SelectedCell == cell ? _codeCellBoxSelected : _codeCellBox);
                     DrawCodeCell(notebook, cell);
+                    GUILayout.EndVertical();
                     break;
                 case Notebook.CellType.Markdown:
+                    GUILayout.BeginVertical(NBState.SelectedCell == cell ? _cellBoxSelected : _cellBox);
                     DrawTextCell(notebook, cell);
+                    GUILayout.EndVertical();
                     break;
             }
-            GUILayout.EndVertical();
 
             // detect a click inside of the box
             var cellRect = GUILayoutUtility.GetLastRect();
@@ -739,7 +754,8 @@ namespace UnityNotebook
             c.rawText ??= string.Concat(c.source);
             var syntaxTheme = EditorGUIUtility.isProSkin ? SyntaxTheme.Dark : SyntaxTheme.Light;
             // a horizontal scroll view
-            c.scroll = GUILayout.BeginScrollView(c.scroll, false, false, GUILayout.ExpandHeight(false));
+            var height = c.source.Length * 16 + 23;
+            c.scroll = GUILayout.BeginScrollView(c.scroll, false, false, GUILayout.Height(height));
             GUI.SetNextControlName(CellInputControlName);
             CodeArea.Draw(ref c.rawText, ref c.highlightedText, syntaxTheme, _codeStyle);
 
