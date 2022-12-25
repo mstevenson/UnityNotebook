@@ -12,6 +12,7 @@ namespace UnityNotebook
             var content = new GUIContent(rawText);
             var rect = GUILayoutUtility.GetRect(content, style, options);
             var editor = (TextEditor) GUIUtility.GetStateObject(typeof(TextEditor), controlId);
+            var oldText = content.text;
             editor.text = content.text;
             editor.SaveBackup();
             editor.controlID = controlId;
@@ -23,10 +24,12 @@ namespace UnityNotebook
             editor.UpdateScrollOffsetIfNeeded(Event.current);
 
             rawText = content.text;
-
-            // TODO only update highlighted text if gui changed
-
-            highlightedText = SyntaxHighlighting.SyntaxToHtml(rawText, theme);
+            
+            // Only run syntax highlighter when the text changes
+            if (string.IsNullOrEmpty(highlightedText) || oldText != content.text)
+            {
+                highlightedText = SyntaxHighlighting.SyntaxToHtml(rawText, theme);
+            }
         }
 
         private static void HandleTextFieldEvent(Rect position, int id, GUIContent content, ref string highlightedText,
