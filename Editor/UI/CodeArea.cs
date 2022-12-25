@@ -26,8 +26,9 @@ namespace UnityNotebook
             rawText = content.text;
             
             // Only run syntax highlighter when the text changes
-            if (string.IsNullOrEmpty(highlightedText) || oldText != content.text)
+            if (string.IsNullOrEmpty(highlightedText) || oldText != content.text || NBState.instance.forceSyntaxRefresh)
             {
+                Debug.Log("highlight");
                 highlightedText = SyntaxHighlighting.SyntaxToHtml(rawText, theme);
             }
         }

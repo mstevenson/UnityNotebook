@@ -117,6 +117,9 @@ namespace UnityNotebook
             {
                 DrawNotebook(NBState.OpenedNotebook);
             }
+
+            // HACK
+            NBState.instance.forceSyntaxRefresh = false;
         }
 
         private void DrawCreateNotebook()

@@ -19,6 +19,9 @@ namespace UnityNotebook
         
         [NonSerialized] public ScriptState scriptState;
 
+        // HACK
+        [NonSerialized] public bool forceSyntaxRefresh;
+
         public static Notebook OpenedNotebook
         {
             get => instance.openedNotebook;

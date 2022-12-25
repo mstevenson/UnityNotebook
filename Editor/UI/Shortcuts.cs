@@ -198,9 +198,9 @@ namespace UnityNotebook
                         notebook.cells.Insert(selectedCell, c2);
                         return true;
                     }
-                    // shift+M (command mode)
+                    // ctrl-shift+M (command mode)
                     // merge cell below
-                    case KeyCode.M when HasModifiers(Shift):
+                    case KeyCode.M when HasModifiers(Control | Shift):
                     {
                         // ignore if the cell is the last cell
                         if (selectedCell == notebook.cells.Count - 1)
@@ -208,18 +208,32 @@ namespace UnityNotebook
                             return false;
                         }
                         Undo.RecordObject(notebook, "Merge Cell Below");
-                        // add newline to last line of current cell
-                        var count = notebook.cells[selectedCell].source.Length - 1;
-                        var lastLine = notebook.cells[selectedCell].source[count];
-                        // Add newline to last line of current cell
-                        if (lastLine.Length > 0 && lastLine[^1] != '\n')
-                        {
-                            notebook.cells[selectedCell].source[count] += "\n";
-                        }
-                        // merge the cells
-                        notebook.cells[selectedCell].source = notebook.cells[selectedCell].source.Concat(notebook.cells[selectedCell + 1].source).ToArray();
-                        notebook.cells[selectedCell].rawText = string.Join("", notebook.cells[selectedCell].source);
+                        var cell = notebook.cells[selectedCell];
+                        var cellBelow = notebook.cells[selectedCell + 1];
+                        cell.rawText += "\n" + cellBelow.rawText;
                         notebook.cells.RemoveAt(selectedCell + 1);
+                        NBState.CopyRawTextToSourceLines(cell);
+                        NBState.instance.forceSyntaxRefresh = true;
+                        return true;
+                    }
+                    // ctrl-backspace (command mode)
+                    // merge cell above
+                    case KeyCode.Backspace when HasModifiers(Control):
+                    {
+                        Debug.Log("merge above");
+                        // ignore if the cell is the first cell
+                        if (selectedCell == 0)
+                        {
+                            return false;
+                        }
+                        Undo.RecordObject(notebook, "Merge Cell Above");
+                        var cell = notebook.cells[selectedCell];
+                        var cellAbove = notebook.cells[selectedCell - 1];
+                        cellAbove.rawText += "\n" + cell.rawText;
+                        notebook.cells.RemoveAt(selectedCell);
+                        NBState.SelectedCell = selectedCell - 1;
+                        NBState.CopyRawTextToSourceLines(cellAbove);
+                        NBState.instance.forceSyntaxRefresh = true;
                         return true;
                     }
                     // 0..6 (command mode)
