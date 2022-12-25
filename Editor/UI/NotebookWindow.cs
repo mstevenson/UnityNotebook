@@ -612,12 +612,18 @@ namespace UnityNotebook
         }
 
         private const string CellInputControlName = "CellInputField";
-
+        
         private static void UpdateFocusAndMode(int cell)
         {
-            if (cell == NBState.SelectedCell && NBState.IsEditMode)
+            if (Event.current.type != EventType.Layout)
             {
-                // GUI.FocusControl(CellInputControlName);
+                return;
+            }
+            
+            if (cell == NBState.SelectedCell && NBState.IsEditMode && NBState.instance.forceFocusCodeArea)
+            {
+                GUI.FocusControl(CellInputControlName);
+                NBState.instance.forceFocusCodeArea = false;
             }
             else if (GUI.GetNameOfFocusedControl() == CellInputControlName)
             {

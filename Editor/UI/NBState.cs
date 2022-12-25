@@ -21,6 +21,7 @@ namespace UnityNotebook
 
         // HACK
         [NonSerialized] public bool forceSyntaxRefresh;
+        [NonSerialized] public bool forceFocusCodeArea;
 
         public static Notebook OpenedNotebook
         {
@@ -72,6 +73,7 @@ namespace UnityNotebook
             set
             {
                 if (instance.isEditMode == value) return;
+                instance.forceFocusCodeArea = true;
                 instance.isEditMode = value;
                 instance.Save(true);
             }
