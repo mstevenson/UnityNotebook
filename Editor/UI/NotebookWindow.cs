@@ -256,6 +256,8 @@ namespace UnityNotebook
                     if (GUILayout.Button("Revert", EditorStyles.toolbarButton))
                     {
                         AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(nb));
+                        NBState.SaveScriptableObject();
+                        NBState.IsJsonOutOfDate = false;
                     }
                     if (GUILayout.Button("Edit", EditorStyles.toolbarButton))
                     {
