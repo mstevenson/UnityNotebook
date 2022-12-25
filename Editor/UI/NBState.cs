@@ -2,6 +2,7 @@ using System;
 using Microsoft.CodeAnalysis.Scripting;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace UnityNotebook
 {
@@ -14,6 +15,7 @@ namespace UnityNotebook
         [SerializeField] private int selectedCell;
         [SerializeField] private int runningCell;
         [SerializeField] private bool isEditMode;
+        [SerializeField] private bool isJsonOutOfDate;
         
         [NonSerialized] public ScriptState scriptState;
 
@@ -72,12 +74,25 @@ namespace UnityNotebook
             }
         }
 
+        public static bool IsJsonOutOfDate
+        {
+            get => instance.isJsonOutOfDate;
+            set
+            {
+                instance.isJsonOutOfDate = value;
+                instance.Save(true);
+            }
+        }
+
         public static void CloseNotebook()
         {
             instance.openedNotebook = null;
             instance.scroll = default;
             instance.selectedCell = -1;
             instance.runningCell = -1;
+            instance.isJsonOutOfDate = false;
+            SaveScriptableObject();
+            SaveJson();
             instance.Save(true);
         }
 
@@ -99,6 +114,7 @@ namespace UnityNotebook
             {
                 nb.SaveJson();
             }
+            IsJsonOutOfDate = false;
         }
         
         public static void SaveScriptableObject()

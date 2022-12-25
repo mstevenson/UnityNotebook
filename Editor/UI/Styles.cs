@@ -12,8 +12,10 @@ namespace UnityNotebook
         public static GUIStyle CodeNoBackgroundStyle;
         public static GUIStyle CellBoxStyle;
         public static GUIStyle CellBoxSelectedStyle;
+        public static GUIStyle CellBoxSelectedEditStyle;
         public static GUIStyle CodeCellBoxStyle;
         public static GUIStyle CodeCellBoxSelectedStyle;
+        public static GUIStyle CodeCellBoxSelectedEditStyle;
         
         private static string _packagePath;
         private static bool _initialized;
@@ -113,28 +115,40 @@ namespace UnityNotebook
                     margin = new RectOffset()
                 };
             }
+            
+            Texture2D BuildTexture(Color color)
+            {
+                const int width = 64;
+                const int height = 64;
+                var pixels = new Color[width * height];
+                for (var i = 0; i < pixels.Length; i++)
+                {
+                    pixels[i] = color;
+                }
+                var result = new Texture2D(width, height);
+                result.SetPixels(pixels);
+                result.Apply();
+                return result;
+            }
 
             if (CellBoxSelectedStyle == null)
             {
-                Texture2D BuildTexture(Color color)
-                {
-                    const int width = 64;
-                    const int height = 64;
-                    var pixels = new Color[width * height];
-                    for (var i = 0; i < pixels.Length; i++)
-                    {
-                        pixels[i] = color;
-                    }
-                    var result = new Texture2D(width, height);
-                    result.SetPixels(pixels);
-                    result.Apply();
-                    return result;
-                }
                 CellBoxSelectedStyle = new GUIStyle(CellBoxStyle)
                 {
                     normal = new GUIStyleState()
                     {
                         background = BuildTexture(new Color(0.23f, 0.29f, 0.37f)),
+                    }
+                };
+            }
+
+            if (CellBoxSelectedEditStyle == null)
+            {
+                CellBoxSelectedEditStyle = new GUIStyle(CellBoxStyle)
+                {
+                    normal = new GUIStyleState()
+                    {
+                        background = BuildTexture(new Color(0.21f, 0.37f, 0.27f)),
                     }
                 };
             }
@@ -149,6 +163,14 @@ namespace UnityNotebook
             if (CodeCellBoxSelectedStyle == null)
             {
                 CodeCellBoxSelectedStyle = new GUIStyle(CellBoxSelectedStyle)
+                {
+                    padding = new RectOffset(8, 8, 8, 1)
+                };
+            }
+
+            if (CodeCellBoxSelectedEditStyle == null)
+            {
+                CodeCellBoxSelectedEditStyle = new GUIStyle(CellBoxSelectedEditStyle)
                 {
                     padding = new RectOffset(8, 8, 8, 1)
                 };

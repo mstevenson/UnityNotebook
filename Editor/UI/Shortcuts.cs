@@ -6,6 +6,10 @@ using static UnityEngine.EventModifiers;
 
 namespace UnityNotebook
 {
+    // TODO evaluate Unity's ShortcutManager
+    // It doesn't seem to allow binding esc or return, and it
+    // can't bind multiple shortcuts to the same command.
+    
     public static class Shortcuts
     {
         // Thanks, ChatGPT

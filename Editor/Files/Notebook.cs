@@ -17,12 +17,12 @@ namespace UnityNotebook
         public int formatMinor = 2;
         public Metadata metadata = new();
         public List<Cell> cells = new();
-
+        
         // Saves the current ScriptableObject data back to the underlying json asset file
         public void SaveScriptableObject()
         {
             EditorUtility.SetDirty(this);
-            AssetDatabase.SaveAssets();
+            AssetDatabase.SaveAssetIfDirty(this);
         }
 
         public void SaveJson()

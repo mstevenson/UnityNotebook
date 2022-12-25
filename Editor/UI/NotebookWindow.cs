@@ -91,11 +91,11 @@ namespace UnityNotebook
             if (Event.current.isKey && NBState.OpenedNotebook != null)
             {
                 // TODO undo doesn't work with this, need to use TextEditor's undo?
-                // if (!_runningSaveCooldown)
-                // {
+                if (!_runningSaveCooldown)
+                {
                 //     Debug.Log("record undo");
                 //     Undo.RecordObject(NBState.OpenedNotebook, "Notebook Cell Text");
-                // }
+                }
                 _runningSaveCooldown = true;
                 _cooldownStartTime = EditorApplication.timeSinceStartup;
             }
@@ -204,64 +204,68 @@ namespace UnityNotebook
             using var h = new EditorGUILayout.HorizontalScope(EditorStyles.toolbar);
             
             var nb = NBState.OpenedNotebook;
-            using var _ = new EditorGUI.DisabledScope(nb == null);
-            
-            if (nb != null && IsRunning)
+            using (new EditorGUI.DisabledScope(nb == null))
             {
-                if (GUILayout.Button("Stop", EditorStyles.toolbarButton, GUILayout.Width(40)))
+                if (nb != null && IsRunning)
                 {
-                    Evaluator.Stop();
-                }
-            }
-            else
-            {
-                if (GUILayout.Button("Run", EditorStyles.toolbarButton, GUILayout.Width(40)))
-                {
-                    GUI.FocusControl(null);
-                    // TODO repaint callback doesn't work reliably, the final cell output often isn't drawn
-                    Evaluator.ExecuteAllCells(nb, Repaint);
-                }
-            }
-
-            using (new EditorGUI.DisabledScope(nb == null || IsRunning))
-            {
-                if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
-                {
-                    Undo.RecordObject(nb, "Clear All Output");
-                    NBState.ClearOutput();
-                }
-
-                using (new EditorGUI.DisabledScope(nb != null && NBState.instance.scriptState == null))
-                {
-                    if (GUILayout.Button("Restart", EditorStyles.toolbarButton))
+                    if (GUILayout.Button("Stop", EditorStyles.toolbarButton, GUILayout.Width(40)))
                     {
-                        NBState.instance.scriptState = null;
+                        Evaluator.Stop();
                     }
                 }
-                
-                EditorGUILayout.Space();
+                else
+                {
+                    if (GUILayout.Button("Run", EditorStyles.toolbarButton, GUILayout.Width(40)))
+                    {
+                        GUI.FocusControl(null);
+                        // TODO repaint callback doesn't work reliably, the final cell output often isn't drawn
+                        Evaluator.ExecuteAllCells(nb, Repaint);
+                    }
+                }
 
-                if (GUILayout.Button("Save", EditorStyles.toolbarButton))
+                using (new EditorGUI.DisabledScope(nb == null || IsRunning))
                 {
-                    NBState.SaveJson();
-                }
-                // Revert unsaved ScriptableObject changes by reimporting the json file
-                if (GUILayout.Button("Revert", EditorStyles.toolbarButton))
-                {
-                    AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(nb));
-                }
-                if (GUILayout.Button("Edit", EditorStyles.toolbarButton))
-                {
-                    _openExternally = true;
-                    AssetDatabase.OpenAsset(nb);
-                    _openExternally = false;
+                    if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
+                    {
+                        Undo.RecordObject(nb, "Clear All Output");
+                        NBState.ClearOutput();
+                    }
+
+                    using (new EditorGUI.DisabledScope(nb != null && NBState.instance.scriptState == null))
+                    {
+                        if (GUILayout.Button("Restart", EditorStyles.toolbarButton))
+                        {
+                            NBState.instance.scriptState = null;
+                        }
+                    }
+                    
+                    EditorGUILayout.Space();
+
+                    using (new EditorGUI.DisabledScope(!NBState.IsJsonOutOfDate))
+                    {
+                        if (GUILayout.Button("Save", EditorStyles.toolbarButton))
+                        {
+                            NBState.SaveJson();
+                        }
+                    }
+                    // Revert unsaved ScriptableObject changes by reimporting the json file
+                    if (GUILayout.Button("Revert", EditorStyles.toolbarButton))
+                    {
+                        AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(nb));
+                    }
+                    if (GUILayout.Button("Edit", EditorStyles.toolbarButton))
+                    {
+                        _openExternally = true;
+                        AssetDatabase.OpenAsset(nb);
+                        _openExternally = false;
+                    }
                 }
             }
             
             GUILayout.FlexibleSpace();
             
             // Notebook object field
-            using (new EditorGUI.DisabledScope(nb != null && IsRunning))
+            using (new EditorGUI.DisabledScope(IsRunning))
             {
                 using (var check = new EditorGUI.ChangeCheckScope())
                 {
@@ -276,10 +280,22 @@ namespace UnityNotebook
 
         private void OnUpdate()
         {
+            Debug.Log(EditorUtility.IsDirty(NBState.OpenedNotebook));
+            
+            if (NBState.OpenedNotebook != null)
+            {
+                if (EditorUtility.IsDirty(NBState.OpenedNotebook))
+                {
+                    NBState.IsJsonOutOfDate = true;
+                }
+            }
+            
             // subtract editor deltatime
-            if (EditorApplication.timeSinceStartup - _cooldownStartTime > SaveCooldownDuration)
+            if (_runningSaveCooldown && EditorApplication.timeSinceStartup - _cooldownStartTime > SaveCooldownDuration)
             {
                 _runningSaveCooldown = false;
+                NBState.SaveScriptableObject();
+                Debug.Log("save");
             }
             
             if (NBState.RunningCell != -1)
@@ -438,14 +454,18 @@ namespace UnityNotebook
             switch (notebook.cells[cell].cellType)
             {
                 case Notebook.CellType.Code:
-                    using (new GUILayout.VerticalScope(NBState.SelectedCell == cell ? CodeCellBoxSelectedStyle : CodeCellBoxStyle))
+                    using (new GUILayout.VerticalScope(NBState.SelectedCell == cell
+                               ? NBState.IsEditMode ? CodeCellBoxSelectedEditStyle : CodeCellBoxSelectedStyle
+                               : CodeCellBoxStyle))
                     {
                         DrawCodeCell(notebook, cell);
                         DrawCodeCellOutput(notebook, cell);
                     }
                     break;
                 case Notebook.CellType.Markdown:
-                    using (new GUILayout.VerticalScope(NBState.SelectedCell == cell ? CellBoxSelectedStyle : CellBoxStyle))
+                    using (new GUILayout.VerticalScope(NBState.SelectedCell == cell
+                               ? NBState.IsEditMode ? CellBoxSelectedEditStyle : CellBoxSelectedStyle
+                               : CellBoxStyle))
                     {
                         DrawTextCell(notebook, cell);
                     }
@@ -586,7 +606,7 @@ namespace UnityNotebook
         {
             if (cell == NBState.SelectedCell && NBState.IsEditMode)
             {
-                GUI.FocusControl(CellInputControlName);
+                // GUI.FocusControl(CellInputControlName);
             }
             else if (GUI.GetNameOfFocusedControl() == CellInputControlName)
             {
