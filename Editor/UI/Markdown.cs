@@ -79,6 +79,10 @@ namespace UnityNotebook
         {
             int indent = 0;
             bool codeBlock = false;
+            if (lines == null || lines.Length == 0)
+            {
+                GUILayout.Label("");
+            }
             foreach (var line in lines)
             {
                 var l = line.Trim();

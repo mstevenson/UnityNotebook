@@ -49,7 +49,7 @@ namespace UnityNotebook
 
         public override Notebook.CellOutput ObjectToCellOutput(object obj)
         {
-            var o = obj as UnityEngine.Object;
+            var o = (Object) obj;
             
             var mimeType = o switch
             {

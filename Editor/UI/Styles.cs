@@ -109,7 +109,8 @@ namespace UnityNotebook
             {
                 CellBoxStyle = new GUIStyle("box")
                 {
-                    padding = new RectOffset(8, 8, 8, 8)
+                    padding = new RectOffset(8, 8, 8, 8),
+                    margin = new RectOffset()
                 };
             }
 

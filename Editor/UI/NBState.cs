@@ -72,13 +72,42 @@ namespace UnityNotebook
             }
         }
 
-        public void Clear()
+        public static void CloseNotebook()
         {
-            openedNotebook = null;
-            scroll = default;
-            selectedCell = -1;
-            runningCell = -1;
-            Save(true);
+            instance.openedNotebook = null;
+            instance.scroll = default;
+            instance.selectedCell = -1;
+            instance.runningCell = -1;
+            instance.Save(true);
+        }
+
+        public static void ClearOutput()
+        {
+            var nb = instance.openedNotebook;
+            if (nb == null)
+            {
+                return;
+            }
+            nb.ClearOutputs();
+            SaveScriptableObject();
+        }
+        
+        public static void SaveJson()
+        {
+            var nb = instance.openedNotebook;
+            if (nb != null)
+            {
+                nb.SaveJson();
+            }
+        }
+        
+        public static void SaveScriptableObject()
+        {
+            var nb = instance.openedNotebook;
+            if (nb != null)
+            {
+                nb.SaveScriptableObject();
+            }
         }
     }
 }
