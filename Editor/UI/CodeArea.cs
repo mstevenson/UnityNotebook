@@ -101,13 +101,14 @@ namespace UnityNotebook
                         break;
                     }
 
-                    if (current.character == '\n' && (current.shift || current.alt))
+                    if (current.character == '\n' && (current.shift || current.alt || current.control))
                     {
                         // do nothing, this is used elsewhere to execute the cell
                         current.Use();
                         break;
                     }
-                    if (current.keyCode == KeyCode.Tab) // == '\t')
+
+                    void ChangeIndent(bool forward)
                     {
                         editor.MoveLineStart();
                         // move until we reach a non-space character
@@ -117,11 +118,10 @@ namespace UnityNotebook
                             spaces++;
                             editor.MoveRight();
                         }
-
                         // Add/remove spaces
                         for (int i = 0; i < 4 - (spaces % 4); i++)
                         {
-                            if (current.shift && editor.cursorIndex > 0 && editor.text[editor.cursorIndex - 1] == ' ')
+                            if (!forward && editor.cursorIndex > 0 && editor.text[editor.cursorIndex - 1] == ' ')
                             {
                                 editor.Backspace();
                             }
@@ -130,8 +130,22 @@ namespace UnityNotebook
                                 editor.Insert(' ');
                             }
                         }
-
                         content.text = editor.text;
+                    }
+                    // dedent
+                    if ((current.keyCode == KeyCode.Tab && Shortcuts.HasModifiers(EventModifiers.Shift)) ||
+                        (current.keyCode == KeyCode.LeftBracket && Shortcuts.HasModifiers(EventModifiers.Control)))
+                    {
+                        ChangeIndent(false);
+                        current.Use();
+                        flag = true;
+                        break;
+                    }
+                    // indent
+                    if (current.keyCode == KeyCode.Tab && Shortcuts.HasModifiers(EventModifiers.None) ||
+                        (current.keyCode == KeyCode.RightBracket && Shortcuts.HasModifiers(EventModifiers.Control)))
+                    {
+                        ChangeIndent(true);
                         current.Use();
                         flag = true;
                         break;
