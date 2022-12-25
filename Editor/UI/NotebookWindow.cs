@@ -20,6 +20,9 @@ namespace UnityNotebook
         }
         
         private static bool _openExternally;
+        private static double _cooldownStartTime = double.PositiveInfinity;
+        private const float SaveCooldownDuration = 2;
+        private static bool _runningSaveCooldown;
 
         private static bool IsRunning => NBState.RunningCell >= 0;
 
@@ -63,15 +66,15 @@ namespace UnityNotebook
         private void OnEnable()
         {
             ChangeNotebook(NBState.OpenedNotebook);
-            EditorApplication.update += DoRepaint;
-            Undo.undoRedoPerformed += DoRepaint;
+            EditorApplication.update += OnUpdate;
+            Undo.undoRedoPerformed += OnUpdate;
         }
         
         private void OnDisable()
         {
             Evaluator.Stop();
-            EditorApplication.update -= DoRepaint;
-            Undo.undoRedoPerformed -= DoRepaint;
+            EditorApplication.update -= OnUpdate;
+            Undo.undoRedoPerformed -= OnUpdate;
         }
         
         private void OnDestroy()
@@ -80,10 +83,22 @@ namespace UnityNotebook
         }
 
         private int _lastKeyboardControl;
-        
+
         private void OnGUI()
         {
             Styles.Init();
+
+            if (Event.current.isKey && NBState.OpenedNotebook != null)
+            {
+                // TODO undo doesn't work with this, need to use TextEditor's undo?
+                // if (!_runningSaveCooldown)
+                // {
+                //     Debug.Log("record undo");
+                //     Undo.RecordObject(NBState.OpenedNotebook, "Notebook Cell Text");
+                // }
+                _runningSaveCooldown = true;
+                _cooldownStartTime = EditorApplication.timeSinceStartup;
+            }
             
             // Save the asset when moving between fields
             if (GUIUtility.keyboardControl != _lastKeyboardControl)
@@ -259,14 +274,18 @@ namespace UnityNotebook
             }
         }
 
-        private void DoRepaint()
+        private void OnUpdate()
         {
-            if (NBState.RunningCell == -1)
+            // subtract editor deltatime
+            if (EditorApplication.timeSinceStartup - _cooldownStartTime > SaveCooldownDuration)
             {
-                return;
+                _runningSaveCooldown = false;
             }
-
-            Repaint();
+            
+            if (NBState.RunningCell != -1)
+            {
+                Repaint();
+            }
         }
 
         private void DrawNotebook(Notebook notebook)

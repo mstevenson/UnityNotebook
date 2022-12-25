@@ -9,7 +9,7 @@ namespace UnityNotebook
     public static class Shortcuts
     {
         // Thanks, ChatGPT
-        private static bool HasModifiers(EventModifiers requiredModifiers)
+        public static bool HasModifiers(EventModifiers requiredModifiers)
         {
             // Check if all of the required keys are being held down
             if ((Event.current.modifiers & requiredModifiers) != requiredModifiers)
