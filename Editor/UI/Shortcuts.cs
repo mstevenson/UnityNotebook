@@ -95,7 +95,7 @@ namespace UnityNotebook
                     }
                     // backspace in empty cell (edit mode)
                     // delete current empty cell
-                    case KeyCode.Backspace when HasModifiers(None) && notebook.cells[selectedCell].source.Length == 0 || notebook.cells[selectedCell].source[0].Length == 0:
+                    case KeyCode.Backspace when HasModifiers(None) && notebook.cells.Count > 0 && (notebook.cells[selectedCell].source.Length == 0 || notebook.cells[selectedCell].source[0].Length == 0):
                     {
                         Undo.RecordObject(notebook, "Delete Cell");
                         notebook.cells.RemoveAt(selectedCell);
