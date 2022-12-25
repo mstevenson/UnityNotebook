@@ -269,170 +269,6 @@ namespace UnityNotebook
             Repaint();
         }
 
-        private static bool _consumeReturnKey;
-
-        private static bool HandleKeyboardShortcuts(Notebook notebook)
-        {
-            if (Event.current.type == EventType.KeyDown)
-            {
-                var selectedCell = NBState.SelectedCell;
-                var isEditMode = NBState.IsEditMode;
-                bool flag = false;
-                
-                switch (Event.current.keyCode)
-                {
-                    case KeyCode.Return:
-                        // run cell
-                        if (Event.current.control)
-                        {
-                            Evaluator.ExecuteCell(notebook, selectedCell);
-                        }
-                        // execute cell, select next
-                        if (Event.current.shift)
-                        {
-                            Evaluator.ExecuteCell(notebook, selectedCell);
-                            if (selectedCell < notebook.cells.Count - 1)
-                            {
-                                NBState.SelectedCell = selectedCell + 1;
-                            }
-                            flag = true;
-                            // consumeReturnKey = true;
-                        }
-                        // execute and add cell
-                        else if (Event.current.alt)
-                        {
-                            GUI.FocusControl(null);
-                            Evaluator.ExecuteCell(notebook, selectedCell);
-                            var newCell = new Notebook.Cell { cellType = notebook.cells[selectedCell].cellType };
-                            notebook.cells.Insert(selectedCell + 1, newCell);
-                            NBState.SelectedCell = selectedCell + 1;
-                            flag = true;
-                            // consumeReturnKey = true;
-                        }
-                        // enter edit mode
-                        else if (!NBState.IsEditMode)
-                        {
-                            NBState.IsEditMode = true;
-                            _consumeReturnKey = true;
-                        }
-                        break;
-                    // enter edit mode
-                    case KeyCode.Q when !isEditMode:
-                    case KeyCode.Escape when !isEditMode:
-                        NBState.IsEditMode = true;
-                        flag = true;
-                        break;
-                    // enter command mode
-                    case KeyCode.Escape:
-                    case KeyCode.M when Event.current.control && isEditMode:
-                        GUI.FocusControl(null);
-                        NBState.IsEditMode = false;
-                        flag = true;
-                        break;
-                    // select next cell
-                    case KeyCode.J when !isEditMode && selectedCell < notebook.cells.Count - 1:
-                    case KeyCode.DownArrow when !isEditMode && selectedCell < notebook.cells.Count - 1:
-                        NBState.SelectedCell += 1;
-                        flag = true;
-                        break;
-                    // select previous cell
-                    case KeyCode.K when !isEditMode && selectedCell > 0:
-                    case KeyCode.UpArrow when !isEditMode && selectedCell > 0:
-                        NBState.SelectedCell -= 1;
-                        flag = true;
-                        break;
-                    // delete current empty cell
-                    case KeyCode.Backspace when isEditMode && (notebook.cells[selectedCell].source.Length == 0 || notebook.cells[selectedCell].source[0].Length == 0):
-                    case KeyCode.Delete when !isEditMode:
-                        Undo.RecordObject(notebook, "Delete Cell");
-                        notebook.cells.RemoveAt(selectedCell);
-                        NBState.SelectedCell = Mathf.Max(0, selectedCell - 1);
-                        flag = true;
-                        break;
-                    // add a cell below
-                    case KeyCode.B when !isEditMode:
-                        Undo.RecordObject(notebook, "Add Cell Below");
-                        var c = new Notebook.Cell { cellType = Notebook.CellType.Code };
-                        notebook.cells.Insert(selectedCell + 1, c);
-                        NBState.SelectedCell = selectedCell + 1;
-                        flag = true;
-                        break;
-                    // add cell above
-                    case KeyCode.A when !isEditMode:
-                        Undo.RecordObject(notebook, "Add Cell Above");
-                        var c2 = new Notebook.Cell { cellType = Notebook.CellType.Code };
-                        notebook.cells.Insert(selectedCell, c2);
-                        flag = true;
-                        break;
-                    // merge cell below
-                    case KeyCode.M when Event.current.shift && !isEditMode:
-                        if (selectedCell < notebook.cells.Count - 1)
-                        {
-                            Undo.RecordObject(notebook, "Merge Cell Below");
-                            // add newline to last line of current cell
-                            var count = notebook.cells[selectedCell].source.Length - 1;
-                            var lastLine = notebook.cells[selectedCell].source[count];
-                            if (lastLine.Length > 0 && lastLine[^1] != '\n')
-                            {
-                                notebook.cells[selectedCell].source[count] += "\n";
-                            }
-                            // merge the cells
-                            notebook.cells[selectedCell].source = notebook.cells[selectedCell].source.Concat(notebook.cells[selectedCell + 1].source).ToArray();
-                            notebook.cells[selectedCell].rawText = string.Join("", notebook.cells[selectedCell].source);
-                            notebook.cells.RemoveAt(selectedCell + 1);
-                            flag = true;
-                        }
-                        break;
-                    // split cell
-                    case KeyCode.Minus when Event.current.control && Event.current.shift && isEditMode:
-                        // Undo.RecordObject(notebook, "Split Cell");
-                        var cell = notebook.cells[selectedCell];
-                        var editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
-                        var cursorIndex = editor.selectIndex;
-                        // TODO copy the raw text after the cursorIndex to a new cell and delete the previous characters from the current cell
-                        // then update the source array to match the rawText
-                        Debug.Log("split not implemented");
-                        break;
-                    // set header
-                    case KeyCode.Alpha1 when !isEditMode:
-                        SetTextCellHeaderLevel(1);
-                        flag = true;
-                        break;
-                    case KeyCode.Alpha2 when !isEditMode:
-                        SetTextCellHeaderLevel(2);
-                        flag = true;
-                        break;
-                    case KeyCode.Alpha3 when !isEditMode:
-                        SetTextCellHeaderLevel(3);
-                        flag = true;
-                        break;
-                    case KeyCode.Alpha4 when !isEditMode:
-                        SetTextCellHeaderLevel(4);
-                        flag = true;
-                        break;
-                    case KeyCode.Alpha5 when !isEditMode:
-                        SetTextCellHeaderLevel(5);
-                        flag = true;
-                        break;
-                    // change cell type
-                    case KeyCode.M when !isEditMode:
-                        Undo.RecordObject(notebook, "Change Cell Type");
-                        notebook.cells[selectedCell].cellType = Notebook.CellType.Markdown;
-                        flag = true;
-                        break;
-                    case KeyCode.Y when !isEditMode:
-                        Undo.RecordObject(notebook, "Change Cell Type");
-                        notebook.cells[selectedCell].cellType = Notebook.CellType.Code;
-                        flag = true;
-                        break;
-                }
-
-                return flag;
-            }
-
-            return false;
-        }
-
         private void DrawNotebook(Notebook notebook)
         {
             if (notebook == null)
@@ -740,8 +576,9 @@ namespace UnityNotebook
                 }
             }
         }
-        
+
         private const string CellInputControlName = "CellInputField";
+
         private static void UpdateFocusAndMode(int cell)
         {
             if (cell == NBState.SelectedCell && NBState.IsEditMode)
@@ -754,8 +591,9 @@ namespace UnityNotebook
                 NBState.SelectedCell = cell;
             }
         }
-        
+
         // Split code area's text into separate lines to store in scriptable object
+
         private static void TryUpdateCellSource(Notebook.Cell c)
         {
             if (!GUI.changed)
@@ -772,6 +610,169 @@ namespace UnityNotebook
                 }
             }
             GUI.changed = false;
+        }
+        
+        private static bool _consumeReturnKey;
+        private static bool HandleKeyboardShortcuts(Notebook notebook)
+        {
+            if (Event.current.type != EventType.KeyDown)
+            {
+                return false;
+            }
+            
+            var selectedCell = NBState.SelectedCell;
+            var isEditMode = NBState.IsEditMode;
+            bool flag = false;
+            
+            switch (Event.current.keyCode)
+            {
+                case KeyCode.Return:
+                    // run cell
+                    if (Event.current.control)
+                    {
+                        Evaluator.ExecuteCell(notebook, selectedCell);
+                    }
+                    // execute cell, select next
+                    if (Event.current.shift)
+                    {
+                        Evaluator.ExecuteCell(notebook, selectedCell);
+                        if (selectedCell < notebook.cells.Count - 1)
+                        {
+                            NBState.SelectedCell = selectedCell + 1;
+                        }
+                        flag = true;
+                        // consumeReturnKey = true;
+                    }
+                    // execute and add cell
+                    else if (Event.current.alt)
+                    {
+                        GUI.FocusControl(null);
+                        Evaluator.ExecuteCell(notebook, selectedCell);
+                        var newCell = new Notebook.Cell { cellType = notebook.cells[selectedCell].cellType };
+                        notebook.cells.Insert(selectedCell + 1, newCell);
+                        NBState.SelectedCell = selectedCell + 1;
+                        flag = true;
+                        // consumeReturnKey = true;
+                    }
+                    // enter edit mode
+                    else if (!NBState.IsEditMode)
+                    {
+                        NBState.IsEditMode = true;
+                        _consumeReturnKey = true;
+                    }
+                    break;
+                // enter edit mode
+                case KeyCode.Q when !isEditMode:
+                case KeyCode.Escape when !isEditMode:
+                    NBState.IsEditMode = true;
+                    flag = true;
+                    break;
+                // enter command mode
+                case KeyCode.Escape:
+                case KeyCode.M when Event.current.control && isEditMode:
+                    GUI.FocusControl(null);
+                    NBState.IsEditMode = false;
+                    flag = true;
+                    break;
+                // select next cell
+                case KeyCode.J when !isEditMode && selectedCell < notebook.cells.Count - 1:
+                case KeyCode.DownArrow when !isEditMode && selectedCell < notebook.cells.Count - 1:
+                    NBState.SelectedCell += 1;
+                    flag = true;
+                    break;
+                // select previous cell
+                case KeyCode.K when !isEditMode && selectedCell > 0:
+                case KeyCode.UpArrow when !isEditMode && selectedCell > 0:
+                    NBState.SelectedCell -= 1;
+                    flag = true;
+                    break;
+                // delete current empty cell
+                case KeyCode.Backspace when isEditMode && (notebook.cells[selectedCell].source.Length == 0 || notebook.cells[selectedCell].source[0].Length == 0):
+                case KeyCode.Delete when !isEditMode:
+                    Undo.RecordObject(notebook, "Delete Cell");
+                    notebook.cells.RemoveAt(selectedCell);
+                    NBState.SelectedCell = Mathf.Max(0, selectedCell - 1);
+                    flag = true;
+                    break;
+                // add a cell below
+                case KeyCode.B when !isEditMode:
+                    Undo.RecordObject(notebook, "Add Cell Below");
+                    var c = new Notebook.Cell { cellType = Notebook.CellType.Code };
+                    notebook.cells.Insert(selectedCell + 1, c);
+                    NBState.SelectedCell = selectedCell + 1;
+                    flag = true;
+                    break;
+                // add cell above
+                case KeyCode.A when !isEditMode:
+                    Undo.RecordObject(notebook, "Add Cell Above");
+                    var c2 = new Notebook.Cell { cellType = Notebook.CellType.Code };
+                    notebook.cells.Insert(selectedCell, c2);
+                    flag = true;
+                    break;
+                // merge cell below
+                case KeyCode.M when Event.current.shift && !isEditMode:
+                    if (selectedCell < notebook.cells.Count - 1)
+                    {
+                        Undo.RecordObject(notebook, "Merge Cell Below");
+                        // add newline to last line of current cell
+                        var count = notebook.cells[selectedCell].source.Length - 1;
+                        var lastLine = notebook.cells[selectedCell].source[count];
+                        if (lastLine.Length > 0 && lastLine[^1] != '\n')
+                        {
+                            notebook.cells[selectedCell].source[count] += "\n";
+                        }
+                        // merge the cells
+                        notebook.cells[selectedCell].source = notebook.cells[selectedCell].source.Concat(notebook.cells[selectedCell + 1].source).ToArray();
+                        notebook.cells[selectedCell].rawText = string.Join("", notebook.cells[selectedCell].source);
+                        notebook.cells.RemoveAt(selectedCell + 1);
+                        flag = true;
+                    }
+                    break;
+                // split cell
+                case KeyCode.Minus when Event.current.control && Event.current.shift && isEditMode:
+                    // Undo.RecordObject(notebook, "Split Cell");
+                    var cell = notebook.cells[selectedCell];
+                    var editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+                    var cursorIndex = editor.selectIndex;
+                    // TODO copy the raw text after the cursorIndex to a new cell and delete the previous characters from the current cell
+                    // then update the source array to match the rawText
+                    Debug.Log("split not implemented");
+                    break;
+                // set header
+                case KeyCode.Alpha1 when !isEditMode:
+                    SetTextCellHeaderLevel(1);
+                    flag = true;
+                    break;
+                case KeyCode.Alpha2 when !isEditMode:
+                    SetTextCellHeaderLevel(2);
+                    flag = true;
+                    break;
+                case KeyCode.Alpha3 when !isEditMode:
+                    SetTextCellHeaderLevel(3);
+                    flag = true;
+                    break;
+                case KeyCode.Alpha4 when !isEditMode:
+                    SetTextCellHeaderLevel(4);
+                    flag = true;
+                    break;
+                case KeyCode.Alpha5 when !isEditMode:
+                    SetTextCellHeaderLevel(5);
+                    flag = true;
+                    break;
+                // change cell type
+                case KeyCode.M when !isEditMode:
+                    Undo.RecordObject(notebook, "Change Cell Type");
+                    notebook.cells[selectedCell].cellType = Notebook.CellType.Markdown;
+                    flag = true;
+                    break;
+                case KeyCode.Y when !isEditMode:
+                    Undo.RecordObject(notebook, "Change Cell Type");
+                    notebook.cells[selectedCell].cellType = Notebook.CellType.Code;
+                    flag = true;
+                    break;
+            }
+            
+            return flag;
         }
     }
 }
