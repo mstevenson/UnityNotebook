@@ -23,6 +23,7 @@ namespace UnityNotebook
         {
             EditorUtility.SetDirty(this);
             AssetDatabase.SaveAssetIfDirty(this);
+            EditorUtility.ClearDirty(this);
         }
 
         public void SaveJson()

@@ -106,6 +106,16 @@ namespace UnityNotebook
             nb.ClearOutputs();
             SaveScriptableObject();
         }
+
+        public static void SetDirty()
+        {
+            var nb = instance.openedNotebook;
+            if (nb != null)
+            {
+                EditorUtility.SetDirty(nb);
+                IsJsonOutOfDate = true;
+            }
+        }
         
         public static void SaveJson()
         {

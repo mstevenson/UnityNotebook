@@ -21,7 +21,7 @@ namespace UnityNotebook
         
         private static bool _openExternally;
         private static double _cooldownStartTime = double.PositiveInfinity;
-        private const float SaveCooldownDuration = 2;
+        private const float SaveCooldownDuration = 1.5f;
         private static bool _runningSaveCooldown;
 
         private static bool IsRunning => NBState.RunningCell >= 0;
@@ -198,7 +198,7 @@ namespace UnityNotebook
                 ChangeNotebook(notebooks[index]);
             }
         }
-        
+
         private void DrawWindowToolbar()
         {
             using var h = new EditorGUILayout.HorizontalScope(EditorStyles.toolbar);
@@ -219,7 +219,11 @@ namespace UnityNotebook
                     {
                         GUI.FocusControl(null);
                         // TODO repaint callback doesn't work reliably, the final cell output often isn't drawn
-                        Evaluator.ExecuteAllCells(nb, Repaint);
+                        Evaluator.ExecuteAllCells(nb, () =>
+                        {
+                            NBState.SetDirty();
+                            Repaint();
+                        });
                     }
                 }
 
@@ -280,8 +284,6 @@ namespace UnityNotebook
 
         private void OnUpdate()
         {
-            Debug.Log(EditorUtility.IsDirty(NBState.OpenedNotebook));
-            
             if (NBState.OpenedNotebook != null)
             {
                 if (EditorUtility.IsDirty(NBState.OpenedNotebook))
@@ -294,8 +296,9 @@ namespace UnityNotebook
             if (_runningSaveCooldown && EditorApplication.timeSinceStartup - _cooldownStartTime > SaveCooldownDuration)
             {
                 _runningSaveCooldown = false;
-                NBState.SaveScriptableObject();
-                Debug.Log("save");
+                NBState.SetDirty();
+                // NBState.SaveScriptableObject();
+                Repaint();
             }
             
             if (NBState.RunningCell != -1)
@@ -323,7 +326,7 @@ namespace UnityNotebook
             // Keyboard shortcuts
             if (Shortcuts.HandleKeyboardShortcuts(notebook))
             {
-                NBState.SaveScriptableObject();
+                NBState.SetDirty();
                 Event.current.Use();
                 Repaint();
             }
@@ -412,6 +415,7 @@ namespace UnityNotebook
                     notebook.cells.Insert(cellIndex - 1, notebook.cells[cellIndex]);
                     notebook.cells.RemoveAt(cellIndex + 1);
                     NBState.SelectedCell = cellIndex - 1;
+                    NBState.SetDirty();
                     Event.current.Use();
                     return true;
                 }
@@ -426,6 +430,7 @@ namespace UnityNotebook
                     notebook.cells.Insert(cellIndex + 2, notebook.cells[cellIndex]);
                     notebook.cells.RemoveAt(cellIndex);
                     NBState.SelectedCell = cellIndex + 1;
+                    NBState.SetDirty();
                     Event.current.Use();
                     return true;
                 }
@@ -437,6 +442,7 @@ namespace UnityNotebook
                 Undo.RecordObject(notebook, "Delete Cell");
                 notebook.cells.RemoveAt(cellIndex);
                 NBState.SelectedCell = Mathf.Max(0, cellIndex - 1);
+                NBState.SetDirty();
                 Event.current.Use();
                 return true;
             }
