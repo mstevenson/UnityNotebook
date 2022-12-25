@@ -288,6 +288,7 @@ namespace UnityNotebook
             // Keyboard shortcuts
             if (HandleKeyboardShortcuts(notebook))
             {
+                NBState.SaveScriptableObject();
                 Event.current.Use();
                 Repaint();
             }
@@ -592,24 +593,29 @@ namespace UnityNotebook
             }
         }
 
-        // Split code area's text into separate lines to store in scriptable object
-
-        private static void TryUpdateCellSource(Notebook.Cell c)
+        // When the cell text is changed via UI, update the cell's source lines
+        private static void TryUpdateCellSource(Notebook.Cell cell)
         {
             if (!GUI.changed)
             {
                 return;
             }
-            c.source = c.rawText.Split('\n');
+            CopyRawTextToSourceLines(cell);
+            GUI.changed = false;
+        }
+
+        // Update the cell's source lines stored in json from the raw text used by the UI
+        private static void CopyRawTextToSourceLines(Notebook.Cell cell)
+        {
+            cell.source = cell.rawText.Split('\n');
             // add stripped newline char back onto each line
-            for (var i = 0; i < c.source.Length; i++)
+            for (var i = 0; i < cell.source.Length; i++)
             {
-                if (i < c.source.Length - 1)
+                if (i < cell.source.Length - 1)
                 {
-                    c.source[i] += '\n';
+                    cell.source[i] += '\n';
                 }
             }
-            GUI.changed = false;
         }
         
         private static bool _consumeReturnKey;
@@ -711,32 +717,54 @@ namespace UnityNotebook
                     break;
                 // merge cell below
                 case KeyCode.M when Event.current.shift && !isEditMode:
-                    if (selectedCell < notebook.cells.Count - 1)
+                    // ignore if the cell is the last cell
+                    if (selectedCell == notebook.cells.Count - 1)
                     {
-                        Undo.RecordObject(notebook, "Merge Cell Below");
-                        // add newline to last line of current cell
-                        var count = notebook.cells[selectedCell].source.Length - 1;
-                        var lastLine = notebook.cells[selectedCell].source[count];
-                        if (lastLine.Length > 0 && lastLine[^1] != '\n')
-                        {
-                            notebook.cells[selectedCell].source[count] += "\n";
-                        }
-                        // merge the cells
-                        notebook.cells[selectedCell].source = notebook.cells[selectedCell].source.Concat(notebook.cells[selectedCell + 1].source).ToArray();
-                        notebook.cells[selectedCell].rawText = string.Join("", notebook.cells[selectedCell].source);
-                        notebook.cells.RemoveAt(selectedCell + 1);
-                        flag = true;
+                        break;
                     }
+                    Undo.RecordObject(notebook, "Merge Cell Below");
+                    // add newline to last line of current cell
+                    var count = notebook.cells[selectedCell].source.Length - 1;
+                    var lastLine = notebook.cells[selectedCell].source[count];
+                    // Add newline to last line of current cell
+                    if (lastLine.Length > 0 && lastLine[^1] != '\n')
+                    {
+                        notebook.cells[selectedCell].source[count] += "\n";
+                    }
+                    // merge the cells
+                    notebook.cells[selectedCell].source = notebook.cells[selectedCell].source.Concat(notebook.cells[selectedCell + 1].source).ToArray();
+                    notebook.cells[selectedCell].rawText = string.Join("", notebook.cells[selectedCell].source);
+                    notebook.cells.RemoveAt(selectedCell + 1);
+                    flag = true;
                     break;
                 // split cell
                 case KeyCode.Minus when Event.current.control && Event.current.shift && isEditMode:
-                    // Undo.RecordObject(notebook, "Split Cell");
-                    var cell = notebook.cells[selectedCell];
+                    if (notebook.cells[selectedCell].source.Length == 0 || notebook.cells[selectedCell].source[0].Length == 0)
+                    {
+                        break;
+                    }
+                    Undo.RecordObject(notebook, "Split Cell");
                     var editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
                     var cursorIndex = editor.selectIndex;
-                    // TODO copy the raw text after the cursorIndex to a new cell and delete the previous characters from the current cell
-                    // then update the source array to match the rawText
-                    Debug.Log("split not implemented");
+                    var cell = notebook.cells[selectedCell];
+                    // split text into two parts
+                    var first = cell.rawText[..cursorIndex];
+                    var second = cell.rawText[cursorIndex..];
+                    // Update the first cell with the first part of split text
+                    cell.rawText = first;
+                    // remove trailing newline if one exists
+                    if (cell.rawText.Length > 0 && cell.rawText[^1] == '\n')
+                    {
+                        cell.rawText = cell.rawText[..^1];
+                    }
+                    CopyRawTextToSourceLines(cell);
+                    // Create a new cell with the second part of split text
+                    var newSplitCell = new Notebook.Cell { cellType = cell.cellType, rawText = second };
+                    CopyRawTextToSourceLines(newSplitCell);
+                    // Insert the new cell after the current cell
+                    notebook.cells.Insert(selectedCell + 1, newSplitCell);
+                    NBState.SelectedCell = selectedCell + 1;
+                    flag = true;
                     break;
                 // set header
                 case KeyCode.Alpha1 when !isEditMode:
