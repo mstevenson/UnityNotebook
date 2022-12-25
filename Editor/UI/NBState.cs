@@ -109,5 +109,19 @@ namespace UnityNotebook
                 nb.SaveScriptableObject();
             }
         }
+        
+        // Update the cell's source lines stored in json from the raw text used by the UI
+        public static void CopyRawTextToSourceLines(Notebook.Cell cell)
+        {
+            cell.source = cell.rawText.Split('\n');
+            // add stripped newline char back onto each line
+            for (var i = 0; i < cell.source.Length; i++)
+            {
+                if (i < cell.source.Length - 1)
+                {
+                    cell.source[i] += '\n';
+                }
+            }
+        }
     }
 }
