@@ -574,39 +574,41 @@ namespace UnityNotebook
             
             foreach (var output in cell.outputs)
             {
-                switch (output.outputType)
+                switch (output)
                 {
-                    case Notebook.OutputType.Stream:
-                        EditorGUILayout.TextArea(string.Concat(output.text), TextNoBackgroundStyle);
+                    case Notebook.CellOutputStream stream:
+                        EditorGUILayout.TextArea(string.Concat(stream.text), TextNoBackgroundStyle);
                         break;
-                    case Notebook.OutputType.ExecuteResult:
-                        foreach (var data in output.data)
+                    case Notebook.CellOutputExecuteResults results:
+                        foreach (var data in results.data)
                         {
-                            EditorGUILayout.TextArea(string.Concat(data.stringData), TextNoBackgroundStyle);
+                            EditorGUILayout.TextArea(string.Concat(data.data), TextNoBackgroundStyle);
                         }
                         break;
-                    case Notebook.OutputType.DisplayData:
-                        foreach (var data in output.data)
+                    case Notebook.CellOutputDisplayData display:
+                        foreach (var dataElement in display.data)
                         {
-                            var renderer = Renderers.GetRendererForMimeType(data.mimeType);
-                            renderer.Render(data);
+                            // var renderer = Renderers.GetRendererForMimeType(dataElement.mimeType);
+                            var renderer = Renderers.GetRendererForType(dataElement.GetData().GetType());
+                            renderer.DrawGUI(dataElement);
                         }
                         break;
                     // TODO parse terminal control codes, set colors
-                    case Notebook.OutputType.Error:
+                    case Notebook.CellOutputError error:
                         var c = GUI.color;
                         GUI.color = Color.red;
-                        GUILayout.Label(output.ename);
-                        GUILayout.Label(output.evalue);
+                        GUILayout.Label(error.ename);
+                        GUILayout.Label(error.evalue);
                         GUI.color = c;
                         // TODO convert ANSI escape sequences to HTML tags
-                        var str = string.Join("\n", output.traceback);
+                        var str = string.Join("\n", error.traceback);
                         output.scroll = GUILayout.BeginScrollView(output.scroll);
                         EditorGUILayout.TextArea(str, CodeNoBackgroundStyle, GUILayout.ExpandHeight(false));
                         GUILayout.EndScrollView();
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        Debug.LogWarning($"Unknown output type: {output.GetType()}");
+                        break;
                 }
             }
         }

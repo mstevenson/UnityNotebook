@@ -41,19 +41,18 @@ namespace UnityNotebook
             }
             return _renderersByMimeType["text/plain"][0];
         }
-
-        public static Notebook.CellOutput GetCellOutputForObject(object obj)
+        
+        public static OutputRendererBase GetRendererForType(object obj)
         {
             Init();
             foreach (var renderer in _renderers)
             {
                 if (renderer.SupportedTypes.Any(t => t.IsInstanceOfType(obj)))
                 {
-                    return renderer.ObjectToCellOutput(obj);
+                    return renderer;
                 }
             }
-            // Fallback, supports any type via ToString()
-            return _renderersByMimeType["text/plain"][0].ObjectToCellOutput(obj);
+            return _renderersByMimeType["text/plain"][0]; // fallback to support any type by displaying ToString()
         }
     }
 }

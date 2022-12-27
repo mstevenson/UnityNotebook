@@ -109,7 +109,7 @@ namespace UnityNotebook
             }
             catch (Exception e)
             {
-                var output = new Notebook.CellOutput
+                var output = new Notebook.CellOutputError
                 {
                     outputType = Notebook.OutputType.Error,
                     ename = e.GetType().Name,
@@ -132,6 +132,7 @@ namespace UnityNotebook
         {
             NBState.RunningCell = -1;
             NBState.OpenedNotebook.SaveScriptableObject();
+            NBState.SetDirty();
         }
         
         public static void Stop()

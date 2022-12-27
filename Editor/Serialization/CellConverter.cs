@@ -13,20 +13,20 @@ namespace UnityNotebook
             var cell = new JObject
             {
                 ["cell_type"] = JToken.FromObject(value.cellType),
-                ["metadata"] = value.metadata != null ? JObject.FromObject(value.metadata) : new JObject(),
+                // TODO metadata
+                // ["metadata"] = value.metadata != null ? JObject.FromObject(value.metadata) : new JObject(),
                 ["source"] = JArray.FromObject(value.source)
             };
             if (value.cellType == Code)
             {
                 cell["execution_count"] = value.executionCount;
-                cell["outputs"] = value.outputs != null ? JArray.FromObject(value.outputs) : new JArray();
+                cell["outputs"] = JArray.FromObject(value.outputs);
             }
 
             cell.WriteTo(writer);
         }
 
-        public override Notebook.Cell ReadJson(JsonReader reader, Type objectType, Notebook.Cell existingValue,
-            bool hasExistingValue, JsonSerializer serializer)
+        public override Notebook.Cell ReadJson(JsonReader reader, Type objectType, Notebook.Cell existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             var obj = JToken.Load(reader);
             if (!obj.HasValues)
@@ -37,7 +37,8 @@ namespace UnityNotebook
             var cell = hasExistingValue ? existingValue : new Notebook.Cell();
 
             cell.cellType = obj["cell_type"]?.ToObject<Notebook.CellType>() ?? Code;
-            cell.metadata = obj["metadata"]?.ToObject<Notebook.CellMetadata>() ?? new Notebook.CellMetadata();
+            // TODO metadata
+            // cell.metadata = obj["metadata"]?.ToObject<List<Notebook.CellMetadataEntry>>() ?? new List<Notebook.CellMetadataEntry>();
             cell.source = obj["source"]?.ToObject<string[]>() ?? Array.Empty<string>();
             if (cell.cellType == Code)
             {

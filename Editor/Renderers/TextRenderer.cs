@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using JetBrains.Annotations;
 using UnityEngine;
 
@@ -11,30 +10,23 @@ namespace UnityNotebook
         public override string[] MimeTypes { get; } = { "text/plain", "text/markdown", "application/json" };
         public override Type[] SupportedTypes { get; } = { typeof(string) }; // also is a fallback to support any type by calling ToString()
 
-        public override void Render(Notebook.CellOutputDataEntry content)
+        public override void DrawGUI(Notebook.CellOutputDataEntry content)
         {
-            foreach (var line in content.stringData)
+            if (content.primitiveObject is string str)
             {
-                GUILayout.Label(line.Replace("\n", ""));
+                GUILayout.Label(str);
             }
         }
 
-        public override Notebook.CellOutput ObjectToCellOutput(object obj)
+        public override Notebook.CellOutput CreateCellOutputData(object obj)
         {
-            var value = obj as string ?? obj.ToString();
-            
-            return new Notebook.CellOutput
+            var output = new Notebook.CellOutputDisplayData();
+            output.data.Add(new Notebook.CellOutputDataEntry
             {
-                outputType = Notebook.OutputType.DisplayData,
-                data = new List<Notebook.CellOutputDataEntry>
-                {
-                    new()
-                    {
-                        mimeType = "text/plain",
-                        stringData = new List<string>(value.Split('\n'))
-                    }
-                }
-            };
+                mimeType = "text/plain",
+                primitiveObject = obj.ToString()
+            });
+            return output;
         }
     }
 }

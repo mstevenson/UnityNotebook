@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace UnityNotebook
 {
     public abstract class OutputRendererBase
@@ -7,9 +9,8 @@ namespace UnityNotebook
         public abstract string[] MimeTypes { get; }
         public abstract System.Type[] SupportedTypes { get; }
 
-        // TODO take metadata as input
-        public abstract void Render(Notebook.CellOutputDataEntry content);
+        public abstract void DrawGUI(Notebook.CellOutputDataEntry content);
 
-        public abstract Notebook.CellOutput ObjectToCellOutput(object obj);
+        public abstract Notebook.CellOutput CreateCellOutputData(object obj);
     }
 }

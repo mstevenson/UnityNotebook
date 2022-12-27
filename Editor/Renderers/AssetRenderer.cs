@@ -13,28 +13,47 @@ namespace UnityNotebook
         public override string[] MimeTypes { get; } = { $"{UnityMimePrefix}texture", $"{UnityMimePrefix}material", $"{UnityMimePrefix}mesh", $"{UnityMimePrefix}gameobject" };
         public override Type[] SupportedTypes { get; } = { typeof(Texture), typeof(Material), typeof(Mesh), typeof(GameObject) };
         
-        // TODO leaks textures? automatically clean up
-        private static readonly Dictionary<int, Texture2D> AssetPreviews = new();
-
-        public override void Render(Notebook.CellOutputDataEntry content)
+        public override void DrawGUI(Notebook.CellOutputDataEntry content)
         {
-            var asset = content.obj;
-
-            // Cache asset preview textures so that different outputs can show separate visual states of the same asset 
-            if (!AssetPreviews.TryGetValue(content.Id, out var cachedPreview))
-            {
-                var tempPreview = AssetPreview.GetAssetPreview(asset);
-                var newPreview = new Texture2D(tempPreview.width, tempPreview.height, tempPreview.format, false);
-                Graphics.CopyTexture(tempPreview, newPreview);
-                // We have to destroy the preview texture, otherwise the GUI system will reuse a stale
-                // texture during subsequence GetAssetPreview calls for the same asset.
-                Object.DestroyImmediate(tempPreview);
-                AssetPreviews.Add(content.Id, newPreview);
-                cachedPreview = newPreview;
-            }
-            var rect = GUILayoutUtility.GetRect(cachedPreview.width, cachedPreview.height, GUILayout.ExpandWidth(false));
-            EditorGUI.DrawPreviewTexture(rect, cachedPreview);
+            // var asset = content.obj;
+            // var cachedPreview = GetAssetImage(asset, content.Id);
+            // var rect = GUILayoutUtility.GetRect(cachedPreview.width, cachedPreview.height, GUILayout.ExpandWidth(false));
+            // EditorGUI.DrawPreviewTexture(rect, cachedPreview);
+            // GUILayout.Label(label);
+        }
+        
+        public override Notebook.CellOutput CreateCellOutputData(object obj)
+        {
+            var unityObject = (Object) obj;
+            var tempPreview = AssetPreview.GetAssetPreview(unityObject);
+            var tex = new Texture2D(tempPreview.width, tempPreview.height, tempPreview.format, false);
+            Graphics.CopyTexture(tempPreview, tex);
+            // We have to destroy the preview texture, otherwise the GUI system will reuse a stale
+            // texture during subsequence GetAssetPreview calls for the same asset.
+            Object.DestroyImmediate(tempPreview);
             
+            var output = new Notebook.CellOutputDisplayData();
+            
+            // Image
+            output.data.Add(new Notebook.CellOutputDataEntry
+            {
+                mimeType = "image/png",
+                unityObject = tex,
+            });
+            // Info
+            output.data.Add(new Notebook.CellOutputDataEntry
+            {
+                mimeType = "text/plain",
+                data = new List<string> { GetInfoString(unityObject) }
+            });
+            
+            // Metadata will be added by the json converter during serialization
+
+            return output;
+        }
+        
+        private static string GetInfoString(UnityEngine.Object asset)
+        {
             var assetName = (string.IsNullOrEmpty(asset.name) ? "Unnamed" : asset.name) + $" ({asset.GetType().Name})";
             var label = $"{assetName} • " + asset switch
             {
@@ -44,34 +63,7 @@ namespace UnityNotebook
                 GameObject go => $"",
                 _ => assetName
             };
-            GUILayout.Label(label);
-        }
-
-        public override Notebook.CellOutput ObjectToCellOutput(object obj)
-        {
-            var o = (Object) obj;
-            
-            var mimeType = o switch
-            {
-                Texture2D _ => $"{UnityMimePrefix}texture",
-                Material _ => $"{UnityMimePrefix}material",
-                Mesh _ => $"{UnityMimePrefix}mesh",
-                GameObject _ => $"{UnityMimePrefix}gameobject",
-                _ => throw new ArgumentException($"Object type {o.GetType()} is not supported by this renderer")
-            };
-            
-            return new Notebook.CellOutput
-            {
-                outputType = Notebook.OutputType.DisplayData,
-                data = new List<Notebook.CellOutputDataEntry>
-                {
-                    new()
-                    {
-                        mimeType = mimeType,
-                        obj = o
-                    }
-                }
-            };
+            return label;
         }
     }
 }

@@ -9,7 +9,8 @@ using UnityEditor;
 namespace UnityNotebook
 {
     // Implementation of the Jupyter Notebook file format
-    // https://ipython.org/ipython-doc/3/notebook/nbformat.html
+    // https://nbformat.readthedocs.io/en/latest/format_description.html
+    // https://github.com/jupyter/nbformat/blob/main/nbformat/v4/nbformat.v4.schema.json
     [JsonConverter(typeof(NotebookConverter))]
     public class Notebook : ScriptableObject
     {
@@ -111,38 +112,35 @@ namespace UnityNotebook
             // common
             public CellType cellType; // markdown, code
             public int executionCount;
-            public CellMetadata metadata; // empty object if its a markdown cell
+            
+            [JsonConverter(typeof(CellMetadataConverter))]
+            // TODO metadata
+            // public List<CellMetadataEntry> metadata; // empty object if its a markdown cell
             public string[] source = Array.Empty<string>(); // could be a single string or a list of strings
 
-            // code
+            // code cell
+            [SerializeReference]
+            // [JsonConverter(typeof(CellOutputConverter))]
             public List<CellOutput> outputs = new();
 
-            // UI
+            // temp UI vars
             [NonSerialized] public string rawText;
             [NonSerialized] public string highlightedText = "";
             [NonSerialized] public Vector2 scroll;
         }
 
-        public enum AutoScroll
-        {
-            True,
-            False,
-            Auto
-        }
+        // public enum AutoScroll
+        // {
+        //     True,
+        //     False,
+        //     Auto
+        // }
 
         [Serializable]
-        [JsonConverter(typeof(CellMetadataConverter))]
-        public class CellMetadata
+        public class CellMetadataEntry
         {
-            public bool collapsed;
-            public AutoScroll autoscroll;
-
-            public bool deletable = true;
-
-            // TODO support Raw NBConvert Cell
-            public string format; // The mime-type of a Raw NBConvert Cell
-            public string name;
-            public List<string> tags;
+            public string key;
+            public string value;
         }
 
         [JsonConverter(typeof(StringEnumConverter))]
@@ -163,25 +161,48 @@ namespace UnityNotebook
         public class CellOutput
         {
             public OutputType outputType;
+            [NonSerialized] public Vector2 scroll;
+        }
 
-            // stream output
+        [Serializable]
+        [JsonConverter(typeof(CellOutputStreamConverter))]
+        public class CellOutputStream : CellOutput
+        {
+            public CellOutputStream() => outputType = OutputType.Stream;
+            
             public string name; // if stream output cell: stdout, stderr
             public List<string> text = new();
+        }
 
-            // display data output or execute result output
+        [Serializable]
+        [JsonConverter(typeof(CellOutputDisplayDataConverter))]
+        public class CellOutputDisplayData : CellOutput
+        {
+            public CellOutputDisplayData() => outputType = OutputType.DisplayData;
+
             public List<CellOutputDataEntry> data = new(); // mime-type -> data, often text/plain, image/png, application/json
+            // public List<CellOutputMetadataEntry> metadata = new(); // mime-type -> metadata
+        }
 
-            public List<CellOutputMetadataEntry> metadata = new(); // mime-type -> metadata
-
-            // execute result output
+        [Serializable]
+        [JsonConverter(typeof(CellOutputExecuteResultsConverter))]
+        public class CellOutputExecuteResults : CellOutput
+        {
+            public CellOutputExecuteResults() => outputType = OutputType.ExecuteResult;
+            
+            public List<CellOutputDataEntry> data = new(); // mime-type -> data, often text/plain, image/png, application/json
             public int executionCount;
+        }
 
-            // error output
+        [Serializable]
+        [JsonConverter(typeof(CellOutputErrorConverter))]
+        public class CellOutputError : CellOutput
+        {
+            public CellOutputError() => outputType = OutputType.Error;
+            
             public string ename;
             public string evalue;
             public List<string> traceback = new();
-
-            [NonSerialized] public Vector2 scroll;
         }
 
         [Serializable]
@@ -189,37 +210,43 @@ namespace UnityNotebook
         public class CellOutputDataEntry
         {
             public string mimeType;
-            public List<string> stringData = new();
-            public Texture2D imageData;
+            public List<string> data = new();
             
-            // serialized into scriptable object, not in json
+            // TODO need to be able to serialize any type in primitiveObject
+            // https://forum.unity.com/threads/serializereference-primitive-types.968293/
+            
+            [JsonIgnore]
+            public object primitiveObject;
             [JsonIgnore, SerializeReference]
-            public UnityEngine.Object obj;
-            [JsonIgnore, SerializeReference]
-            public object value;
+            public UnityEngine.Object unityObject;
             // hack to work around SerializeReference not working with animation curves
             [JsonIgnore, SerializeReference]
             public AnimationCurve curve;
-            [SerializeField] private int id;
 
-            [JsonIgnore]
-            public int Id
+            public object GetData()
             {
-                get
+                if (unityObject != null)
                 {
-                    if (id == 0)
-                    {
-                        id = Guid.NewGuid().GetHashCode();
-                    }
-                    return id;
+                    return unityObject;
                 }
+                if (primitiveObject != null)
+                {
+                    return primitiveObject;
+                }
+                if (curve != null)
+                {
+                    return typeof(AnimationCurve);
+                }
+                throw new Exception("Unknown data type");
             }
         }
 
-        [Serializable]
-        public class CellOutputMetadataEntry
-        {
-            public string mimeType;
-        }
+        // [Serializable]
+        // public class CellOutputMetadataEntry
+        // {
+        //     public string mimeType;
+        //     public int width;
+        //     public int height;
+        // }
     }
 }

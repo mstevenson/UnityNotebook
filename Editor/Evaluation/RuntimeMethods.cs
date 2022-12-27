@@ -14,7 +14,8 @@ namespace UnityNotebook
             }
             var notebook = NBState.OpenedNotebook;
             var cell = NBState.RunningCell;
-            var output = Renderers.GetCellOutputForObject(data);
+            var renderer = Renderers.GetRendererForType(data);
+            var output = renderer.CreateCellOutputData(data);
             notebook.cells[cell].outputs.Add(output);
         }
     }

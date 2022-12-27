@@ -28,8 +28,8 @@ namespace UnityNotebook
             get => instance.openedNotebook;
             set
             {
-                if (instance.openedNotebook == value) return;
                 instance.openedNotebook = value;
+                if (instance.openedNotebook == value) return;
                 instance.Save(true);
             }
         }
@@ -39,8 +39,8 @@ namespace UnityNotebook
             get => instance.scroll;
             set
             {
-                if (instance.scroll == value) return;
                 instance.scroll = value;
+                if (instance.scroll == value) return;
                 instance.Save(true);
             }
         }
@@ -50,8 +50,8 @@ namespace UnityNotebook
             get => instance.selectedCell;
             set
             {
-                if (instance.selectedCell == value) return;
                 instance.selectedCell = value;
+                if (instance.selectedCell == value) return;
                 instance.Save(true);
             }
         }
@@ -61,8 +61,8 @@ namespace UnityNotebook
             get => instance.runningCell;
             set
             {
-                if (instance.runningCell == value) return;
                 instance.runningCell = value;
+                if (instance.runningCell == value) return;
                 instance.Save(true);
             }
         }
@@ -72,9 +72,9 @@ namespace UnityNotebook
             get => instance.isEditMode;
             set
             {
-                if (instance.isEditMode == value) return;
                 instance.forceFocusCodeArea = true;
                 instance.isEditMode = value;
+                if (instance.isEditMode == value) return;
                 instance.Save(true);
             }
         }
