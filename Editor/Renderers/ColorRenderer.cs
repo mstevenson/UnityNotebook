@@ -26,7 +26,13 @@ namespace UnityNotebook
 
         public override Notebook.CellOutput CreateCellOutputData(object obj)
         {
-            throw new NotImplementedException();
+            var output = new Notebook.CellOutputDisplayData();
+            output.data.Add(new Notebook.CellOutputDataEntry
+            {
+                mimeType = MimeTypes[0],
+                backingValue = new ValueWrapper(obj)
+            });
+            return output;
         }
     }
 }
