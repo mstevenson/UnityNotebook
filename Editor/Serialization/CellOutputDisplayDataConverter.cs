@@ -21,10 +21,14 @@ namespace UnityNotebook
             var dict = obj["data"].ToObject<Dictionary<string, List<string>>>();
             foreach (var (mimeType, dataList) in dict)
             {
+                // TODO need to call CellOutputDataEntryConverter via ToObject call instead of manually constructing this object
                 var entry = new Notebook.CellOutputDataEntry
                 {
                     mimeType = mimeType,
-                    data = dataList
+                    data = dataList,
+                    // HACK
+                    // TODO this should be set through CellOutputDataEntryConverter
+                    backingValue = new ValueWrapper(dataList[0])
                 };
                 output.data.Add(entry);
             }
@@ -46,12 +50,12 @@ namespace UnityNotebook
             // Collect assets
             foreach (var entry in value.data)
             {
-                var data = entry.GetData();
-                if (data is Texture2D tex)
+                var obj = entry.backingValue.Object;
+                if (obj is Texture2D tex)
                 {
                     tempTextures.Add(tex);
                 }
-                var dataArray = new[] {data};
+                var dataArray = new[] {obj};
                 output["data"] = new JObject
                 {
                     [entry.mimeType] = JToken.FromObject(dataArray)

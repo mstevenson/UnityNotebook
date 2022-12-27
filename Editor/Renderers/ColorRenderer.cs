@@ -14,9 +14,9 @@ namespace UnityNotebook
 
         public override void DrawGUI(Notebook.CellOutputDataEntry content)
         {
-            if (content.primitiveObject is not Color color)
+            if (content.backingValue.Object is not Color color)
             {
-                Debug.LogError($"Expected {nameof(Color)} but got {content.primitiveObject.GetType()}");
+                Debug.LogError($"Expected {nameof(Color)} but got {content.backingValue.Object.GetType()}");
                 return;
             }
             var hdr = color.maxColorComponent > 1.0f;

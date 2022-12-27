@@ -12,7 +12,7 @@ namespace UnityNotebook
 
         public override void DrawGUI(Notebook.CellOutputDataEntry content)
         {
-            if (content.primitiveObject is string str)
+            if (content.backingValue.Object is string str)
             {
                 GUILayout.Label(str);
             }
@@ -24,7 +24,7 @@ namespace UnityNotebook
             output.data.Add(new Notebook.CellOutputDataEntry
             {
                 mimeType = "text/plain",
-                primitiveObject = obj.ToString()
+                backingValue = new ValueWrapper(obj.ToString())
             });
             return output;
         }

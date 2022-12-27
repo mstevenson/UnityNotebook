@@ -7,10 +7,16 @@ using UnityEngine;
 
 namespace UnityNotebook
 {
+    
+    // TODO this isn't being called during deserialization because we're manually converting 
+    // a <Dictionary<string, List<string>>> to Notebook.CellOutputDataEntry in CellOutputDisplayDataConverter
+    
     public class CellOutputDataEntryConverter : JsonConverter<Notebook.CellOutputDataEntry>
     {
         public override Notebook.CellOutputDataEntry ReadJson(JsonReader reader, Type objectType, Notebook.CellOutputDataEntry existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
+            Debug.Log("import");
+            
             var obj = JToken.Load(reader);
             if (!obj.HasValues)
             {
@@ -18,12 +24,13 @@ namespace UnityNotebook
             }
             var output = hasExistingValue ? existingValue : new Notebook.CellOutputDataEntry();
             output.mimeType = obj["mime_type"].Value<string>();
-            
+
             switch (output.mimeType)
             {
                 case "text/plain":
                     var list = obj["data"].ToObject<List<string>>();
-                    output.primitiveObject = string.Concat(list); 
+                    output.backingValue = new ValueWrapper(string.Concat(list));
+                    Debug.Log(output.backingValue.Object);
                     break;
                 case "image/png":
                 {
@@ -36,7 +43,7 @@ namespace UnityNotebook
                     var bytes = Convert.FromBase64String(b64.ToString());
                     var tex = new Texture2D(2, 2);
                     tex.LoadImage(bytes);
-                    output.unityObject = tex;
+                    output.backingValue = new ValueWrapper(tex);
                     break;
                 }
                 case "application/vnd.unity3d.animationcurve":
@@ -60,8 +67,9 @@ namespace UnityNotebook
         public override void WriteJson(JsonWriter writer, Notebook.CellOutputDataEntry value, JsonSerializer serializer)
         {
             var output = new JObject();
+            var obj = value.backingValue.Object;
             
-            if (value.unityObject is Texture2D tex)
+            if (obj is Texture2D tex)
             {
                 var bytes = tex.EncodeToPNG();
                 var b64 = Convert.ToBase64String(bytes);
@@ -69,17 +77,17 @@ namespace UnityNotebook
                 output["mime_type"] = "image/png";
                 output["data"] = JArray.FromObject(lines);
             }
-            else if (value.curve != null)
+            else if (obj is AnimationCurve curve)
             {
                 output["mime_type"] = "application/vnd.unity3d.animationcurve";
                 // TODO write curve
             }
-            else if (value.primitiveObject is Color color)
+            else if (obj is Color color)
             {
                 output["mime_type"] = "application/vnd.unity3d.color";
                 // TODO write color
             }
-            else if (value.primitiveObject is string str)
+            else if (obj is string str)
             {
                 output["mime_type"] = "text/plain";
                 var list = str.Split('\n');

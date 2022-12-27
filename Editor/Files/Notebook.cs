@@ -120,7 +120,6 @@ namespace UnityNotebook
 
             // code cell
             [SerializeReference]
-            // [JsonConverter(typeof(CellOutputConverter))]
             public List<CellOutput> outputs = new();
 
             // temp UI vars
@@ -181,6 +180,7 @@ namespace UnityNotebook
             public CellOutputDisplayData() => outputType = OutputType.DisplayData;
 
             public List<CellOutputDataEntry> data = new(); // mime-type -> data, often text/plain, image/png, application/json
+
             // public List<CellOutputMetadataEntry> metadata = new(); // mime-type -> metadata
         }
 
@@ -204,7 +204,10 @@ namespace UnityNotebook
             public string evalue;
             public List<string> traceback = new();
         }
-
+        
+        
+        // TODO JsonConverter is never called
+        
         [Serializable]
         [JsonConverter(typeof(CellOutputDataEntryConverter))]
         public class CellOutputDataEntry
@@ -212,35 +215,10 @@ namespace UnityNotebook
             public string mimeType;
             public List<string> data = new();
             
-            // TODO need to be able to serialize any type in primitiveObject
-            // https://forum.unity.com/threads/serializereference-primitive-types.968293/
-            
             [JsonIgnore]
-            public object primitiveObject;
-            [JsonIgnore, SerializeReference]
-            public UnityEngine.Object unityObject;
-            // hack to work around SerializeReference not working with animation curves
-            [JsonIgnore, SerializeReference]
-            public AnimationCurve curve;
-
-            public object GetData()
-            {
-                if (unityObject != null)
-                {
-                    return unityObject;
-                }
-                if (primitiveObject != null)
-                {
-                    return primitiveObject;
-                }
-                if (curve != null)
-                {
-                    return typeof(AnimationCurve);
-                }
-                throw new Exception("Unknown data type");
-            }
+            public ValueWrapper backingValue;
         }
-
+        
         // [Serializable]
         // public class CellOutputMetadataEntry
         // {

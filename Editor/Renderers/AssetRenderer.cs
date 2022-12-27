@@ -38,7 +38,7 @@ namespace UnityNotebook
             output.data.Add(new Notebook.CellOutputDataEntry
             {
                 mimeType = "image/png",
-                unityObject = tex,
+                backingValue = new ValueWrapper(tex),
             });
             // Info
             output.data.Add(new Notebook.CellOutputDataEntry

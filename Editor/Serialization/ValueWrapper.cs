@@ -6,7 +6,7 @@ namespace UnityNotebook
 {
     // https://forum.unity.com/threads/serializereference-primitive-types.968293/
     [Serializable]
-    public struct ValueWrapper : ISerializationCallbackReceiver
+    public struct ValueWrapper
     {
         private interface IValue
         {
@@ -32,59 +32,21 @@ namespace UnityNotebook
         private class BoolValue : Ref<bool> { }
         private class CharValue : Ref<char> { }
         private class StringValue : Ref<string> { }
+        private class AnimationCurveValue : Ref<AnimationCurve> { }
         private class UnityObjectValue : Ref<Object> { }
 
         [SerializeReference]
         private object _serialized;
         
-        private object _object;
-        
-        public object Object
-        {
-            get
-            {
-                if (_object == null && _serialized != null)
-                {
-                    _object = _serialized is IValue v ? v.Object : _serialized;
-                    _serialized = null;
-                }
-                return _object;
-            }
-            set
-            {
-                _serialized = null;
-                _object = value;
-            }
-        }
-        
+        public object Object => _serialized is IValue v ? v.Object : _serialized;
+
         public ValueWrapper(object obj)
         {
-            _serialized = null;
-            _object = obj;
-        }
-        
-        void ISerializationCallbackReceiver.OnBeforeSerialize()
-        {
-            // Pack primitive types into struct
-            if (_object != null || _serialized == null)
-            {
-                _serialized = Pack(_object);
-            }
-        }
-        
-        void ISerializationCallbackReceiver.OnAfterDeserialize()
-        {
-            // Reference are deserialized in unspecified order
-            _object = null;
-        }
-        
-        public static object Pack(object obj)
-        {
-            return obj switch
+            _serialized = obj switch
             {
                 Object unityObj => new UnityObjectValue {Value = unityObj},
                 string str => new StringValue {Value = str},
-                _ when obj.GetType().IsPrimitive => obj switch
+                _ when obj != null && obj.GetType().IsPrimitive => obj switch
                 {
                     sbyte v => new Int8Value {Value = v},
                     short v => new Int16Value {Value = v},
@@ -98,6 +60,7 @@ namespace UnityNotebook
                     double v => new DoubleValue {Value = v},
                     bool v => new BoolValue {Value = v},
                     char v => new CharValue {Value = v},
+                    AnimationCurve v => new AnimationCurveValue {Value = v},
                     _ => throw new ArgumentOutOfRangeException(nameof(obj), obj, null)
                 },
                 _ => obj

@@ -589,7 +589,7 @@ namespace UnityNotebook
                         foreach (var dataElement in display.data)
                         {
                             // var renderer = Renderers.GetRendererForMimeType(dataElement.mimeType);
-                            var renderer = Renderers.GetRendererForType(dataElement.GetData().GetType());
+                            var renderer = Renderers.GetRendererForType(dataElement.backingValue.Object.GetType());
                             renderer.DrawGUI(dataElement);
                         }
                         break;

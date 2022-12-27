@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
 
+
 namespace UnityNotebook
 {
     [UsedImplicitly]
@@ -14,7 +15,7 @@ namespace UnityNotebook
 
         public override void DrawGUI(Notebook.CellOutputDataEntry content)
         {
-            EditorGUILayout.CurveField(content.curve, GUILayout.Width(250), GUILayout.Height(120));
+            EditorGUILayout.CurveField(content.backingValue.Object as AnimationCurve, GUILayout.Width(250), GUILayout.Height(120));
         }
         
         public override Notebook.CellOutput CreateCellOutputData(object obj)
@@ -23,7 +24,7 @@ namespace UnityNotebook
             output.data.Add(new Notebook.CellOutputDataEntry
             {
                 mimeType = MimeTypes[0],
-                curve = (AnimationCurve) obj
+                backingValue = new ValueWrapper(obj)
             });
             return output;
         }
