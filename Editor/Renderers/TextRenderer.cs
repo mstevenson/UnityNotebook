@@ -12,10 +12,8 @@ namespace UnityNotebook
 
         public override void DrawGUI(object value)
         {
-            if (value is string str)
-            {
-                GUILayout.Label(str);
-            }
+            var str = value is string s ? s : value.ToString();
+            GUILayout.Label(str);
         }
     }
 }
