@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -15,49 +16,88 @@ namespace UnityNotebook
             {
                 return new Notebook.CellOutputDisplayData();
             }
-            var output = hasExistingValue ? existingValue : new Notebook.CellOutputDisplayData();
+            Notebook.CellOutputDisplayData output = hasExistingValue ? existingValue : new Notebook.CellOutputDisplayData();
             output.outputType = obj["output_type"].ToObject<Notebook.OutputType>();
             
-            // Rebuild json dictionary as a list of objects so CellOutputDataEntry will have its custom JsonConverter called.
             foreach (var jToken in obj["data"])
             {
                 var item = (JProperty) jToken;
-                var rebuilt = new JObject
+                var mimeType = item.Name;
+                var value = item.Value;
+                
+                switch (mimeType)
                 {
-                    ["mime_type"] = item.Name,
-                    ["data"] = item.Value
-                };
-                var entry = rebuilt.ToObject<Notebook.CellOutputDataEntry>();
-                output.data.Add(entry);
+                    case "text/plain":
+                        var list = obj["data"].ToObject<List<string>>();
+                        output.values.Add(new ValueWrapper(string.Concat(list)));
+                        break;
+                    case "image/png":
+                    {
+                        // TODO parse image data? Is it required to reconstruct the texture?
+                        
+                        var b64 =  new StringBuilder();
+                        var lines = obj["data"].ToObject<List<string>>();
+                        foreach (var line in lines)
+                        {
+                            b64.Append(line);
+                        }
+                        var bytes = Convert.FromBase64String(b64.ToString());
+                        var tex = new Texture2D(2, 2);
+                        tex.LoadImage(bytes);
+                        output.values.Add(new ValueWrapper(tex));
+                        break;
+                    }
+                    // Unity object type
+                    default:
+                    {
+                        var type = UnityMimeTypes.GetType(mimeType);
+                        var unityObj = obj["data"][mimeType].ToObject(type);
+                        output.values.Add(new ValueWrapper(unityObj));
+                        break;
+                    }
+                }
             }
-            
-            // TODO parse metadata from raw fields (see WriteJson below)
-            
+
             return output;
         }
         
-        public override void WriteJson(JsonWriter writer, Notebook.CellOutputDisplayData value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, Notebook.CellOutputDisplayData displayData, JsonSerializer serializer)
         {
             var output = new JObject
             {
-                ["output_type"] = JToken.FromObject(value.outputType),
+                ["output_type"] = JToken.FromObject(displayData.outputType),
             };
             
             var tempTextures = new List<Texture2D>();
             
             // Collect assets
-            foreach (var entry in value.data)
+            foreach (var value in displayData.values)
             {
-                var obj = entry.backingValue.Object;
-                if (obj is Texture2D tex)
+                var jEntry = new JObject();
+                
+                // Texture
+                if (value.Object is Texture2D tex)
                 {
                     tempTextures.Add(tex);
+                    var bytes = tex.EncodeToPNG();
+                    var b64 = Convert.ToBase64String(bytes);
+                    var lines = new[] { b64 };
+                    jEntry["image/png"] = JArray.FromObject(lines);
                 }
-                var dataArray = new[] {obj};
-                output["data"] = new JObject
+                // String
+                else if (value.Object is string str)
                 {
-                    [entry.mimeType] = JToken.FromObject(dataArray)
-                };
+                    var list = str.Split('\n');
+                    jEntry["text/plain"] = JArray.FromObject(list);
+                }
+                // Unity type
+                else
+                {
+                    var mimeType = UnityMimeTypes.GetMimeType(value.Object.GetType());
+                    jEntry[mimeType] = JObject.FromObject(value.Object);
+                }
+                
+                output["data"] = jEntry;
             }
             
             // Collect metadata

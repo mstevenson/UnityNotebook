@@ -580,17 +580,15 @@ namespace UnityNotebook
                         EditorGUILayout.TextArea(string.Concat(stream.text), TextNoBackgroundStyle);
                         break;
                     case Notebook.CellOutputExecuteResults results:
-                        foreach (var data in results.data)
-                        {
-                            EditorGUILayout.TextArea(string.Concat(data.data), TextNoBackgroundStyle);
-                        }
+                        var resultStr = results.backingValue.Object as string;
+                        EditorGUILayout.TextArea(resultStr, TextNoBackgroundStyle);
                         break;
                     case Notebook.CellOutputDisplayData display:
-                        foreach (var dataElement in display.data)
+                        foreach (var value in display.values)
                         {
-                            // var renderer = Renderers.GetRendererForMimeType(dataElement.mimeType);
-                            var renderer = Renderers.GetRendererForType(dataElement.backingValue.Object.GetType());
-                            renderer.DrawGUI(dataElement);
+                            var type = value.Object.GetType();
+                            var renderer = Renderers.GetRendererForType(type);
+                            renderer.DrawGUI(value.Object);
                         }
                         break;
                     // TODO parse terminal control codes, set colors

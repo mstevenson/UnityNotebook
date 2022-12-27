@@ -6,6 +6,7 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.UnityConverters.Math;
 using UnityEngine;
 using UnityEditor;
+using UnityEngine.Serialization;
 
 namespace UnityNotebook
 {
@@ -179,7 +180,8 @@ namespace UnityNotebook
         {
             public CellOutputDisplayData() => outputType = OutputType.DisplayData;
 
-            public List<CellOutputDataEntry> data = new(); // mime-type -> data, often text/plain, image/png, application/json
+            [JsonIgnore]
+            public List<ValueWrapper> values = new(); // mime-type -> data, often text/plain, image/png, application/json
 
             // public List<CellOutputMetadataEntry> metadata = new(); // mime-type -> metadata
         }
@@ -189,9 +191,10 @@ namespace UnityNotebook
         public class CellOutputExecuteResults : CellOutput
         {
             public CellOutputExecuteResults() => outputType = OutputType.ExecuteResult;
-            
-            public List<CellOutputDataEntry> data = new(); // mime-type -> data, often text/plain, image/png, application/json
             public int executionCount;
+            
+            [JsonIgnore]
+            public ValueWrapper backingValue;
         }
 
         [Serializable]
@@ -203,17 +206,6 @@ namespace UnityNotebook
             public string ename;
             public string evalue;
             public List<string> traceback = new();
-        }
-        
-        [Serializable]
-        [JsonConverter(typeof(CellOutputDataEntryConverter))]
-        public class CellOutputDataEntry
-        {
-            public string mimeType;
-            public List<string> data = new();
-            
-            [JsonIgnore]
-            public ValueWrapper backingValue;
         }
         
         // [Serializable]
