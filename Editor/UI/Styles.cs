@@ -148,7 +148,7 @@ namespace UnityNotebook
                 {
                     normal = new GUIStyleState()
                     {
-                        background = BuildTexture(new Color(0.21f, 0.37f, 0.27f)),
+                        background = BuildTexture(new Color(0.21f, 0.33f, 0.26f)),
                     }
                 };
             }
