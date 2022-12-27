@@ -7,16 +7,10 @@ using UnityEngine;
 
 namespace UnityNotebook
 {
-    
-    // TODO this isn't being called during deserialization because we're manually converting 
-    // a <Dictionary<string, List<string>>> to Notebook.CellOutputDataEntry in CellOutputDisplayDataConverter
-    
     public class CellOutputDataEntryConverter : JsonConverter<Notebook.CellOutputDataEntry>
     {
         public override Notebook.CellOutputDataEntry ReadJson(JsonReader reader, Type objectType, Notebook.CellOutputDataEntry existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            Debug.Log("import");
-            
             var obj = JToken.Load(reader);
             if (!obj.HasValues)
             {
@@ -30,7 +24,6 @@ namespace UnityNotebook
                 case "text/plain":
                     var list = obj["data"].ToObject<List<string>>();
                     output.backingValue = new ValueWrapper(string.Concat(list));
-                    Debug.Log(output.backingValue.Object);
                     break;
                 case "image/png":
                 {

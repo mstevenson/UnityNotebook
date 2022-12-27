@@ -10,7 +10,7 @@ namespace UnityNotebook
     {
         public override Notebook.CellOutputDisplayData ReadJson(JsonReader reader, Type objectType, Notebook.CellOutputDisplayData existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            var obj = JToken.Load(reader);
+            var obj = JObject.Load(reader);
             if (!obj.HasValues)
             {
                 return new Notebook.CellOutputDisplayData();
@@ -18,22 +18,20 @@ namespace UnityNotebook
             var output = hasExistingValue ? existingValue : new Notebook.CellOutputDisplayData();
             output.outputType = obj["output_type"].ToObject<Notebook.OutputType>();
             
-            var dict = obj["data"].ToObject<Dictionary<string, List<string>>>();
-            foreach (var (mimeType, dataList) in dict)
+            // Rebuild json dictionary as a list of objects so CellOutputDataEntry will have its custom JsonConverter called.
+            foreach (var jToken in obj["data"])
             {
-                // TODO need to call CellOutputDataEntryConverter via ToObject call instead of manually constructing this object
-                var entry = new Notebook.CellOutputDataEntry
+                var item = (JProperty) jToken;
+                var rebuilt = new JObject
                 {
-                    mimeType = mimeType,
-                    data = dataList,
-                    // HACK
-                    // TODO this should be set through CellOutputDataEntryConverter
-                    backingValue = new ValueWrapper(dataList[0])
+                    ["mime_type"] = item.Name,
+                    ["data"] = item.Value
                 };
+                var entry = rebuilt.ToObject<Notebook.CellOutputDataEntry>();
                 output.data.Add(entry);
             }
             
-            // TODO parse metadata from raw fields (see WriteJson below), use to construct Texture2Ds?
+            // TODO parse metadata from raw fields (see WriteJson below)
             
             return output;
         }

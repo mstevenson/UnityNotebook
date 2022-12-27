@@ -205,9 +205,6 @@ namespace UnityNotebook
             public List<string> traceback = new();
         }
         
-        
-        // TODO JsonConverter is never called
-        
         [Serializable]
         [JsonConverter(typeof(CellOutputDataEntryConverter))]
         public class CellOutputDataEntry
