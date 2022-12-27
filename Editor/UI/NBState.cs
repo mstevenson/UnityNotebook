@@ -112,7 +112,7 @@ namespace UnityNotebook
             SaveScriptableObject();
         }
 
-        public static void SetDirty()
+        public static void SetNotebookDirty()
         {
             var nb = instance.openedNotebook;
             if (nb != null)

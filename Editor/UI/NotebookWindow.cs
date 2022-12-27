@@ -224,7 +224,7 @@ namespace UnityNotebook
                         // TODO repaint callback doesn't work reliably, the final cell output often isn't drawn
                         Evaluator.ExecuteAllCells(nb, () =>
                         {
-                            NBState.SetDirty();
+                            NBState.SetNotebookDirty();
                             Repaint();
                         });
                     }
@@ -301,7 +301,7 @@ namespace UnityNotebook
             if (_runningSaveCooldown && EditorApplication.timeSinceStartup - _cooldownStartTime > SaveCooldownDuration)
             {
                 _runningSaveCooldown = false;
-                NBState.SetDirty();
+                NBState.SetNotebookDirty();
                 // NBState.SaveScriptableObject();
                 Repaint();
             }
@@ -331,7 +331,7 @@ namespace UnityNotebook
             // Keyboard shortcuts
             if (Shortcuts.HandleKeyboardShortcuts(notebook))
             {
-                NBState.SetDirty();
+                NBState.SetNotebookDirty();
                 Event.current.Use();
                 Repaint();
             }
@@ -420,7 +420,7 @@ namespace UnityNotebook
                     notebook.cells.Insert(cellIndex - 1, notebook.cells[cellIndex]);
                     notebook.cells.RemoveAt(cellIndex + 1);
                     NBState.SelectedCell = cellIndex - 1;
-                    NBState.SetDirty();
+                    NBState.SetNotebookDirty();
                     Event.current.Use();
                     return true;
                 }
@@ -435,7 +435,7 @@ namespace UnityNotebook
                     notebook.cells.Insert(cellIndex + 2, notebook.cells[cellIndex]);
                     notebook.cells.RemoveAt(cellIndex);
                     NBState.SelectedCell = cellIndex + 1;
-                    NBState.SetDirty();
+                    NBState.SetNotebookDirty();
                     Event.current.Use();
                     return true;
                 }
@@ -447,7 +447,7 @@ namespace UnityNotebook
                 Undo.RecordObject(notebook, "Delete Cell");
                 notebook.cells.RemoveAt(cellIndex);
                 NBState.SelectedCell = Mathf.Max(0, cellIndex - 1);
-                NBState.SetDirty();
+                NBState.SetNotebookDirty();
                 Event.current.Use();
                 return true;
             }
