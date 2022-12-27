@@ -3,7 +3,8 @@
     "rootNamespace": "",
     "references": [
         "GUID:5f2f28fa72128b546ae1967c2dfe233b",
-        "GUID:478a2357cc57436488a56e564b08d223"
+        "GUID:478a2357cc57436488a56e564b08d223",
+        "Newtonsoft.Json.UnityConverters"
     ],
     "includePlatforms": [
         "Editor"

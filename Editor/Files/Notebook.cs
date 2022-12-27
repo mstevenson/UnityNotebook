@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.UnityConverters.Math;
 using UnityEngine;
 using UnityEditor;
 
@@ -113,7 +114,6 @@ namespace UnityNotebook
             public CellType cellType; // markdown, code
             public int executionCount;
             
-            [JsonConverter(typeof(CellMetadataConverter))]
             // TODO metadata
             // public List<CellMetadataEntry> metadata; // empty object if its a markdown cell
             public string[] source = Array.Empty<string>(); // could be a single string or a list of strings

@@ -14,7 +14,7 @@ namespace UnityNotebook
             {
                 ["nbformat"] = value.format,
                 ["nbformat_minor"] = value.formatMinor,
-                ["metadata"] = value.metadata != null ? JObject.FromObject(value.metadata) : null,
+                // ["metadata"] = value.metadata != null ? JObject.FromObject(value.metadata) : null,
                 ["cells"] = JArray.FromObject(value.cells)
             };
             nb.WriteTo(writer);
@@ -27,11 +27,19 @@ namespace UnityNotebook
             {
                 return ScriptableObject.CreateInstance<Notebook>();
             }
-            var nb = hasExistingValue ? existingValue : ScriptableObject.CreateInstance<Notebook>();;
+            var nb = hasExistingValue ? existingValue : ScriptableObject.CreateInstance<Notebook>();
             nb.format = obj["nbformat"]?.Value<int>() ?? 4;
             nb.formatMinor = obj["nbformat_minor"]?.Value<int>() ?? 2;
-            nb.metadata = obj["metadata"]?.ToObject<Notebook.Metadata>() ?? new Notebook.Metadata();
-            nb.cells = obj["cells"]?.ToObject<List<Notebook.Cell>>() ?? new List<Notebook.Cell>();
+            var metadataList = obj["metadata"];
+            if (metadataList is {HasValues: true})
+            {
+                nb.metadata = metadataList.ToObject<Notebook.Metadata>();
+            }
+            var cellsList = obj["cells"];
+            if (cellsList is {HasValues: true})
+            {
+                nb.cells = cellsList.ToObject<List<Notebook.Cell>>();
+            }
             return nb;
         }
     }

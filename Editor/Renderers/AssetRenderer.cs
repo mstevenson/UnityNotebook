@@ -25,21 +25,25 @@ namespace UnityNotebook
         public override Notebook.CellOutput CreateCellOutputData(object obj)
         {
             var unityObject = (Object) obj;
-            var tempPreview = AssetPreview.GetAssetPreview(unityObject);
-            var tex = new Texture2D(tempPreview.width, tempPreview.height, tempPreview.format, false);
-            Graphics.CopyTexture(tempPreview, tex);
-            // We have to destroy the preview texture, otherwise the GUI system will reuse a stale
-            // texture during subsequence GetAssetPreview calls for the same asset.
-            Object.DestroyImmediate(tempPreview);
-            
             var output = new Notebook.CellOutputDisplayData();
             
-            // Image
-            output.data.Add(new Notebook.CellOutputDataEntry
+            var tempPreview = AssetPreview.GetAssetPreview(unityObject);
+            if (tempPreview != null)
             {
-                mimeType = "image/png",
-                backingValue = new ValueWrapper(tex),
-            });
+                var tex = new Texture2D(tempPreview.width, tempPreview.height, tempPreview.format, false);
+                Graphics.CopyTexture(tempPreview, tex);
+                // We have to destroy the preview texture, otherwise the GUI system will reuse a stale
+                // texture during subsequence GetAssetPreview calls for the same asset.
+                Object.DestroyImmediate(tempPreview);
+                
+                // Image
+                output.data.Add(new Notebook.CellOutputDataEntry
+                {
+                    mimeType = "image/png",
+                    backingValue = new ValueWrapper(tex),
+                });
+            }
+            
             // Info
             output.data.Add(new Notebook.CellOutputDataEntry
             {

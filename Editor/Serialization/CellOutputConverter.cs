@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using UnityEngine;
 using static UnityNotebook.Notebook.OutputType;
 
 namespace UnityNotebook
@@ -17,48 +18,47 @@ namespace UnityNotebook
         
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            var obj = JToken.Load(reader);
-            var output = new Notebook.CellOutput();
-            
-            var outputType = obj["output_type"].ToObject<Notebook.OutputType>();
-            switch (outputType)
+            var list = JArray.Load(reader);
+            var output = new List<Notebook.CellOutput>();
+            if (!list.HasValues)
             {
-                case Stream:
-                    output = obj.ToObject<Notebook.CellOutputStream>(serializer);
-                    break;
-                case ExecuteResult:
-                    output = obj.ToObject<Notebook.CellOutputExecuteResults>(serializer);
-                    break;
-                case Error:
-                    output = obj.ToObject<Notebook.CellOutputError>(serializer);
-                    break;
-                case DisplayData:
-                    output = obj.ToObject<Notebook.CellOutputDisplayData>(serializer);
-                    break;
+                return output;
+            }
+
+            foreach (var elem in list)
+            {
+                var item = new Notebook.CellOutput();
+                var outputType = elem["output_type"].ToObject<Notebook.OutputType>();
+                item = outputType switch
+                {
+                    Stream => elem.ToObject<Notebook.CellOutputStream>(serializer),
+                    ExecuteResult => elem.ToObject<Notebook.CellOutputExecuteResults>(serializer),
+                    Error => elem.ToObject<Notebook.CellOutputError>(serializer),
+                    DisplayData => elem.ToObject<Notebook.CellOutputDisplayData>(serializer),
+                    _ => item
+                };
+                output.Add(item);
             }
             
             return output;
-
-            return new List<Notebook.CellOutput>();
         }
         
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            var output = (IList) value;
-            // var item = new JObject();
-            // foreach (var VARIABLE in value)
-            // {
-            //     
-            // }
-            // item["output_type"] = output.outputType switch
-            // {
-            //     Stream => JToken.FromObject(Stream),
-            //     ExecuteResult => JToken.FromObject(ExecuteResult),
-            //     Error => JToken.FromObject(Error),
-            //     DisplayData => JToken.FromObject(DisplayData),
-            //     _ => item["output_type"]
-            // };
-            // item.WriteTo(writer);
+            if (value is not List<Notebook.CellOutput> list || list.Count == 0)
+            {
+                var arr = new JArray();
+                arr.WriteTo(writer);
+                return;
+            }
+            
+            writer.WriteStartArray();
+            foreach (var elem in list)
+            {
+                var obj = JObject.FromObject(elem);
+                obj.WriteTo(writer);
+            }
+            writer.WriteEndArray();
         }
     }
 }

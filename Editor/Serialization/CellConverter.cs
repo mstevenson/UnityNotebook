@@ -20,7 +20,7 @@ namespace UnityNotebook
             if (value.cellType == Code)
             {
                 cell["execution_count"] = value.executionCount;
-                cell["outputs"] = JArray.FromObject(value.outputs);
+                cell["outputs"] = value.outputs is {Count: > 0} ? JArray.FromObject(value.outputs) : new JArray();
             }
 
             cell.WriteTo(writer);
@@ -42,7 +42,11 @@ namespace UnityNotebook
             cell.source = obj["source"]?.ToObject<string[]>() ?? Array.Empty<string>();
             if (cell.cellType == Code)
             {
-                cell.outputs = obj["outputs"]?.ToObject<List<Notebook.CellOutput>>() ?? new List<Notebook.CellOutput>();
+                var outputsList = obj["outputs"];
+                if (outputsList is {HasValues: true})
+                {
+                    cell.outputs = outputsList.ToObject<List<Notebook.CellOutput>>() ?? new List<Notebook.CellOutput>();
+                }
             }
 
             return cell;
