@@ -27,5 +27,6 @@
     "email": "michael@mstevenson.net",
     "url": "https://mstevenson.net"
   },
+  "license": "MIT",
   "type": "tool"
 }
