@@ -14,7 +14,7 @@ namespace UnityNotebook
             {
                 ["cell_type"] = JToken.FromObject(value.cellType),
                 // TODO metadata
-                // ["metadata"] = value.metadata != null ? JObject.FromObject(value.metadata) : new JObject(),
+                ["metadata"] = new JObject(),
                 ["source"] = JArray.FromObject(value.source)
             };
             if (value.cellType == Code)
