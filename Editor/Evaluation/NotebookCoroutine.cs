@@ -60,33 +60,5 @@ namespace UnityNotebook
                 yield return result;
             }
         }
-        
-        // public class LocalVariableExtractor : CSharpSyntaxRewriter
-        // {
-        //     private readonly SemanticModel _semanticModel;
-        //     private readonly SyntaxGenerator _syntaxGenerator;
-        //
-        //     public LocalVariableExtractor(SemanticModel semanticModel)
-        //     {
-        //         _semanticModel = semanticModel;
-        //         _syntaxGenerator = SyntaxGenerator.GetGenerator(_semanticModel.SyntaxTree);
-        //     }
-        //
-        //     public override SyntaxNode VisitLocalDeclarationStatement(LocalDeclarationStatementSyntax node)
-        //     {
-        //         // Extract the local variables into a global scope
-        //         var declarations = node.Declaration.Variables
-        //             .Select(v => _syntaxGenerator.FieldDeclaration(v.Identifier.ValueText, v.Initializer.Value))
-        //             .ToArray();
-        //         var fieldDeclaration = _syntaxGenerator.FieldDeclaration(declarations);
-        //         var classDeclaration = _syntaxGenerator.ClassDeclaration("GlobalScope", null, null, null, new[] { fieldDeclaration });
-        //
-        //         // Replace the local variable declaration with a reference to the global variable
-        //         var globalScopeReference = _syntaxGenerator.MemberAccessExpression(_syntaxGenerator.IdentifierName("GlobalScope"), v.Identifier);
-        //         var newAssignment = _syntaxGenerator.AssignmentStatement(globalScopeReference, v.Initializer.Value);
-        //         var newLocalDeclaration = node.ReplaceNode(v, newAssignment);
-        //         return base.VisitLocalDeclarationStatement(newLocalDeclaration);
-        //     }
-        // }
     }
 }
