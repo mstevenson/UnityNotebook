@@ -10,7 +10,7 @@ using static UnityNotebook.Styles;
 
 namespace UnityNotebook
 {
-    public class NotebookWindow : EditorWindow
+    public class NotebookWindow : EditorWindow, IHasCustomMenu
     {
         [MenuItem("Window/Notebook")]
         public static void Init()
@@ -389,11 +389,7 @@ namespace UnityNotebook
                 {
                     return false;
                 }
-                Undo.RecordObject(notebook, "Add Cell");
-                var c = new Notebook.Cell { cellType = type };
-                notebook.cells.Insert(cellIndex, c);
-                NBState.SelectedCell = cellIndex;
-                NBState.IsEditMode = true;
+                Commands.AddCell(type);
                 Event.current.Use();
                 return true;
             }
@@ -416,11 +412,7 @@ namespace UnityNotebook
             {
                 if (GUI.Button(rect, "▲", EditorStyles.miniButtonLeft))
                 {
-                    Undo.RecordObject(notebook, "Move Cell Up");
-                    notebook.cells.Insert(cellIndex - 1, notebook.cells[cellIndex]);
-                    notebook.cells.RemoveAt(cellIndex + 1);
-                    NBState.SelectedCell = cellIndex - 1;
-                    NBState.SetNotebookDirty();
+                    Commands.MoveCellUp();
                     Event.current.Use();
                     return true;
                 }
@@ -431,11 +423,7 @@ namespace UnityNotebook
             {
                 if (GUI.Button(rect, "▼", EditorStyles.miniButtonMid))
                 {
-                    Undo.RecordObject(notebook, "Move Cell Down");
-                    notebook.cells.Insert(cellIndex + 2, notebook.cells[cellIndex]);
-                    notebook.cells.RemoveAt(cellIndex);
-                    NBState.SelectedCell = cellIndex + 1;
-                    NBState.SetNotebookDirty();
+                    Commands.MoveCellDown();
                     Event.current.Use();
                     return true;
                 }
@@ -444,10 +432,7 @@ namespace UnityNotebook
             rect.x += buttonWidth;
             if (GUI.Button(rect, "✕", EditorStyles.miniButtonRight))
             {
-                Undo.RecordObject(notebook, "Delete Cell");
-                notebook.cells.RemoveAt(cellIndex);
-                NBState.SelectedCell = Mathf.Max(0, cellIndex - 1);
-                NBState.SetNotebookDirty();
+                Commands.DeleteCurrentCell();
                 Event.current.Use();
                 return true;
             }
@@ -641,6 +626,16 @@ namespace UnityNotebook
             }
             NBState.CopyRawTextToSourceLines(cell);
             GUI.changed = false;
+        }
+
+        // This is automatically called by the editor to build a context menu for the window
+        public void AddItemsToMenu(GenericMenu menu)
+        {
+            menu.AddItem(new GUIContent("Split Cell"), false, () => Commands.SplitCell());
+            menu.AddItem(new GUIContent("Merge Cell Below"), false, () => Commands.MergeCellBelow());
+            menu.AddItem(new GUIContent("Merge Cell Above"), false, () => Commands.MergeCellAbove());
+            menu.AddItem(new GUIContent("Convert to Markdown"), false, () => Commands.ConvertCellToMarkdown());
+            menu.AddItem(new GUIContent("Convert to Code"), false, () => Commands.ConvertCellToCode());
         }
     }
 }
