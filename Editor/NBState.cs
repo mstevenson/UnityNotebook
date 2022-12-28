@@ -158,5 +158,19 @@ namespace UnityNotebook
                 }
             }
         }
+
+        public static void Reset()
+        {
+            instance.openedNotebook = null;
+            instance.scroll = default;
+            instance.selectedCell = -1;
+            instance.runningCell = -1;
+            instance.isJsonOutOfDate = false;
+            instance.isEditMode = false;
+            instance.scriptState = null;
+            instance.forceSyntaxRefresh = false;
+            instance.forceFocusCodeArea = false;
+            instance.Save(true);
+        }
     }
 }

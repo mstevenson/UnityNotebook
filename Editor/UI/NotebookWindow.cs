@@ -25,6 +25,8 @@ namespace UnityNotebook
             menu.AddItem(new GUIContent("Merge Cell Above"), false, () => Commands.MergeCellAbove());
             menu.AddItem(new GUIContent("Convert to Markdown"), false, Commands.ConvertCellToMarkdown);
             menu.AddItem(new GUIContent("Convert to Code"), false, Commands.ConvertCellToCode);
+            menu.AddSeparator(null);
+            menu.AddItem(new GUIContent("Reset Tool State"), false, NBState.Reset);
         }
         
         private static bool _openExternally;
@@ -88,6 +90,7 @@ namespace UnityNotebook
         private void OnDestroy()
         {
             NBState.SaveJson();
+            NBState.Reset();
         }
 
         private int _lastKeyboardControl;
