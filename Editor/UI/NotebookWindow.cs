@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine;
@@ -17,6 +15,16 @@ namespace UnityNotebook
         {
             var wnd = GetWindow<NotebookWindow>();
             wnd.titleContent = new GUIContent("Notebook");
+        }
+        
+        // Automatically called by the editor to build a context menu for the window
+        public void AddItemsToMenu(GenericMenu menu)
+        {
+            menu.AddItem(new GUIContent("Split Cell"), false, () => Commands.SplitCell());
+            menu.AddItem(new GUIContent("Merge Cell Below"), false, () => Commands.MergeCellBelow());
+            menu.AddItem(new GUIContent("Merge Cell Above"), false, () => Commands.MergeCellAbove());
+            menu.AddItem(new GUIContent("Convert to Markdown"), false, Commands.ConvertCellToMarkdown);
+            menu.AddItem(new GUIContent("Convert to Code"), false, Commands.ConvertCellToCode);
         }
         
         private static bool _openExternally;
@@ -147,7 +155,7 @@ namespace UnityNotebook
                     var nb = Notebook.CreateAsset(path);
                     AssetDatabase.Refresh();
                     EditorGUIUtility.PingObject(nb);
-                    nb.cells.Add(new Notebook.Cell {cellType = Notebook.CellType.Code});
+                    nb.cells.Add(new Cell {cellType = CellType.Code});
                     NBState.OpenedNotebook = nb;
                 }
             }
@@ -383,7 +391,7 @@ namespace UnityNotebook
             rect = GUILayoutUtility.GetRect(0, 20, GUILayout.ExpandWidth(true));
             var buttonRect = new Rect(rect.x + rect.width / 2 - 60, rect.y, 60, 20);
                 
-            bool AddButton(string title, Notebook.CellType type)
+            bool AddButton(string title, CellType type)
             {
                 if (!GUI.Button(buttonRect, title, EditorStyles.toolbarButton))
                 {
@@ -394,9 +402,9 @@ namespace UnityNotebook
                 return true;
             }
 
-            var addCode = AddButton("+ Code", Notebook.CellType.Code);
+            var addCode = AddButton("+ Code", CellType.Code);
             buttonRect.x += 60;
-            var addText = AddButton("+ Text", Notebook.CellType.Markdown);
+            var addText = AddButton("+ Text", CellType.Markdown);
                 
             return addCode || addText;
         }
@@ -449,7 +457,7 @@ namespace UnityNotebook
             
             switch (notebook.cells[cell].cellType)
             {
-                case Notebook.CellType.Code:
+                case CellType.Code:
                     using (new GUILayout.VerticalScope(NBState.SelectedCell == cell
                                ? NBState.IsEditMode ? CodeCellBoxSelectedEditStyle : CodeCellBoxSelectedStyle
                                : CodeCellBoxStyle))
@@ -458,7 +466,7 @@ namespace UnityNotebook
                         DrawCodeCellOutput(notebook, cell);
                     }
                     break;
-                case Notebook.CellType.Markdown:
+                case CellType.Markdown:
                     using (new GUILayout.VerticalScope(NBState.SelectedCell == cell
                                ? NBState.IsEditMode ? CellBoxSelectedEditStyle : CellBoxSelectedStyle
                                : CellBoxStyle))
@@ -466,7 +474,7 @@ namespace UnityNotebook
                         DrawTextCell(notebook, cell);
                     }
                     break;
-                case Notebook.CellType.Raw:
+                case CellType.Raw:
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -553,7 +561,7 @@ namespace UnityNotebook
             DrawOutput(notebook.cells[cell]);
         }
 
-        private static void DrawOutput(Notebook.Cell cell)
+        private static void DrawOutput(Cell cell)
         {
             using var _ = new EditorGUILayout.VerticalScope();
             
@@ -561,14 +569,14 @@ namespace UnityNotebook
             {
                 switch (output)
                 {
-                    case Notebook.CellOutputStream stream:
+                    case CellOutputStream stream:
                         EditorGUILayout.TextArea(string.Concat(stream.text), TextNoBackgroundStyle);
                         break;
-                    case Notebook.CellOutputExecuteResults results:
+                    case CellOutputExecuteResults results:
                         var resultStr = results.backingValue.Object as string;
                         EditorGUILayout.TextArea(resultStr, TextNoBackgroundStyle);
                         break;
-                    case Notebook.CellOutputDisplayData display:
+                    case CellOutputDisplayData display:
                         foreach (var value in display.values)
                         {
                             var type = value.Object.GetType();
@@ -577,7 +585,7 @@ namespace UnityNotebook
                         }
                         break;
                     // TODO parse terminal control codes, set colors
-                    case Notebook.CellOutputError error:
+                    case CellOutputError error:
                         var c = GUI.color;
                         GUI.color = Color.red;
                         GUILayout.Label(error.ename);
@@ -618,7 +626,7 @@ namespace UnityNotebook
         }
 
         // When the cell text is changed via UI, update the cell's source lines
-        private static void TryUpdateCellSource(Notebook.Cell cell)
+        private static void TryUpdateCellSource(Cell cell)
         {
             if (!GUI.changed)
             {
@@ -626,16 +634,6 @@ namespace UnityNotebook
             }
             NBState.CopyRawTextToSourceLines(cell);
             GUI.changed = false;
-        }
-
-        // This is automatically called by the editor to build a context menu for the window
-        public void AddItemsToMenu(GenericMenu menu)
-        {
-            menu.AddItem(new GUIContent("Split Cell"), false, () => Commands.SplitCell());
-            menu.AddItem(new GUIContent("Merge Cell Below"), false, () => Commands.MergeCellBelow());
-            menu.AddItem(new GUIContent("Merge Cell Above"), false, () => Commands.MergeCellAbove());
-            menu.AddItem(new GUIContent("Convert to Markdown"), false, () => Commands.ConvertCellToMarkdown());
-            menu.AddItem(new GUIContent("Convert to Code"), false, () => Commands.ConvertCellToCode());
         }
     }
 }

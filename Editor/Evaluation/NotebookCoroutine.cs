@@ -2,8 +2,6 @@ using System;
 using System.Collections;
 using System.Reflection;
 using JetBrains.Annotations;
-using Microsoft.CodeAnalysis.CSharp.Scripting;
-using Microsoft.CodeAnalysis.Scripting;
 using Unity.EditorCoroutines.Editor;
 using UnityEngine;
 

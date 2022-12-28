@@ -1,5 +1,4 @@
 using JetBrains.Annotations;
-using UnityEditor;
 using UnityEngine;
 
 namespace UnityNotebook
@@ -16,7 +15,7 @@ namespace UnityNotebook
             }
             var notebook = NBState.OpenedNotebook;
             var cell = NBState.RunningCell;
-            var output = new Notebook.CellOutputDisplayData();
+            var output = new CellOutputDisplayData();
             if (data is Object obj)
             {
                 var preview = UnityObjectPreview.Create(obj);

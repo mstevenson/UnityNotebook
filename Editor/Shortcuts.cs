@@ -1,6 +1,3 @@
-using System.Linq;
-using System.Text.RegularExpressions;
-using UnityEditor;
 using UnityEngine;
 using static UnityEngine.EventModifiers;
 
@@ -65,7 +62,7 @@ namespace UnityNotebook
                 {
                     GUI.FocusControl(null);
                     Evaluator.ExecuteCell(notebook, selectedCell);
-                    var newCell = new Notebook.Cell { cellType = notebook.cells[selectedCell].cellType };
+                    var newCell = new Cell { cellType = notebook.cells[selectedCell].cellType };
                     notebook.cells.Insert(selectedCell + 1, newCell);
                     NBState.SelectedCell = selectedCell + 1;
                     return true;

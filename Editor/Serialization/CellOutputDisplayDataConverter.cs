@@ -7,17 +7,17 @@ using UnityEngine;
 
 namespace UnityNotebook
 {
-    public class CellOutputDisplayDataConverter : JsonConverter<Notebook.CellOutputDisplayData>
+    public class CellOutputDisplayDataConverter : JsonConverter<CellOutputDisplayData>
     {
-        public override Notebook.CellOutputDisplayData ReadJson(JsonReader reader, Type objectType, Notebook.CellOutputDisplayData existingValue, bool hasExistingValue, JsonSerializer serializer)
+        public override CellOutputDisplayData ReadJson(JsonReader reader, Type objectType, CellOutputDisplayData existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             var obj = JObject.Load(reader);
             if (!obj.HasValues)
             {
-                return new Notebook.CellOutputDisplayData();
+                return new CellOutputDisplayData();
             }
-            Notebook.CellOutputDisplayData output = hasExistingValue ? existingValue : new Notebook.CellOutputDisplayData();
-            output.outputType = obj["output_type"].ToObject<Notebook.OutputType>();
+            CellOutputDisplayData output = hasExistingValue ? existingValue : new CellOutputDisplayData();
+            output.outputType = obj["output_type"].ToObject<OutputType>();
             
             foreach (var jToken in obj["data"])
             {
@@ -61,7 +61,7 @@ namespace UnityNotebook
             return output;
         }
         
-        public override void WriteJson(JsonWriter writer, Notebook.CellOutputDisplayData displayData, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, CellOutputDisplayData displayData, JsonSerializer serializer)
         {
             var output = new JObject
             {

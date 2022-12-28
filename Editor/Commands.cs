@@ -27,12 +27,12 @@ namespace UnityNotebook
             NBState.SelectedCell -= 1;
         }
 
-        public static void AddCell(Notebook.CellType type)
+        public static void AddCell(CellType type)
         {
             var notebook = NBState.OpenedNotebook;
             var cellIndex = NBState.SelectedCell;
             Undo.RecordObject(notebook, "Add Cell");
-            var c = new Notebook.Cell { cellType = type };
+            var c = new Cell { cellType = type };
             notebook.cells.Insert(cellIndex, c);
             NBState.SelectedCell = cellIndex;
             NBState.IsEditMode = true;
@@ -73,7 +73,7 @@ namespace UnityNotebook
             var notebook = NBState.OpenedNotebook;
             var selectedCell = NBState.SelectedCell;
             Undo.RecordObject(notebook, "Add Cell Below");
-            var c = new Notebook.Cell { cellType = Notebook.CellType.Code };
+            var c = new Cell { cellType = CellType.Code };
             notebook.cells.Insert(selectedCell + 1, c);
             NBState.SelectedCell = selectedCell + 1;
         }
@@ -83,7 +83,7 @@ namespace UnityNotebook
             var notebook = NBState.OpenedNotebook;
             var selectedCell = NBState.SelectedCell;
             Undo.RecordObject(notebook, "Add Cell Above");
-            var c2 = new Notebook.Cell { cellType = Notebook.CellType.Code };
+            var c2 = new Cell { cellType = CellType.Code };
             notebook.cells.Insert(selectedCell, c2);
         }
 
@@ -111,7 +111,7 @@ namespace UnityNotebook
             }
             NBState.CopyRawTextToSourceLines(cell);
             // Create a new cell with the second part of split text
-            var newSplitCell = new Notebook.Cell { cellType = cell.cellType, rawText = second };
+            var newSplitCell = new Cell { cellType = cell.cellType, rawText = second };
             NBState.CopyRawTextToSourceLines(newSplitCell);
             // Insert the new cell after the current cell
             notebook.cells.Insert(selectedCell + 1, newSplitCell);
@@ -162,7 +162,7 @@ namespace UnityNotebook
         {
             var notebook = NBState.OpenedNotebook;
             var cell = NBState.SelectedCell;
-            if (notebook.cells[cell].cellType != Notebook.CellType.Markdown)
+            if (notebook.cells[cell].cellType != CellType.Markdown)
             {
                 return;
             }
@@ -180,7 +180,7 @@ namespace UnityNotebook
             var notebook = NBState.OpenedNotebook;
             var selectedCell = NBState.SelectedCell;
             Undo.RecordObject(notebook, "Change Cell Type");
-            notebook.cells[selectedCell].cellType = Notebook.CellType.Markdown;
+            notebook.cells[selectedCell].cellType = CellType.Markdown;
         }
         
         public static void ConvertCellToCode()
@@ -188,7 +188,7 @@ namespace UnityNotebook
             var notebook = NBState.OpenedNotebook;
             var selectedCell = NBState.SelectedCell;
             Undo.RecordObject(notebook, "Change Cell Type");
-            notebook.cells[selectedCell].cellType = Notebook.CellType.Code;
+            notebook.cells[selectedCell].cellType = CellType.Code;
         }
     }
 }

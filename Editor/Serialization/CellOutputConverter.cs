@@ -1,11 +1,8 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using UnityEngine;
-using static UnityNotebook.Notebook.OutputType;
+using static UnityNotebook.OutputType;
 
 namespace UnityNotebook
 {
@@ -13,13 +10,13 @@ namespace UnityNotebook
     {
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof(List<Notebook.CellOutput>);
+            return objectType == typeof(List<CellOutput>);
         }
         
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             var list = JArray.Load(reader);
-            var output = new List<Notebook.CellOutput>();
+            var output = new List<CellOutput>();
             if (!list.HasValues)
             {
                 return output;
@@ -27,14 +24,14 @@ namespace UnityNotebook
 
             foreach (var elem in list)
             {
-                var item = new Notebook.CellOutput();
-                var outputType = elem["output_type"].ToObject<Notebook.OutputType>();
+                var item = new CellOutput();
+                var outputType = elem["output_type"].ToObject<OutputType>();
                 item = outputType switch
                 {
-                    Stream => elem.ToObject<Notebook.CellOutputStream>(serializer),
-                    ExecuteResult => elem.ToObject<Notebook.CellOutputExecuteResults>(serializer),
-                    Error => elem.ToObject<Notebook.CellOutputError>(serializer),
-                    DisplayData => elem.ToObject<Notebook.CellOutputDisplayData>(serializer),
+                    Stream => elem.ToObject<CellOutputStream>(serializer),
+                    ExecuteResult => elem.ToObject<CellOutputExecuteResults>(serializer),
+                    Error => elem.ToObject<CellOutputError>(serializer),
+                    DisplayData => elem.ToObject<CellOutputDisplayData>(serializer),
                     _ => item
                 };
                 output.Add(item);
@@ -45,7 +42,7 @@ namespace UnityNotebook
         
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            if (value is not List<Notebook.CellOutput> list || list.Count == 0)
+            if (value is not List<CellOutput> list || list.Count == 0)
             {
                 var arr = new JArray();
                 arr.WriteTo(writer);

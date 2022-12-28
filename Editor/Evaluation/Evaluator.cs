@@ -5,7 +5,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using Unity.EditorCoroutines.Editor;
-using UnityEngine;
 
 namespace UnityNotebook
 {
@@ -67,7 +66,7 @@ namespace UnityNotebook
         {
             for (var i = 0; i < notebook.cells.Count; i++)
             {
-                if (notebook.cells[i].cellType != Notebook.CellType.Code)
+                if (notebook.cells[i].cellType != CellType.Code)
                 {
                     continue;
                 }
@@ -109,9 +108,9 @@ namespace UnityNotebook
             }
             catch (Exception e)
             {
-                var output = new Notebook.CellOutputError
+                var output = new CellOutputError
                 {
-                    outputType = Notebook.OutputType.Error,
+                    outputType = OutputType.Error,
                     ename = e.GetType().Name,
                     evalue = e.Message,
                     traceback = new List<string>(e.StackTrace.Split('\n'))
