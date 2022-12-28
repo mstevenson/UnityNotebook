@@ -5,6 +5,16 @@ using Newtonsoft.Json.Linq;
 
 namespace UnityNotebook
 {
+    [Serializable]
+    [JsonConverter(typeof(CellOutputStreamConverter))]
+    public class CellOutputStream : CellOutput
+    {
+        public CellOutputStream() => outputType = OutputType.Stream;
+            
+        public string name; // if stream output cell: stdout, stderr
+        public List<string> text = new();
+    }
+    
     public class CellOutputStreamConverter : JsonConverter<CellOutputStream>
     {
         public override CellOutputStream ReadJson(JsonReader reader, Type objectType, CellOutputStream existingValue, bool hasExistingValue, JsonSerializer serializer)

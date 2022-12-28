@@ -7,7 +7,6 @@ namespace UnityNotebook
     {
         public Texture2D image;
         public string info;
-        public ValueWrapper value;
         
         public static UnityObjectPreview Create(Object obj)
         {
@@ -35,8 +34,6 @@ namespace UnityNotebook
                 _ => assetName
             };
             
-            preview.value = new ValueWrapper(obj);
-
             return preview;
         }
     }

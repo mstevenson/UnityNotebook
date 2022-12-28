@@ -130,7 +130,7 @@ namespace UnityNotebook
         private static void OnExecutionEnded()
         {
             NBState.RunningCell = -1;
-            NBState.OpenedNotebook.SaveScriptableObject();
+            NBState.SaveScriptableObject();
             NBState.SetNotebookDirty();
         }
         

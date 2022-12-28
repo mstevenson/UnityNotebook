@@ -5,6 +5,17 @@ using Newtonsoft.Json.Linq;
 
 namespace UnityNotebook
 {
+    [Serializable]
+    [JsonConverter(typeof(CellOutputErrorConverter))]
+    public class CellOutputError : CellOutput
+    {
+        public CellOutputError() => outputType = OutputType.Error;
+            
+        public string ename;
+        public string evalue;
+        public List<string> traceback = new();
+    }
+    
     public class CellOutputErrorConverter : JsonConverter<CellOutputError>
     {
         public override CellOutputError ReadJson(JsonReader reader, Type objectType, CellOutputError existingValue, bool hasExistingValue, JsonSerializer serializer)

@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 
@@ -6,6 +7,15 @@ namespace UnityNotebook
 {
     public static class Commands
     {
+        public static Notebook CreateNotebookAsset(string path)
+        {
+            var notebook = ScriptableObject.CreateInstance<Notebook>();
+            var json = JsonConvert.SerializeObject(notebook, Formatting.Indented);
+            System.IO.File.WriteAllText(path, json);
+            AssetDatabase.ImportAsset(path);
+            return AssetDatabase.LoadAssetAtPath<Notebook>(path);
+        }
+        
         public static void EnterCommandMode()
         {
             GUI.FocusControl(null);

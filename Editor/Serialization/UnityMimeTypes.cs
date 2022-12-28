@@ -17,11 +17,6 @@ namespace UnityNotebook
         private const string Vector2 = "application/vnd.unity3d.vector2+json";
         private const string Vector3 = "application/vnd.unity3d.vector3+json";
         private const string Vector4 = "application/vnd.unity3d.vector4+json";
-        private const string Transform = "application/vnd.unity3d.transform+json";
-        private const string GameObject = "application/vnd.unity3d.gameobject+json";
-        private const string Mesh = "application/vnd.unity3d.mesh+json";
-        private const string Texture2D = "application/vnd.unity3d.texture2d+json";
-        private const string Material = "application/vnd.unity3d.material+json";
         
         private static readonly List<(Type type, string mimeType)> TypeToMimeType = new()
         {
@@ -36,11 +31,6 @@ namespace UnityNotebook
             (typeof(Vector2), Vector2),
             (typeof(Vector3), Vector3),
             (typeof(Vector4), Vector4),
-            (typeof(Transform), Transform),
-            (typeof(GameObject), GameObject),
-            (typeof(Mesh), Mesh),
-            (typeof(Texture2D), Texture2D),
-            (typeof(Material), Material),
         };
 
         public static string GetMimeType(Type type)

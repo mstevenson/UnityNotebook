@@ -1,13 +1,24 @@
-using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
-using UnityEditor;
+using UnityEditor.AssetImporters;
 
 namespace UnityNotebook
 {
+    // Parses Jupyter Notebook asset files and imports them into Unity's AssetDatabase
+    [ScriptedImporter(1, "ipynb")]
+    public class NotebookImporter : ScriptedImporter
+    {
+        public override void OnImportAsset(AssetImportContext ctx)
+        {
+            var json = System.IO.File.ReadAllText(ctx.assetPath);
+            var notebook = JsonConvert.DeserializeObject<Notebook>(json);
+            ctx.AddObjectToAsset("main", notebook);
+            ctx.SetMainObject(notebook);
+        }
+    }
+    
     // Implementation of the Jupyter Notebook file format
     // https://nbformat.readthedocs.io/en/latest/format_description.html
     // https://github.com/jupyter/nbformat/blob/main/nbformat/v4/nbformat.v4.schema.json
@@ -17,147 +28,46 @@ namespace UnityNotebook
         public int format = 4;
         public int formatMinor = 2;
         public List<Cell> cells = new();
-
-        public static Notebook CreateAsset(string path)
+    }
+    
+    public class NotebookConverter : JsonConverter<Notebook>
+    {
+        public override Notebook ReadJson(JsonReader reader, System.Type objectType, Notebook existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            var notebook = CreateInstance<Notebook>();
-            var json = JsonConvert.SerializeObject(notebook, Formatting.Indented);
-            System.IO.File.WriteAllText(path, json);
-            AssetDatabase.ImportAsset(path);
-            return AssetDatabase.LoadAssetAtPath<Notebook>(path);
-        }
-
-        [MenuItem("Assets/Create/Notebook", false, 80)]
-        public static void CreateAssetMenu()
-        {
-            // Get the path to the currently selected folder
-            var path = AssetDatabase.GetAssetPath(Selection.activeObject);
-            if (string.IsNullOrEmpty(path))
+            var obj = JToken.Load(reader);
+            if (!obj.HasValues)
             {
-                path = "Assets";
+                return ScriptableObject.CreateInstance<Notebook>();
             }
-            else if (!string.IsNullOrEmpty(System.IO.Path.GetExtension(path)))
+            var nb = hasExistingValue ? existingValue : ScriptableObject.CreateInstance<Notebook>();
+            nb.format = obj["nbformat"]?.Value<int>() ?? 4;
+            nb.formatMinor = obj["nbformat_minor"]?.Value<int>() ?? 2;
+            var cellsList = obj["cells"];
+            if (cellsList is {HasValues: true})
             {
-                path = path.Replace(System.IO.Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
+                nb.cells = cellsList.ToObject<List<Cell>>();
             }
-
-            // Create asset
-            var assetPath = AssetDatabase.GenerateUniqueAssetPath(path + "/New Notebook.ipynb");
-            var asset = CreateAsset(assetPath);
-            Selection.activeObject = asset;
+            return nb;
         }
-        
-        // Saves the current ScriptableObject data back to the underlying json asset file
-        public void SaveScriptableObject()
+
+        public override void WriteJson(JsonWriter writer, Notebook value, JsonSerializer serializer)
         {
-            EditorUtility.SetDirty(this);
-            AssetDatabase.SaveAssetIfDirty(this);
-            EditorUtility.ClearDirty(this);
+            var nb = new JObject
+            {
+                ["nbformat"] = value.format,
+                ["nbformat_minor"] = value.formatMinor,
+                ["metadata"] = new JObject
+                {
+                    ["kernelspec"] = new JObject
+                    {
+                        ["display_name"] = ".Net (C#)",
+                        ["language"] = "C#",
+                        ["name"] = ".net-csharp"
+                    }
+                },
+                ["cells"] = JArray.FromObject(value.cells)
+            };
+            nb.WriteTo(writer);
         }
-
-        public void SaveJson()
-        {
-            SaveScriptableObject();
-            var json = JsonConvert.SerializeObject(this, Formatting.Indented);
-            System.IO.File.WriteAllText(AssetDatabase.GetAssetPath(this), json);
-        }
-    }
-
-    [Serializable]
-    [JsonConverter(typeof(CellConverter))]
-    public class Cell
-    {
-        // common
-        public CellType cellType; // markdown, code
-        public int executionCount;
-            
-        // TODO metadata
-        // public List<CellMetadataEntry> metadata; // empty object if its a markdown cell
-        public string[] source = Array.Empty<string>(); // could be a single string or a list of strings
-
-        // code cell
-        [SerializeReference]
-        public List<CellOutput> outputs = new();
-
-        // temp UI vars
-        [NonSerialized] public string rawText;
-        [NonSerialized] public string highlightedText = "";
-        [NonSerialized] public Vector2 scroll;
-    }
-
-    [JsonConverter(typeof(StringEnumConverter))]
-    public enum CellType
-    {
-        [EnumMember(Value = "markdown")]
-        Markdown,
-        [EnumMember(Value = "code")]
-        Code,
-        [EnumMember(Value = "raw")]
-        Raw
-    }
-
-    [Serializable]
-    [JsonConverter(typeof(CellOutputConverter))]
-    public class CellOutput
-    {
-        public OutputType outputType;
-        [NonSerialized] public Vector2 scroll;
-    }
-
-    [JsonConverter(typeof(StringEnumConverter))]
-    public enum OutputType
-    {
-        [EnumMember(Value = "stream")]
-        Stream,
-        [EnumMember(Value = "display_data")]
-        DisplayData,
-        [EnumMember(Value = "execute_result")]
-        ExecuteResult,
-        [EnumMember(Value = "error")]
-        Error
-    }
-
-    [Serializable]
-    [JsonConverter(typeof(CellOutputDisplayDataConverter))]
-    public class CellOutputDisplayData : CellOutput
-    {
-        public CellOutputDisplayData() => outputType = OutputType.DisplayData;
-
-        [JsonIgnore]
-        public List<ValueWrapper> values = new(); // mime-type -> data, often text/plain, image/png, application/json
-
-        // public List<CellOutputMetadataEntry> metadata = new(); // mime-type -> metadata
-    }
-
-    [Serializable]
-    [JsonConverter(typeof(CellOutputExecuteResultsConverter))]
-    public class CellOutputExecuteResults : CellOutput
-    {
-        public CellOutputExecuteResults() => outputType = OutputType.ExecuteResult;
-        public int executionCount;
-            
-        [JsonIgnore]
-        public ValueWrapper backingValue;
-    }
-
-    [Serializable]
-    [JsonConverter(typeof(CellOutputErrorConverter))]
-    public class CellOutputError : CellOutput
-    {
-        public CellOutputError() => outputType = OutputType.Error;
-            
-        public string ename;
-        public string evalue;
-        public List<string> traceback = new();
-    }
-
-    [Serializable]
-    [JsonConverter(typeof(CellOutputStreamConverter))]
-    public class CellOutputStream : CellOutput
-    {
-        public CellOutputStream() => outputType = OutputType.Stream;
-            
-        public string name; // if stream output cell: stdout, stderr
-        public List<string> text = new();
     }
 }

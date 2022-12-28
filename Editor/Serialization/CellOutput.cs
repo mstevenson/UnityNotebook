@@ -1,11 +1,35 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using UnityEngine;
 using static UnityNotebook.OutputType;
 
 namespace UnityNotebook
 {
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum OutputType
+    {
+        [EnumMember(Value = "stream")]
+        Stream,
+        [EnumMember(Value = "display_data")]
+        DisplayData,
+        [EnumMember(Value = "execute_result")]
+        ExecuteResult,
+        [EnumMember(Value = "error")]
+        Error
+    }
+    
+    [Serializable]
+    [JsonConverter(typeof(CellOutputConverter))]
+    public class CellOutput
+    {
+        public OutputType outputType;
+        [NonSerialized] public Vector2 scroll;
+    }
+    
     public class CellOutputConverter : JsonConverter
     {
         public override bool CanConvert(Type objectType)

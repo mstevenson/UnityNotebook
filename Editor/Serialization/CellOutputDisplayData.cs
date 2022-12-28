@@ -7,6 +7,18 @@ using UnityEngine;
 
 namespace UnityNotebook
 {
+    [Serializable]
+    [JsonConverter(typeof(CellOutputDisplayDataConverter))]
+    public class CellOutputDisplayData : CellOutput
+    {
+        public CellOutputDisplayData() => outputType = OutputType.DisplayData;
+
+        [JsonIgnore]
+        public List<ValueWrapper> values = new(); // mime-type -> data, often text/plain, image/png, application/json
+
+        // public List<CellOutputMetadataEntry> metadata = new(); // mime-type -> metadata
+    }
+    
     public class CellOutputDisplayDataConverter : JsonConverter<CellOutputDisplayData>
     {
         public override CellOutputDisplayData ReadJson(JsonReader reader, Type objectType, CellOutputDisplayData existingValue, bool hasExistingValue, JsonSerializer serializer)

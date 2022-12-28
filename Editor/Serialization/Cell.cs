@@ -1,11 +1,47 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using UnityEngine;
 using static UnityNotebook.CellType;
 
 namespace UnityNotebook
 {
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum CellType
+    {
+        [EnumMember(Value = "markdown")]
+        Markdown,
+        [EnumMember(Value = "code")]
+        Code,
+        [EnumMember(Value = "raw")]
+        Raw
+    }
+    
+    [Serializable]
+    [JsonConverter(typeof(CellConverter))]
+    public class Cell
+    {
+        // common
+        public CellType cellType; // markdown, code
+        public int executionCount;
+            
+        // TODO metadata
+        // public List<CellMetadataEntry> metadata; // empty object if its a markdown cell
+        public string[] source = Array.Empty<string>(); // could be a single string or a list of strings
+
+        // code cell
+        [SerializeReference]
+        public List<CellOutput> outputs = new();
+
+        // temp UI vars
+        [NonSerialized] public string rawText;
+        [NonSerialized] public string highlightedText = "";
+        [NonSerialized] public Vector2 scroll;
+    }
+    
     public class CellConverter : JsonConverter<Cell>
     {
         public override Cell ReadJson(JsonReader reader, Type objectType, Cell existingValue, bool hasExistingValue, JsonSerializer serializer)

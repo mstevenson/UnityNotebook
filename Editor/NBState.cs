@@ -1,5 +1,6 @@
 using System;
 using Microsoft.CodeAnalysis.Scripting;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 
@@ -126,12 +127,23 @@ namespace UnityNotebook
             }
         }
         
+        public static Notebook CreateNotebookAsset(string path)
+        {
+            var notebook = CreateInstance<Notebook>();
+            var json = JsonConvert.SerializeObject(notebook, Formatting.Indented);
+            System.IO.File.WriteAllText(path, json);
+            AssetDatabase.ImportAsset(path);
+            return AssetDatabase.LoadAssetAtPath<Notebook>(path);
+        }
+        
         public static void SaveJson()
         {
             var nb = instance.openedNotebook;
             if (nb != null)
             {
-                nb.SaveJson();
+                SaveScriptableObject();
+                var json = JsonConvert.SerializeObject(nb, Formatting.Indented);
+                System.IO.File.WriteAllText(AssetDatabase.GetAssetPath(nb), json);
             }
             IsJsonOutOfDate = false;
         }
@@ -141,7 +153,9 @@ namespace UnityNotebook
             var nb = instance.openedNotebook;
             if (nb != null)
             {
-                nb.SaveScriptableObject();
+                EditorUtility.SetDirty(nb);
+                AssetDatabase.SaveAssetIfDirty(nb);
+                EditorUtility.ClearDirty(nb);
             }
         }
         

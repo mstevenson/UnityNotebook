@@ -61,6 +61,26 @@ namespace UnityNotebook
             NBState.OpenedNotebook = notebook;
             return true;
         }
+        
+        [MenuItem("Assets/Create/Notebook", false, 80)]
+        public static void CreateNotebookAssetMenu()
+        {
+            // Get the path to the currently selected folder
+            var path = AssetDatabase.GetAssetPath(Selection.activeObject);
+            if (string.IsNullOrEmpty(path))
+            {
+                path = "Assets";
+            }
+            else if (!string.IsNullOrEmpty(System.IO.Path.GetExtension(path)))
+            {
+                path = path.Replace(System.IO.Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
+            }
+
+            // Create asset
+            var assetPath = AssetDatabase.GenerateUniqueAssetPath(path + "/New Notebook.ipynb");
+            var asset = Commands.CreateNotebookAsset(assetPath);
+            Selection.activeObject = asset;
+        }
 
         private static void ChangeNotebook(Notebook notebook)
         {
@@ -155,7 +175,7 @@ namespace UnityNotebook
                         path += ".ipynb";
                     }
 
-                    var nb = Notebook.CreateAsset(path);
+                    var nb = Commands.CreateNotebookAsset(path);
                     AssetDatabase.Refresh();
                     EditorGUIUtility.PingObject(nb);
                     nb.cells.Add(new Cell {cellType = CellType.Code});
