@@ -28,7 +28,7 @@ namespace UnityNotebook
                 switch (mimeType)
                 {
                     case "text/plain":
-                        var list = obj["data"].ToObject<List<string>>();
+                        var list = obj["data"][mimeType].ToObject<List<string>>();
                         output.values.Add(new ValueWrapper(string.Concat(list)));
                         break;
                     case "image/png":
