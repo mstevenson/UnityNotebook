@@ -18,7 +18,6 @@ namespace UnityNotebook
     {
         public int format = 4;
         public int formatMinor = 2;
-        public Metadata metadata = new();
         public List<Cell> cells = new();
         
         // Saves the current ScriptableObject data back to the underlying json asset file
@@ -75,27 +74,7 @@ namespace UnityNotebook
 
             EditorUtility.SetDirty(this);
         }
-
-        [Serializable]
-        public class Metadata
-        {
-            // TODO preserve existing metadata during deserialization / reserialization
-            public Kernelspec kernelspec = new();
-        }
-
-        public class Kernelspec
-        {
-            public string display_name = ".Net (C#)";
-            public string language = "C#";
-            public string name = ".net-csharp";
-        }
-
-        [Serializable]
-        public class KernelInfo
-        {
-            public string name;
-        }
-
+        
         [JsonConverter(typeof(StringEnumConverter))]
         public enum CellType
         {
