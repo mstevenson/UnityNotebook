@@ -6,7 +6,7 @@ using UnityEngine;
 namespace UnityNotebook
 {
     [UsedImplicitly]
-    public class AssetRenderer : OutputRendererBase
+    public class UnityObjectPreviewRenderer : OutputRendererBase
     {
         public override Type[] SupportedTypes { get; } = { typeof(UnityObjectPreview) };
         
@@ -14,6 +14,10 @@ namespace UnityNotebook
         {
             var obj = value as UnityObjectPreview;
             var img = obj.image;
+            
+            Debug.Log(obj.image);
+            // Debug.Log(obj.info);
+            
             if (img != null)
             {
                 var rect = GUILayoutUtility.GetRect(img.width, img.height, GUILayout.ExpandWidth(false));

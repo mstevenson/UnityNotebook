@@ -36,38 +36,31 @@ namespace UnityNotebook
                 var item = (JProperty) jToken;
                 var mimeType = item.Name;
                 var value = item.Value;
-                
+
+                object result;
                 switch (mimeType)
                 {
+                    // Strings
                     case "text/plain":
-                        var list = obj["data"][mimeType].ToObject<List<string>>();
-                        output.values.Add(new ValueWrapper(string.Concat(list)));
-                        break;
-                    case "image/png":
                     {
-                        // TODO parse image data? Is it required to reconstruct the texture?
-                        
-                        var b64 =  new StringBuilder();
-                        var lines = obj["data"].ToObject<List<string>>();
-                        foreach (var line in lines)
-                        {
-                            b64.Append(line);
-                        }
-                        var bytes = Convert.FromBase64String(b64.ToString());
-                        var tex = new Texture2D(2, 2);
-                        tex.LoadImage(bytes);
-                        output.values.Add(new ValueWrapper(tex));
+                        var list = obj["data"][mimeType].ToObject<List<string>>();
+                        result = string.Concat(list);
                         break;
                     }
-                    // Unity object type
-                    default:
+                    // Unity Object json data
+                    case var _ when UnityMimeTypes.GetType(mimeType) != null:
                     {
                         var type = UnityMimeTypes.GetType(mimeType);
-                        var unityObj = obj["data"][mimeType].ToObject(type);
-                        output.values.Add(new ValueWrapper(unityObj));
+                        var json = obj["data"][mimeType].ToString();
+                        result = JsonConvert.DeserializeObject(json, type);
                         break;
                     }
+                    default:
+                    {
+                        throw new NotSupportedException($"Mime type {mimeType} is not supported");
+                    }
                 }
+                output.values.Add(new ValueWrapper(result));
             }
 
             return output;
@@ -80,24 +73,13 @@ namespace UnityNotebook
                 ["output_type"] = JToken.FromObject(displayData.outputType),
             };
             
-            var tempTextures = new List<Texture2D>();
-            
             // Collect assets
             foreach (var value in displayData.values)
             {
                 var jEntry = new JObject();
                 
-                // Texture
-                if (value.Object is Texture2D tex)
-                {
-                    tempTextures.Add(tex);
-                    var bytes = tex.EncodeToPNG();
-                    var b64 = Convert.ToBase64String(bytes);
-                    var lines = new[] { b64 };
-                    jEntry["image/png"] = JArray.FromObject(lines);
-                }
                 // String
-                else if (value.Object is string str)
+                if (value.Object is string str)
                 {
                     var list = str.Split('\n');
                     jEntry["text/plain"] = JArray.FromObject(list);
@@ -114,17 +96,17 @@ namespace UnityNotebook
             
             // Collect metadata
             // value.metadata.Clear();
-            foreach (var tex in tempTextures)
-            {
-                var meta = new JObject
-                {
-                    ["mime_type"] = "image/png",
-                    ["width"] = tex.width,
-                    ["height"] = tex.height
-                };
-
-                output["metadata"] = meta;
-            }
+            // foreach (var tex in tempTextures)
+            // {
+            //     var meta = new JObject
+            //     {
+            //         ["mime_type"] = "image/png",
+            //         ["width"] = tex.width,
+            //         ["height"] = tex.height
+            //     };
+            //
+            //     output["metadata"] = meta;
+            // }
             
             output.WriteTo(writer);
         }

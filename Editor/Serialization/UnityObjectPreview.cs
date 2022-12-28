@@ -1,10 +1,19 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace UnityNotebook
 {
+    [Serializable]
+    [JsonConverter(typeof(UnityObjectPreviewConverter))]
     public class UnityObjectPreview
     {
+        [SerializeReference]
         public Texture2D image;
         public string info;
         
@@ -35,6 +44,54 @@ namespace UnityNotebook
             };
             
             return preview;
+        }
+
+        public class UnityObjectPreviewConverter : JsonConverter<UnityObjectPreview>
+        {
+            public override UnityObjectPreview ReadJson(JsonReader reader, Type objectType, UnityObjectPreview existingValue, bool hasExistingValue, JsonSerializer serializer)
+            {
+                var obj = JToken.Load(reader);
+                if (!obj.HasValues)
+                {
+                    return new UnityObjectPreview();
+                }
+
+                var result = new UnityObjectPreview();
+                
+                // TODO check if image exists
+                
+                var b64 = obj["image"].ToObject<List<string>>();
+                var bytes = Convert.FromBase64String(string.Concat(b64));
+                var tex = new Texture2D(2, 2);
+                tex.LoadImage(bytes);
+                result.image = tex;
+                
+                result.info = obj["info"].ToObject<string>();
+                
+                // TODO the image is being set correctly here, but is lost by the time it's accessed.
+                // Probably due to serialization weirdness by using [SerializeReference].
+                // Store these in a dictionary and access them by guid?
+                Debug.Log("Deserialized image: " + result.image);
+                
+                return result;
+            }
+
+            public override void WriteJson(JsonWriter writer, UnityObjectPreview value, JsonSerializer serializer)
+            {
+                // TODO check if image exists
+                
+                var bytes = value.image.EncodeToPNG();
+                var b64 = Convert.ToBase64String(bytes);
+                var lines = new[] { b64 }; 
+                
+                var preview = new JObject
+                {
+                    ["image"] = JArray.FromObject(lines),
+                    ["info"] = value.info,
+                };
+                
+                preview.WriteTo(writer);
+            }
         }
     }
 }

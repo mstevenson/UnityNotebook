@@ -127,14 +127,7 @@ namespace UnityNotebook
             }
         }
         
-        public static Notebook CreateNotebookAsset(string path)
-        {
-            var notebook = CreateInstance<Notebook>();
-            var json = JsonConvert.SerializeObject(notebook, Formatting.Indented);
-            System.IO.File.WriteAllText(path, json);
-            AssetDatabase.ImportAsset(path);
-            return AssetDatabase.LoadAssetAtPath<Notebook>(path);
-        }
+        
         
         public static void SaveJson()
         {
