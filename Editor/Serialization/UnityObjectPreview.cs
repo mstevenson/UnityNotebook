@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
@@ -13,9 +12,11 @@ namespace UnityNotebook
     [JsonConverter(typeof(UnityObjectPreviewConverter))]
     public class UnityObjectPreview
     {
-        [SerializeReference]
-        public Texture2D image;
         public string info;
+        public string imageB64;
+        
+        [JsonIgnore]
+        public int hash;
         
         public static UnityObjectPreview Create(Object obj)
         {
@@ -29,7 +30,11 @@ namespace UnityNotebook
                 // We have to destroy the preview texture, otherwise the GUI system will reuse a stale
                 // texture during subsequence GetAssetPreview calls for the same asset.
                 Object.DestroyImmediate(tempPreview);
-                preview.image = tex;
+                
+                // Cache the texture
+                var bytes = tex.EncodeToPNG();
+                preview.imageB64 = Convert.ToBase64String(bytes);
+                preview.hash = NBState.CacheTexture(bytes);
             }
 
             // Info
@@ -56,40 +61,31 @@ namespace UnityNotebook
                     return new UnityObjectPreview();
                 }
 
-                var result = new UnityObjectPreview();
-                
-                // TODO check if image exists
-                
-                var b64 = obj["image"].ToObject<List<string>>();
-                var bytes = Convert.FromBase64String(string.Concat(b64));
-                var tex = new Texture2D(2, 2);
-                tex.LoadImage(bytes);
-                result.image = tex;
-                
-                result.info = obj["info"].ToObject<string>();
-                
-                // TODO the image is being set correctly here, but is lost by the time it's accessed.
-                // Probably due to serialization weirdness by using [SerializeReference].
-                // Store these in a dictionary and access them by guid?
-                Debug.Log("Deserialized image: " + result.image);
+                var result = new UnityObjectPreview
+                {
+                    info = obj["info"].ToObject<string>()
+                };
+
+                if (obj["image"].HasValues)
+                {
+                    var b64Array = obj["image"].ToObject<List<string>>();
+                    var b64 = string.Concat(b64Array);
+                    result.imageB64 = b64;
+                    // used by the editor for cached texture lookup
+                    result.hash = NBState.CacheTexture(b64);
+                }
                 
                 return result;
             }
 
             public override void WriteJson(JsonWriter writer, UnityObjectPreview value, JsonSerializer serializer)
             {
-                // TODO check if image exists
-                
-                var bytes = value.image.EncodeToPNG();
-                var b64 = Convert.ToBase64String(bytes);
-                var lines = new[] { b64 }; 
-                
                 var preview = new JObject
                 {
-                    ["image"] = JArray.FromObject(lines),
+                    ["image"] = string.IsNullOrEmpty(value.imageB64) ? new JArray() : JArray.FromObject(new[] { value.imageB64 }),
                     ["info"] = value.info,
                 };
-                
+
                 preview.WriteTo(writer);
             }
         }

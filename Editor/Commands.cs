@@ -56,6 +56,47 @@ namespace UnityNotebook
             NBState.SetNotebookDirty();
         }
         
+        public static void ClearCellOutput(Cell cell)
+        {
+            var nb = NBState.OpenedNotebook;
+            Undo.RecordObject(nb, "Clear Output");
+            
+            // Delete unused texture assets from the ScriptableObject
+            foreach (var output in cell.outputs)
+            {
+                if (output is not CellOutputDisplayData displayData)
+                {
+                    continue;
+                }
+                foreach (var value in displayData.values)
+                {
+                    if (value.Object is UnityObjectPreview preview)
+                    {
+                        NBState.DiscardTexture(preview.hash);
+                    }
+                }
+            }
+            
+            cell.executionCount = 0;
+            cell.outputs.Clear();
+        }
+
+        public static void ClearAllOutputs()
+        {
+            var nb = NBState.OpenedNotebook;
+            Undo.RecordObject(nb, "Clear All Output");
+            if (nb == null)
+            {
+                return;
+            }
+            foreach (var cell in nb.cells)
+            {
+                ClearCellOutput(cell);
+            }
+            EditorUtility.SetDirty(nb);
+            NBState.SaveScriptableObject();
+        }
+        
         public static void MoveCellDown()
         {
             var notebook = NBState.OpenedNotebook;

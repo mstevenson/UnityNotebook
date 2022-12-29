@@ -265,8 +265,7 @@ namespace UnityNotebook
                 {
                     if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
                     {
-                        Undo.RecordObject(nb, "Clear All Output");
-                        NBState.ClearOutput();
+                        Commands.ClearAllOutputs();
                     }
 
                     using (new EditorGUI.DisabledScope(nb != null && NBState.instance.scriptState == null))
@@ -577,8 +576,7 @@ namespace UnityNotebook
             using var _ = new EditorGUILayout.HorizontalScope();
             if (GUILayout.Button("✕", GUILayout.Width(20), GUILayout.Height(20)))
             {
-                Undo.RecordObject(notebook, "Clear Output");
-                notebook.cells[cell].outputs.Clear();
+                Commands.ClearCellOutput(notebook.cells[cell]);
                 NBState.SaveScriptableObject();
             }
             DrawOutput(notebook.cells[cell]);

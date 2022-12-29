@@ -13,11 +13,12 @@ namespace UnityNotebook
         public override void DrawGUI(object value)
         {
             var obj = value as UnityObjectPreview;
-            var img = obj.image;
-            
-            Debug.Log(obj.image);
-            // Debug.Log(obj.info);
-            
+            var img = NBState.GetTexture(obj.hash);
+            if (img == null)
+            {
+                obj.hash = NBState.CacheTexture(obj.imageB64);
+            }
+
             if (img != null)
             {
                 var rect = GUILayoutUtility.GetRect(img.width, img.height, GUILayout.ExpandWidth(false));
