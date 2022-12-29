@@ -37,10 +37,8 @@ namespace UnityNotebook
             NBState.SelectedCell -= 1;
         }
 
-        public static void AddCell(CellType type)
+        public static void AddCell(CellType type, Notebook notebook, int cellIndex)
         {
-            var notebook = NBState.OpenedNotebook;
-            var cellIndex = NBState.SelectedCell;
             Undo.RecordObject(notebook, "Add Cell");
             var c = new Cell { cellType = type };
             notebook.cells.Insert(cellIndex, c);
@@ -48,11 +46,12 @@ namespace UnityNotebook
             NBState.IsEditMode = true;
         }
         
-        public static void DeleteCurrentCell()
+        public static void DeleteCell(int cellIndex)
         {
-            Undo.RecordObject(NBState.OpenedNotebook, "Delete Cell");
-            NBState.OpenedNotebook.cells.RemoveAt(NBState.SelectedCell);
-            NBState.SelectedCell = Mathf.Max(0, NBState.SelectedCell - 1);
+            var nb = NBState.OpenedNotebook;
+            Undo.RecordObject(nb, "Delete Cell");
+            nb.cells.RemoveAt(cellIndex);
+            NBState.SelectedCell = Mathf.Max(0, cellIndex - 1);
             NBState.SetNotebookDirty();
         }
         
@@ -97,25 +96,23 @@ namespace UnityNotebook
             NBState.SaveScriptableObject();
         }
         
-        public static void MoveCellDown()
+        public static void MoveCellDown(int cellIndex)
         {
             var notebook = NBState.OpenedNotebook;
-            var selectedCell = NBState.SelectedCell;
             Undo.RecordObject(notebook, "Move Cell Down");
-            notebook.cells.Insert(selectedCell + 2, notebook.cells[selectedCell]);
-            notebook.cells.RemoveAt(selectedCell);
-            NBState.SelectedCell = selectedCell + 1;
+            notebook.cells.Insert(cellIndex + 2, notebook.cells[cellIndex]);
+            notebook.cells.RemoveAt(cellIndex);
+            NBState.SelectedCell = cellIndex + 1;
             NBState.SetNotebookDirty();
         }
 
-        public static void MoveCellUp()
+        public static void MoveCellUp(int cellIndex)
         {
             var notebook = NBState.OpenedNotebook;
-            var selectedCell = NBState.SelectedCell;
             Undo.RecordObject(notebook, "Move Cell Up");
-            notebook.cells.Insert(selectedCell - 1, notebook.cells[selectedCell]);
-            notebook.cells.RemoveAt(selectedCell + 1);
-            NBState.SelectedCell = selectedCell - 1;
+            notebook.cells.Insert(cellIndex - 1, notebook.cells[cellIndex]);
+            notebook.cells.RemoveAt(cellIndex + 1);
+            NBState.SelectedCell = cellIndex - 1;
             NBState.SetNotebookDirty();
         }
         

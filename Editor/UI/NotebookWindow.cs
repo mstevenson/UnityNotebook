@@ -419,7 +419,7 @@ namespace UnityNotebook
                 {
                     return false;
                 }
-                Commands.AddCell(type);
+                Commands.AddCell(type, notebook, cellIndex);
                 Event.current.Use();
                 return true;
             }
@@ -442,7 +442,7 @@ namespace UnityNotebook
             {
                 if (GUI.Button(rect, "▲", EditorStyles.miniButtonLeft))
                 {
-                    Commands.MoveCellUp();
+                    Commands.MoveCellUp(cellIndex);
                     Event.current.Use();
                     return true;
                 }
@@ -453,7 +453,7 @@ namespace UnityNotebook
             {
                 if (GUI.Button(rect, "▼", EditorStyles.miniButtonMid))
                 {
-                    Commands.MoveCellDown();
+                    Commands.MoveCellDown(cellIndex);
                     Event.current.Use();
                     return true;
                 }
@@ -462,7 +462,7 @@ namespace UnityNotebook
             rect.x += buttonWidth;
             if (GUI.Button(rect, "✕", EditorStyles.miniButtonRight))
             {
-                Commands.DeleteCurrentCell();
+                Commands.DeleteCell(cellIndex);
                 Event.current.Use();
                 return true;
             }

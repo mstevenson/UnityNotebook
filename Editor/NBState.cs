@@ -172,7 +172,6 @@ namespace UnityNotebook
             {
                 if (instance.texHashes[i] == hash)
                 {
-                    Debug.Log("found tex");
                     var tex = instance.texCache[i];
                     return tex;
                 }
@@ -207,7 +206,6 @@ namespace UnityNotebook
             tex.LoadImage(bytes);
             instance.texHashes.Add(hash);
             instance.texCache.Add(tex);
-            Debug.Log("created tex");
             return hash;
         }
         
@@ -226,7 +224,6 @@ namespace UnityNotebook
             DestroyImmediate(tex);
             instance.texHashes.RemoveAt(index);
             instance.texCache.RemoveAt(index);
-            Debug.Log("discarded tex");
         }
 
         public static void DiscardAllTextures()
@@ -239,7 +236,6 @@ namespace UnityNotebook
             }
             instance.texHashes.Clear();
             instance.texCache.Clear();
-            Debug.Log("discarded all textures");
         }
         
         public static void Reset()

@@ -91,7 +91,7 @@ namespace UnityNotebook
                     // backspace in empty cell (edit mode)
                     case KeyCode.Backspace when HasModifiers(None) && notebook.cells.Count > 0 && (notebook.cells[selectedCell].source.Length == 0 || notebook.cells[selectedCell].source[0].Length == 0):
                     {
-                        Commands.DeleteCurrentCell();
+                        Commands.DeleteCell(NBState.SelectedCell);
                         return true;
                     }
                     // ctrl+shift+minus (edit mode)
@@ -108,7 +108,7 @@ namespace UnityNotebook
                 {
                     case KeyCode.Delete when HasModifiers(None):
                     {
-                        Commands.DeleteCurrentCell();
+                        Commands.DeleteCell(NBState.SelectedCell);
                         return true;
                     }
                     // ctrl+enter (command mode)
