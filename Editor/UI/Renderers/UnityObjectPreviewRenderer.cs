@@ -21,8 +21,7 @@ namespace UnityNotebook
 
             if (img != null)
             {
-                var rect = GUILayoutUtility.GetRect(img.width, img.height, GUILayout.ExpandWidth(false));
-                EditorGUI.DrawPreviewTexture(rect, img);
+                GUILayout.Label(img);
             }
             if (obj.info != null)
             {
