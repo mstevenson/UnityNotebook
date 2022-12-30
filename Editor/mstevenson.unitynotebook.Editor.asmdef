@@ -1,10 +1,10 @@
 {
-    "name": "com.mstevenson.unitynotebook",
+    "name": "mstevenson.unitynotebook.Editor",
     "rootNamespace": "",
     "references": [
         "GUID:5f2f28fa72128b546ae1967c2dfe233b",
         "GUID:478a2357cc57436488a56e564b08d223",
-        "Newtonsoft.Json.UnityConverters"
+        "GUID:c55d28459d9c4444ebb4788be912e1f1"
     ],
     "includePlatforms": [
         "Editor"
