@@ -608,7 +608,7 @@ namespace UnityNotebook
                     // TODO parse terminal control codes, set colors
                     case CellOutputError error:
                         var c = GUI.color;
-                        GUI.color = Color.red;
+                        GUI.color = new Color(1f, 0.68f, 0f);
                         GUILayout.Label(error.ename);
                         GUILayout.Label(error.evalue);
                         GUI.color = c;
