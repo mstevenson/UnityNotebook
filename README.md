@@ -2,7 +2,7 @@
 
 Welcome to Unity Notebook! This project brings the interactive coding experience of Jupyter Notebook to Unity, allowing you to use C# to create interactive projects within the Unity editor.
 
-![Notebook window](Docs/notebook_window.png)
+![Notebook window](Docs~/notebook_window.png)
 
 ## Getting Started
 
