@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Newtonsoft.Json.UnityConverters.Helpers
 {
-    internal static class JsonHelperExtensions
+    public static class JsonHelperExtensions
     {
         /// <summary>
         /// This refers to the ctor that lets you specify the line number and
