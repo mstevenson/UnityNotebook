@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using AICommand;
+using Microsoft.CodeAnalysis.CSharp.Scripting;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine;
@@ -504,15 +506,50 @@ namespace UnityNotebook
 
         private static void DrawTextCell(Notebook notebook, int cell)
         {
+            using var _ = new EditorGUILayout.HorizontalScope();
+            
+            // Run button
+            if (IsRunning && NBState.RunningCell == cell)
+            {
+                if (GUILayout.Button("■", GUILayout.Width(20), GUILayout.Height(20)))
+                {
+                    // TODO cancel web request?
+                }
+            }
+            else
+            {
+                using (new EditorGUI.DisabledScope(NBState.RunningCell != -1))
+                {
+                    if (GUILayout.Button("▶", GUILayout.Width(20), GUILayout.Height(20)))
+                    {
+                        if (!OpenAIUtil.ValidateApiKey)
+                        {
+                            Debug.LogError(OpenAIUtil.ApiKeyErrorText);
+                        }
+                        else
+                        {
+                            GUI.FocusControl(null);
+                            var instructions = string.Concat(notebook.cells[cell].source);
+                            var prompt = OpenAIUtil.GetPrompt(instructions);
+                            var code = OpenAIUtil.InvokeChat(prompt);
+                            code = OpenAIUtil.SanitizeResult(code);
+                            Debug.Log(code);
+                            var output = Evaluator.ExecuteCodeAsync(code).Result;
+                            if (output != null)
+                            {
+                                notebook.cells[cell].outputs.Add(output);
+                            }
+                        }
+                    }
+                }
+            }
+            
             if (!NBState.IsEditMode || NBState.SelectedCell != cell)
             {
                 Markdown.Draw(notebook.cells[cell].source);
                 return;
             }
             
-            using var _ = new EditorGUILayout.HorizontalScope();
-            
-            GUILayout.Space(25);
             notebook.cells[cell].rawText = notebook.cells[cell].source == null ? string.Empty : string.Concat(notebook.cells[cell].source);
             GUI.SetNextControlName(CellInputControlName);
             notebook.cells[cell].rawText = EditorGUILayout.TextArea(notebook.cells[cell].rawText, TextStyle);

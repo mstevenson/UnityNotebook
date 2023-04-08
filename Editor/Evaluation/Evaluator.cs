@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 using Unity.EditorCoroutines.Editor;
 
 namespace UnityNotebook
@@ -81,11 +82,10 @@ namespace UnityNotebook
             }
         }
 
-        private static async void ExecuteCellAsync(Notebook notebook, int cell)
+        public static async Task<CellOutput> ExecuteCodeAsync(string code)
         {
             Init();
-            notebook.cells[cell].outputs.Clear();
-            var code = string.Concat(notebook.cells[cell].source);
+            
             var isCoroutine = code.Contains("yield ");
             try
             {
@@ -115,8 +115,8 @@ namespace UnityNotebook
                     evalue = e.Message,
                     traceback = new List<string>(e.StackTrace.Split('\n'))
                 };
-                notebook.cells[cell].outputs.Add(output);
                 OnExecutionEnded();
+                return output;
             }
             finally
             {
@@ -124,6 +124,18 @@ namespace UnityNotebook
                 {
                     OnExecutionEnded();
                 }
+            }
+            return null;
+        }
+
+        private static async void ExecuteCellAsync(Notebook notebook, int cell)
+        {
+            notebook.cells[cell].outputs.Clear();
+            var code = string.Concat(notebook.cells[cell].source);
+            var output = await ExecuteCodeAsync(code);
+            if (output != null)
+            {
+                notebook.cells[cell].outputs.Add(output);
             }
         }
 
