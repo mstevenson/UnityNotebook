@@ -507,39 +507,24 @@ namespace UnityNotebook
         private static void DrawTextCell(Notebook notebook, int cell)
         {
             using var _ = new EditorGUILayout.HorizontalScope();
-            
-            // Run button
-            if (IsRunning && NBState.RunningCell == cell)
+            using (new EditorGUI.DisabledScope(NBState.RunningCell != -1))
             {
-                if (GUILayout.Button("■", GUILayout.Width(20), GUILayout.Height(20)))
+                if (GUILayout.Button("ai", GUILayout.Width(20), GUILayout.Height(20)))
                 {
-                    // TODO cancel web request?
-                }
-            }
-            else
-            {
-                using (new EditorGUI.DisabledScope(NBState.RunningCell != -1))
-                {
-                    if (GUILayout.Button("▶", GUILayout.Width(20), GUILayout.Height(20)))
+                    if (!OpenAIUtil.ValidateApiKey)
                     {
-                        if (!OpenAIUtil.ValidateApiKey)
-                        {
-                            Debug.LogError(OpenAIUtil.ApiKeyErrorText);
-                        }
-                        else
-                        {
-                            GUI.FocusControl(null);
-                            var instructions = string.Concat(notebook.cells[cell].source);
-                            var prompt = OpenAIUtil.GetPrompt(instructions);
-                            var code = OpenAIUtil.InvokeChat(prompt);
-                            code = OpenAIUtil.SanitizeResult(code);
-                            Debug.Log(code);
-                            var output = Evaluator.ExecuteCodeAsync(code).Result;
-                            if (output != null)
-                            {
-                                notebook.cells[cell].outputs.Add(output);
-                            }
-                        }
+                        Debug.LogError(OpenAIUtil.ApiKeyErrorText);
+                    }
+                    else
+                    {
+                        var prompt = string.Concat(notebook.cells[cell].source);
+                        var code = OpenAIUtil.InvokeChat(OpenAICommandSettings.instance.systemPrompt, prompt);
+                        code = OpenAIUtil.SanitizeCode(code);
+                        Commands.AddCell(CellType.Code, notebook, cell + 1);
+                        var newCell = notebook.cells[cell + 1];
+                        newCell.rawText = code;
+                        NBState.CopyRawTextToSourceLines(newCell);
+                        Commands.EnterCommandMode();
                     }
                 }
             }

@@ -8,52 +8,47 @@ using UnityEngine.Networking;
 namespace AICommand {
     internal static class OpenAIUtil
     {
-        private const string SystemMessage = "Write a sequence of commands that can be executed by a C# REPL using the Unity Editor and Unity Engine APIs to accomplish the given task. Do not use FindGameObjectsWithTag. Do not write comments. Here is the task:\n\n";
-        
         public const string ApiKeyErrorText = "API Key hasn't been set. Please check the project settings (Edit > Project Settings > AI Command > API Key).";
         
-        public static bool ValidateApiKey => !string.IsNullOrEmpty(AICommandSettings.instance.apiKey);
-
-        public static string GetPrompt(string prompt)
+        public static bool ValidateApiKey => !string.IsNullOrEmpty(OpenAICommandSettings.instance.apiKey);
+        
+        public static string SanitizeCode(string result)
         {
-            if (!prompt.EndsWith("."))
-            {
-                prompt += ".";
-            }
-            return SystemMessage + prompt;
-        }
-
-        public static string SanitizeResult(string result)
-        {
-            result = result.Replace("```", "");
+            result = Regex.Replace(result, @"^```.*$", "", RegexOptions.Multiline);
             result = Regex.Replace(result, @"^\s*$\n|\r", "", RegexOptions.Multiline);
             return result;
         }
         
-        private static string CreateChatRequestBody(string prompt)
+        private static string CreateChatRequestBody(string systemPrompt, string userPrompt)
         {
+            var system = new OpenAI.RequestMessage
+            {
+                role = "system",
+                content = systemPrompt
+            };
+            
             var msg = new OpenAI.RequestMessage
             {
                 role = "user",
-                content = prompt
+                content = userPrompt
             };
 
             var req = new OpenAI.Request
             {
-                model = "gpt-3.5-turbo",
-                messages = new [] { msg }
+                model = OpenAICommandSettings.instance.api,
+                messages = new [] { system, msg }
             };
 
             return JsonUtility.ToJson(req);
         }
 
-        public static string InvokeChat(string prompt)
+        public static string InvokeChat(string systemPrompt, string userPrompt)
         {
-            var settings = AICommandSettings.instance;
+            var settings = OpenAICommandSettings.instance;
 
             // POST
             const string url = "https://api.openai.com/v1/chat/completions";
-            var body = CreateChatRequestBody(prompt);
+            var body = CreateChatRequestBody(systemPrompt, userPrompt);
             using var post = UnityWebRequest.Put(url, body);
             post.method = "POST"; // HACK in Unity 2021, UnityWebRequest.Post doesn't include the body. 
             post.SetRequestHeader("Content-Type", "application/json");
