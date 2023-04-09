@@ -11,7 +11,7 @@ namespace AICommand
         public string api = "gpt-3.5-turbo";
         public string apiKey;
         public int timeout = 30;
-        public string systemPrompt = "Write a sequence of commands that can be executed by a C# REPL using the Unity Editor and Unity Engine APIs to accomplish the given task. Do not explain anything. Never add comments, and never use FindGameObjectsWithTag.";
+        public string systemPrompt = "Write a sequence of commands that can be executed by a C# REPL using the Unity Editor and Unity Engine APIs to accomplish the given task. Do not explain anything. Never add comments. Do not use FindGameObjectsWithTag.";
         public void Save() => Save(true);
         void OnDisable() => Save();
     }
