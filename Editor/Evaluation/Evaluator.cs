@@ -1,5 +1,6 @@
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
+using Microsoft.CodeAnalysis.Scripting.Hosting;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -24,6 +25,33 @@ namespace UnityNotebook
             {
                 return;
             }
+
+#if UNITY_2022_1_OR_NEWER
+            //CoreClrShim's AssemblyLoadContext is used for determining if the environment is CoreCLR.
+            //However, the newer Unity's mscorlib includes System.Runtime.Loader.AssemblyLoadContext,
+            //which is required by AssemblyLoaderContext. As a result, the InteractiveAssemblyLoader
+            //that CSharpScript uses to prepare the assembly might mistakenly identify the environment as CoreCLR.
+            //This code fixes this problem.
+
+            Type typeofCoreClrShim = typeof(InteractiveAssemblyLoader)
+                .Assembly
+                .GetType("Microsoft.CodeAnalysis.CoreClrShim");
+            
+            if (typeofCoreClrShim != null)
+            {
+                Type typeofAssemblyLoadContext = typeofCoreClrShim
+                    .GetNestedType("AssemblyLoadContext", BindingFlags.Static | BindingFlags.NonPublic);
+
+                FieldInfo typeField = typeofAssemblyLoadContext.GetField("Type", BindingFlags.Static | BindingFlags.NonPublic);
+
+                typeField.SetValue(null, null);
+            }
+            else
+            {
+                UnityEngine.Debug.LogError($"[UnityNotebook] A {nameof(NotImplementedException)} may be thrown by {nameof(InteractiveAssemblyLoader)}.");
+            }
+#endif
+
             var app = AppDomain.CurrentDomain;
             var allAssemblies = app.GetAssemblies();
             foreach (var assembly in allAssemblies)
