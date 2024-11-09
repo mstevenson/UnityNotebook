@@ -1,3 +1,4 @@
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Scripting.Hosting;
@@ -15,9 +16,15 @@ namespace UnityNotebook
     /// </summary>
     public static class Evaluator
     {
-        private static readonly List<Assembly> Assemblies = new();
+        private static readonly List<MetadataReference> Assemblies = new();
         private static ScriptOptions _options;
         private static EditorCoroutine _sequenceCoroutine;
+        
+        [UnityEditor.Callbacks.DidReloadScripts]
+        private static void Initialize()
+        {
+            Assemblies.Clear();
+        }
 
         private static void Init()
         {
@@ -51,14 +58,22 @@ namespace UnityNotebook
                 UnityEngine.Debug.LogError($"[UnityNotebook] A {nameof(NotImplementedException)} may be thrown by {nameof(InteractiveAssemblyLoader)}.");
             }
 #endif
-
+            
+            string workingDir = System.IO.Directory.GetCurrentDirectory();
             var app = AppDomain.CurrentDomain;
             var allAssemblies = app.GetAssemblies();
             foreach (var assembly in allAssemblies)
             {
                 if (!assembly.IsDynamic && !string.IsNullOrEmpty(assembly.Location))
                 {
-                    Assemblies.Add(assembly);
+                    if (assembly.Location.StartsWith(workingDir))
+                    {
+                        Assemblies.Add(MetadataReference.CreateFromImage(System.IO.File.ReadAllBytes(assembly.Location)));
+                    }
+                    else
+                    {
+                        Assemblies.Add(MetadataReference.CreateFromFile(assembly.Location));
+                    }
                 }
             }
 
