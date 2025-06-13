@@ -117,8 +117,7 @@ namespace UnityNotebook
         {
             var dibBuilder = new StringBuilder();
             
-            const string metadata = @"
-#!meta
+            const string metadata = @"#!meta
 {
     ""kernelInfo"": {
         ""defaultKernelName"": ""csharp"",
