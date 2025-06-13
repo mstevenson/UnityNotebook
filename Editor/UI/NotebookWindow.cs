@@ -174,7 +174,7 @@ namespace UnityNotebook
             {
                 var format = NBState.PreferredFormat;
                 var extension = format == NotebookFormat.Dib ? "dib" : "ipynb";
-                var path = EditorUtility.SaveFilePanelInProject("Create Notebook", "Notebook", extension, "Create Notebook");
+                var path = EditorUtility.SaveFilePanelInProject("Create Notebook", $"Notebook.{extension}", extension, "Create Notebook");
                 if (!string.IsNullOrEmpty(path))
                 {
                     if (!path.EndsWith($".{extension}"))
