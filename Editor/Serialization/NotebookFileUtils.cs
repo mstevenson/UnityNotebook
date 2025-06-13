@@ -9,7 +9,7 @@ namespace UnityNotebook
         public static NotebookFormat GetFormatFromExtension(string filePath)
         {
             var extension = Path.GetExtension(filePath);
-            return extension == ".dib" ? NotebookFormat.Dib : NotebookFormat.Ipynb;
+            return string.Equals(extension, ".dib", StringComparison.OrdinalIgnoreCase) ? NotebookFormat.Dib : NotebookFormat.Ipynb;
         }
         
         public static string GetExtensionFromFormat(NotebookFormat format)
