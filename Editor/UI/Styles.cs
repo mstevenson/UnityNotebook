@@ -22,10 +22,10 @@ namespace UnityNotebook
         
         public static void Init()
         {
-            // if (_initialized)
-            // {
-            //     return;
-            // }
+            if (_initialized)
+            {
+                return;
+            }
             _initialized = true;
             
             if (string.IsNullOrEmpty(_packagePath))
