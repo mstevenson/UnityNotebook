@@ -22,15 +22,17 @@ namespace UnityNotebook
         
         public static void Init()
         {
-            if (_initialized)
-            {
-                return;
-            }
+            // if (_initialized)
+            // {
+            //     return;
+            // }
             _initialized = true;
             
             if (string.IsNullOrEmpty(_packagePath))
             {
-                _packagePath = UnityEditor.PackageManager.PackageInfo.FindForAssembly(Assembly.GetExecutingAssembly()).assetPath;
+                var executingAssembly = Assembly.GetExecutingAssembly();
+                var packageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssembly(executingAssembly);
+                _packagePath = packageInfo.assetPath;
             }
             
             if (TextStyle == null)

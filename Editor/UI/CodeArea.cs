@@ -16,7 +16,7 @@ namespace UnityNotebook
             editor.SaveBackup();
             editor.controlID = controlId;
             editor.position = rect;
-            editor.multiline = true;
+            editor.isMultiline = true;
             editor.style = style;
             editor.DetectFocusChange();
             HandleTextFieldEvent(rect, controlId, content, ref highlightedText, theme, style, editor);
