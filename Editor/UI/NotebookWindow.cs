@@ -165,7 +165,7 @@ namespace UnityNotebook
             const int buttonHeight = 50;
             var buttonRect = new Rect(
                 position.width / 2 - buttonWidth / 2,
-                (position.height / 2 - buttonHeight / 2) - 35,
+                (position.height / 2 - buttonHeight / 2) - 55,
                 buttonWidth,
                 buttonHeight
             );
@@ -189,8 +189,11 @@ namespace UnityNotebook
                     NBState.OpenedNotebook = nb;
                 }
             }
-
             buttonRect.y += buttonHeight + 10;
+            
+            DrawNotebookFormatPopup(buttonRect);
+
+            buttonRect.y += 40;
             if (GUI.Button(buttonRect, "Open Notebook"))
             {
                 var path = EditorUtility.OpenFilePanel("Open Notebook", Application.dataPath, "ipynb,dib");
@@ -202,7 +205,7 @@ namespace UnityNotebook
                     ChangeNotebook(nb);
                 }
             }
-
+            
             buttonRect.y += buttonHeight + 10;
 
             DrawNotebookAssetsPopup(buttonRect);
@@ -237,6 +240,19 @@ namespace UnityNotebook
             if (index >= 0)
             {
                 ChangeNotebook(notebooks[index]);
+            }
+        }
+
+        private static void DrawNotebookFormatPopup(Rect rect)
+        {
+            var formatOptions = new[] { "Jupyter (.ipynb)", "Polyglot (.dib)" };
+            var currentFormat = NBState.PreferredFormat;
+            var currentIndex = currentFormat == NotebookFormat.Ipynb ? 0 : 1;
+            
+            var index = EditorGUI.Popup(rect, currentIndex, formatOptions);
+            if (index != currentIndex)
+            {
+                NBState.PreferredFormat = index == 0 ? NotebookFormat.Ipynb : NotebookFormat.Dib;
             }
         }
 
