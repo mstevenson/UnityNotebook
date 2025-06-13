@@ -2,7 +2,7 @@ using UnityEditor.AssetImporters;
 
 namespace UnityNotebook
 {
-    // Parses .ipynb (IPython Notebook) asset files and imports them into Unity's AssetDatabase
+    // Parses .dib (.NET Interactive Notebook) files and imports them into Unity's AssetDatabase
     [ScriptedImporter(1, "dib")]
     public class DibImporter : ScriptedImporter
     {
