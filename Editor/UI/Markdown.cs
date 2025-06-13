@@ -77,7 +77,6 @@ namespace UnityNotebook
         
         public static void Draw(string[] lines)
         {
-            int indent = 0;
             bool codeBlock = false;
             if (lines == null || lines.Length == 0)
             {

@@ -7,6 +7,12 @@ using UnityEngine;
 
 namespace UnityNotebook
 {
+    public enum NotebookFormat
+    {
+        Ipynb,
+        Dib
+    }
+    
     // Singleton state object for the Notebook window
     [FilePath("UserSettings/NotebookState.asset", FilePathAttribute.Location.ProjectFolder)]
     public class NBState : ScriptableSingleton<NBState>
@@ -17,6 +23,7 @@ namespace UnityNotebook
         [SerializeField] private int runningCell;
         [SerializeField] private bool isEditMode;
         [SerializeField] private bool isJsonOutOfDate;
+        [SerializeField] private NotebookFormat preferredFormat = NotebookFormat.Ipynb;
         [SerializeField] private List<int> texHashes = new();
         [SerializeField] private List<Texture2D> texCache = new();
         
@@ -91,6 +98,16 @@ namespace UnityNotebook
                 instance.Save(true);
             }
         }
+        
+        public static NotebookFormat PreferredFormat
+        {
+            get => instance.preferredFormat;
+            set
+            {
+                instance.preferredFormat = value;
+                instance.Save(true);
+            }
+        }
 
         public static void CloseNotebook()
         {
@@ -121,8 +138,8 @@ namespace UnityNotebook
             if (nb != null)
             {
                 SaveScriptableObject();
-                var json = JsonConvert.SerializeObject(nb, Formatting.Indented);
-                System.IO.File.WriteAllText(AssetDatabase.GetAssetPath(nb), json);
+                var filePath = AssetDatabase.GetAssetPath(nb);
+                NotebookFileUtils.WriteNotebookToFile(nb, filePath);
             }
             IsJsonOutOfDate = false;
         }

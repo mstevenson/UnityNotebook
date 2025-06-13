@@ -1,5 +1,4 @@
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,8 +9,7 @@ namespace UnityNotebook
         public static Notebook CreateNotebookAsset(string path)
         {
             var notebook = ScriptableObject.CreateInstance<Notebook>();
-            var json = JsonConvert.SerializeObject(notebook, Formatting.Indented);
-            System.IO.File.WriteAllText(path, json);
+            NotebookFileUtils.WriteNotebookToFile(notebook, path);
             AssetDatabase.ImportAsset(path);
             return AssetDatabase.LoadAssetAtPath<Notebook>(path);
         }
@@ -237,6 +235,39 @@ namespace UnityNotebook
             var selectedCell = NBState.SelectedCell;
             Undo.RecordObject(notebook, "Change Cell Type");
             notebook.cells[selectedCell].cellType = CellType.Code;
+        }
+        
+        public static void ConvertNotebookFormat(NotebookFormat targetFormat)
+        {
+            var notebook = NBState.OpenedNotebook;
+            if (notebook == null) return;
+            
+            var currentPath = AssetDatabase.GetAssetPath(notebook);
+            var currentFormat = NotebookFileUtils.GetFormatFromExtension(currentPath);
+            var targetExtension = NotebookFileUtils.GetExtensionFromFormat(targetFormat);
+            
+            // Ignore if notebook is already in the target format
+            if (currentFormat == targetFormat)
+            {
+                // show dialog that no conversion is needed
+                EditorUtility.DisplayDialog("Convert Format", $"Notebook is already in {targetExtension} format.", "OK");
+                return;
+            }
+            
+            // Generate new file path
+            var directory = System.IO.Path.GetDirectoryName(currentPath);
+            var filename = System.IO.Path.GetFileNameWithoutExtension(currentPath);
+            var newPath = NotebookFileUtils.GenerateUniqueNotebookPath(directory, filename, targetFormat);
+            
+            // Save in target format
+            NotebookFileUtils.WriteNotebookToFile(notebook, newPath, targetFormat);
+            
+            // Import and select the new asset
+            AssetDatabase.ImportAsset(newPath);
+            var newAsset = AssetDatabase.LoadAssetAtPath<Notebook>(newPath);
+            Selection.activeObject = newAsset;
+            
+            EditorUtility.DisplayDialog("Convert Format", $"Notebook converted to {targetExtension} format and saved as:\n{newPath}", "OK");
         }
     }
 }

@@ -28,6 +28,9 @@ namespace UnityNotebook
             menu.AddItem(new GUIContent("Convert to Markdown"), false, Commands.ConvertCellToMarkdown);
             menu.AddItem(new GUIContent("Convert to Code"), false, Commands.ConvertCellToCode);
             menu.AddSeparator(null);
+            menu.AddItem(new GUIContent("Export as .ipynb"), false, () => Commands.ConvertNotebookFormat(NotebookFormat.Ipynb));
+            menu.AddItem(new GUIContent("Export as .dib"), false, () => Commands.ConvertNotebookFormat(NotebookFormat.Dib));
+            menu.AddSeparator(null);
             menu.AddItem(new GUIContent("Reset Tool State"), false, NBState.Reset);
         }
         
@@ -53,7 +56,7 @@ namespace UnityNotebook
             }
 
             var path = AssetDatabase.GetAssetPath(instanceID);
-            if (Path.GetExtension(path) != ".ipynb")
+            if (!NotebookFileUtils.IsIpynbFile(path) && !NotebookFileUtils.IsDibFile(path))
             {
                 return false;
             }
@@ -79,7 +82,8 @@ namespace UnityNotebook
             }
 
             // Create asset
-            var assetPath = AssetDatabase.GenerateUniqueAssetPath(path + "/New Notebook.ipynb");
+            var extension = NotebookFileUtils.GetExtensionFromFormat(NBState.PreferredFormat);
+            var assetPath = AssetDatabase.GenerateUniqueAssetPath(path + "/New Notebook" + extension);
             var asset = Commands.CreateNotebookAsset(assetPath);
             Selection.activeObject = asset;
         }
@@ -168,13 +172,14 @@ namespace UnityNotebook
             
             if (GUI.Button(buttonRect, "Create Notebook"))
             {
-                var path = EditorUtility.SaveFilePanelInProject("Create Notebook", "Notebook", "ipynb",
-                    "Create Notebook");
+                var format = NBState.PreferredFormat;
+                var extension = format == NotebookFormat.Dib ? "dib" : "ipynb";
+                var path = EditorUtility.SaveFilePanelInProject("Create Notebook", "Notebook", extension, "Create Notebook");
                 if (!string.IsNullOrEmpty(path))
                 {
-                    if (!path.EndsWith(".ipynb"))
+                    if (!path.EndsWith($".{extension}"))
                     {
-                        path += ".ipynb";
+                        path += $".{extension}";
                     }
 
                     var nb = Commands.CreateNotebookAsset(path);
@@ -188,7 +193,7 @@ namespace UnityNotebook
             buttonRect.y += buttonHeight + 10;
             if (GUI.Button(buttonRect, "Open Notebook"))
             {
-                var path = EditorUtility.OpenFilePanel("Open Notebook", Application.dataPath, "ipynb");
+                var path = EditorUtility.OpenFilePanel("Open Notebook", Application.dataPath, "ipynb,dib");
                 if (!string.IsNullOrEmpty(path))
                 {
                     // Get assets-relative path
