@@ -226,7 +226,7 @@ namespace UnityNotebook
                 return;
             }
 
-            notebooks.Sort((a, b) => string.Compare(a.name, b.name, StringComparison.Ordinal));
+            notebooks.Sort((a, b) => string.CompareOrdinal(a.name, b.name));
             var notebookNames = new string[notebooks.Count];
             for (var i = 0; i < notebooks.Count; i++)
             {
